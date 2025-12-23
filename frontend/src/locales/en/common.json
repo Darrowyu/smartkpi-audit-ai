@@ -2,7 +2,6 @@
   "title": "SmartKPI",
   "dashboard": "Dashboard",
   "history": "History",
-  "settings": "Settings",
   "uploadTitle": "Upload KPI Data",
   "dropFile": "Drop file to upload",
   "dragDrop": "Drag and drop your .xlsx file here, or click to browse",
@@ -60,6 +59,10 @@
   "aboutApp": "About",
   "version": "Version 1.0.0",
   "privacyNote": "All data is processed securely via backend API.",
+  "settings": {
+    "subtitle": "Manage your personal preferences",
+    "profile": "Account Information"
+  },
   "backToDashboard": "Back to Dashboard",
   "startAudit": "Start Smart Audit",
   "learnMore": "Learn More",
@@ -232,7 +235,10 @@
     "organization": "Organization",
     "users": "Users",
     "permissions": "Permissions",
-    "logout": "Logout"
+    "logout": "Logout",
+    "businessSection": "Business",
+    "personalSection": "Personal",
+    "adminSection": "Administration"
   },
   "notifications": {
     "title": "Notifications",
@@ -503,5 +509,32 @@
   "common": {
     "confirm": "Confirm",
     "loadFailed": "Load failed"
+  },
+  "forgotPasswordPage": {
+    "title": "Forgot Password",
+    "description": "Enter your email address and we'll send you a link to reset your password.",
+    "emailPlaceholder": "Enter your email",
+    "sendLink": "Send Reset Link",
+    "backToLogin": "Back to Login",
+    "emailSent": "Email Sent",
+    "checkInbox": "Please check your inbox and click the link to reset your password. The link is valid for 24 hours.",
+    "requestFailed": "Request failed, please try again later"
+  },
+  "resetPasswordPage": {
+    "title": "Reset Password",
+    "description": "Please enter your new password.",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "resetButton": "Reset Password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "invalidToken": "Invalid reset link",
+    "invalidLink": "Link Invalid or Expired",
+    "invalidLinkDesc": "Please request a new password reset link.",
+    "requestNewLink": "Request New Link",
+    "success": "Password Reset Successfully",
+    "successDesc": "Your password has been reset. You will be redirected to login page in 3 seconds.",
+    "goToLogin": "Go to Login",
+    "resetFailed": "Reset failed, please try again later"
   }
 }

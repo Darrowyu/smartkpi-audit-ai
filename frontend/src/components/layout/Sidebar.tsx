@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Languages, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Language } from '../../types';
 import { SimpleAvatar as Avatar } from '../ui/avatar';
 import { useAuth } from '../../context/AuthContext';
@@ -17,18 +17,9 @@ interface NavItem {
   path: string;
   icon: LucideIcon;
   labelKey: string;
-  adminOnly?: boolean;
 }
 
-interface NavGroup {
-  id: string;
-  icon: LucideIcon;
-  labelKey: string;
-  adminOnly?: boolean;
-  children: NavItem[];
-}
-
-const mainNavItems: NavItem[] = [
+const businessNavItems: NavItem[] = [
   { path: '/', icon: Home, labelKey: 'sidebar.home' },
   { path: '/dashboard', icon: LayoutDashboard, labelKey: 'sidebar.dashboard' },
   { path: '/kpi-library', icon: Target, labelKey: 'sidebar.kpiLibrary' },
@@ -36,31 +27,33 @@ const mainNavItems: NavItem[] = [
   { path: '/assignment', icon: ClipboardList, labelKey: 'sidebar.assignment' },
   { path: '/data-entry', icon: FileSpreadsheet, labelKey: 'sidebar.dataEntry' },
   { path: '/reports', icon: FileText, labelKey: 'sidebar.reports' },
+];
+
+const personalNavItems: NavItem[] = [
   { path: '/settings', icon: Settings, labelKey: 'sidebar.mySettings' },
 ];
 
-const adminNavGroup: NavGroup = {
-  id: 'admin-settings',
-  icon: Shield,
-  labelKey: 'sidebar.admin',
-  adminOnly: true,
-  children: [
-    { path: '/group-dashboard', icon: Building2, labelKey: 'sidebar.groupCenter', adminOnly: true },
-    { path: '/team', icon: Users, labelKey: 'sidebar.users', adminOnly: true },
-    { path: '/permissions', icon: Shield, labelKey: 'sidebar.permissions', adminOnly: true },
-  ],
-};
+const adminNavItems: NavItem[] = [
+  { path: '/group-dashboard', icon: Building2, labelKey: 'sidebar.groupCenter' },
+  { path: '/team', icon: Users, labelKey: 'sidebar.users' },
+  { path: '/permissions', icon: Shield, labelKey: 'sidebar.permissions' },
+];
 
-export const Sidebar: React.FC<SidebarProps> = ({ language, setLanguage, onLogout }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
   const [adminExpanded, setAdminExpanded] = useState(false);
-  const toggleLanguage = () => setLanguage(language === 'en' ? 'zh' : 'en');
 
-  const isAdminViewActive = adminNavGroup.children.some(item => location.pathname === item.path);
+  const isAdminViewActive = adminNavItems.some(item => location.pathname === item.path);
+
+  useEffect(() => {
+    if (isAdminViewActive) {
+      setAdminExpanded(true);
+    }
+  }, [isAdminViewActive]);
 
   const handleNavClick = (path: string) => {
     navigate(path);
@@ -71,80 +64,117 @@ export const Sidebar: React.FC<SidebarProps> = ({ language, setLanguage, onLogou
     navigate('/login');
   };
 
+  const NavButton: React.FC<{ item: NavItem; compact?: boolean }> = ({ item, compact }) => {
+    const Icon = item.icon;
+    const isActive = location.pathname === item.path;
+
+    return (
+      <button
+        onClick={() => handleNavClick(item.path)}
+        className={`group relative w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-200
+          ${isActive
+            ? 'text-white bg-[#163a6e]'
+            : 'text-white/70 hover:text-white hover:bg-[#163a6e]/50'
+          }
+          ${compact ? 'py-2 pl-6' : ''}
+        `}
+      >
+        {isActive && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#5B9BD5] rounded-r-full" />
+        )}
+        <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-[#5B9BD5]' : ''}`} />
+        <span className="truncate">{t(item.labelKey)}</span>
+      </button>
+    );
+  };
+
+  const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="px-3 py-2 mt-4 first:mt-0">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+        {children}
+      </span>
+    </div>
+  );
+
   return (
-    <div className="w-64 bg-slate-900 text-white flex flex-col h-screen fixed top-0 left-0">
-      <div className="p-4 border-b border-slate-800">
-        <div className="flex items-center justify-center">
-          <img src={logoImage} alt="Makrite KPI" className="h-12 w-auto" />
-        </div>
-      </div>
-
-      <div className="p-6 border-b border-slate-800">
+    <div className="w-64 bg-[#1E4B8E] text-white flex flex-col h-screen fixed top-0 left-0 border-r border-[#163a6e]">
+      {/* Logo */}
+      <div className="h-16 flex items-center justify-center border-b border-white/10">
         <div className="flex items-center gap-3">
-          <Avatar name={user?.username || 'User'} email={user?.email || ''} size="md" />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">{user?.username || 'User'}</div>
-            <div className="text-xs text-slate-400 uppercase">{user?.role || 'USER'}</div>
+          <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+            <img src={logoImage} alt="Makrite KPI" className="h-5 w-auto" />
           </div>
+          <span className="text-lg font-semibold tracking-tight">Makrite KPI</span>
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {mainNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-          return (
-            <button key={item.path} onClick={() => handleNavClick(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
-                                ${isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-              <Icon className="w-5 h-5" />
-              <span>{t(item.labelKey)}</span>
-            </button>
-          );
-        })}
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-2">
+        {/* Business Section */}
+        <SectionLabel>{t('sidebar.businessSection', '业务功能')}</SectionLabel>
+        <div className="space-y-0.5">
+          {businessNavItems.map((item) => (
+            <NavButton key={item.path} item={item} />
+          ))}
+        </div>
 
+        {/* Personal Section */}
+        <SectionLabel>{t('sidebar.personalSection', '个人')}</SectionLabel>
+        <div className="space-y-0.5">
+          {personalNavItems.map((item) => (
+            <NavButton key={item.path} item={item} />
+          ))}
+        </div>
+
+        {/* Admin Section */}
         {isAdmin && (
-          <div className="pt-4 mt-4 border-t border-slate-800">
-            <button onClick={() => setAdminExpanded(!adminExpanded)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors
-                                ${isAdminViewActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-              <div className="flex items-center gap-3">
-                <Settings className="w-5 h-5" />
-                <span>{t(adminNavGroup.labelKey)}</span>
+          <>
+            <SectionLabel>{t('sidebar.adminSection', '系统管理')}</SectionLabel>
+            <div className="space-y-0.5">
+              <button
+                onClick={() => setAdminExpanded(!adminExpanded)}
+                className={`group relative w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium transition-all duration-200
+                  ${isAdminViewActive
+                    ? 'text-white bg-[#163a6e]'
+                    : 'text-white/70 hover:text-white hover:bg-[#163a6e]/50'
+                  }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Shield className={`w-[18px] h-[18px] ${isAdminViewActive ? 'text-[#5B9BD5]' : ''}`} />
+                  <span>{t('sidebar.admin')}</span>
+                </div>
+                {adminExpanded
+                  ? <ChevronDown className="w-4 h-4 text-white/50" />
+                  : <ChevronRight className="w-4 h-4 text-white/50" />
+                }
+              </button>
+
+              <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-40' : 'max-h-0'}`}>
+                {adminNavItems.map((item) => (
+                  <NavButton key={item.path} item={item} compact />
+                ))}
               </div>
-              {adminExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-            {adminExpanded && (
-              <div className="mt-1 ml-4 space-y-1">
-                {adminNavGroup.children.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <button key={item.path} onClick={() => handleNavClick(item.path)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors
-                                                ${isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-                      <Icon className="w-4 h-4" />
-                      <span>{t(item.labelKey)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+            </div>
+          </>
         )}
       </nav>
 
-      <div className="p-4 border-t border-slate-800 space-y-1">
-        <button onClick={toggleLanguage}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-          <Languages className="w-5 h-5" />
-          <span>{language === 'en' ? '中文' : 'English'}</span>
-        </button>
-        <button onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-          <LogOut className="w-5 h-5" />
-          <span>{t('sidebar.logout')}</span>
-        </button>
+      {/* User Footer */}
+      <div className="border-t border-white/10 p-3">
+        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#163a6e]/50 transition-colors">
+          <Avatar name={user?.username || 'User'} email={user?.email || ''} size="sm" />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-white truncate">{user?.username || 'User'}</div>
+            <div className="text-[10px] text-white/50 uppercase tracking-wide">{user?.role || 'USER'}</div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="p-2 text-white/50 hover:text-red-300 hover:bg-[#163a6e] rounded-md transition-colors"
+            title={t('sidebar.logout')}
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

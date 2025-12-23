@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Language } from '../../types';
 import { Eye, EyeOff, LayoutDashboard, BarChart3, ShieldCheck, Languages } from 'lucide-react';
@@ -34,8 +35,8 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
       await login(username, password);
       onSuccess();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error && 'response' in err 
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message 
+      const errorMessage = err instanceof Error && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
         : undefined;
       setError(errorMessage || t('loginFailed'));
     } finally {
@@ -70,23 +71,23 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
         {/* Features */}
         <div className="relative z-10 space-y-8">
           <div className="space-y-6">
-            <FeatureItem 
-              icon={LayoutDashboard} 
-              title={t('multiDashboard')} 
-              desc={t('multiDashboardDesc')} 
+            <FeatureItem
+              icon={LayoutDashboard}
+              title={t('multiDashboard')}
+              desc={t('multiDashboardDesc')}
             />
-            <FeatureItem 
-              icon={BarChart3} 
-              title={t('intelligentAnalytics')} 
-              desc={t('intelligentAnalyticsDesc')} 
+            <FeatureItem
+              icon={BarChart3}
+              title={t('intelligentAnalytics')}
+              desc={t('intelligentAnalyticsDesc')}
             />
-            <FeatureItem 
-              icon={ShieldCheck} 
-              title={t('enterpriseSecurity')} 
-              desc={t('enterpriseSecurityDesc')} 
+            <FeatureItem
+              icon={ShieldCheck}
+              title={t('enterpriseSecurity')}
+              desc={t('enterpriseSecurityDesc')}
             />
           </div>
-          
+
           <div className="pt-8 border-t border-white/20 text-white/50 text-sm">
             &copy; 2025 SmartKPI Audit AI. {t('allRightsReserved')}.
           </div>
@@ -153,9 +154,9 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
                 <label className="text-sm font-medium text-slate-700">
                   {t('password')}
                 </label>
-                <a href="#" className="text-sm text-slate-500 hover:text-[#1E4B8E] transition-colors">
+                <Link to="/forgot-password" className="text-sm text-slate-500 hover:text-[#1E4B8E] transition-colors">
                   {t('forgotPassword')}
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
@@ -190,38 +191,6 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
             </button>
           </form>
 
-          {/* Register Link */}
-          <div className="mt-6 text-center">
-            <span className="text-slate-500">
-              {t('noAccount')}
-            </span>
-            {' '}
-            <a href="#" className="text-[#1E4B8E] font-medium hover:text-[#163a6e] transition-colors">
-              {t('signUpFree')}
-            </a>
-          </div>
-
-          {/* Demo Hint */}
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  {t('demoAccount')}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <div className="text-slate-600">
-                  <span className="text-slate-400 mr-2">User:</span>
-                  <span className="font-mono font-medium">admin</span>
-                </div>
-                <div className="text-slate-600">
-                  <span className="text-slate-400 mr-2">Pass:</span>
-                  <span className="font-mono font-medium">admin123</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

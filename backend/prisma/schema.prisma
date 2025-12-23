@@ -104,6 +104,10 @@ model User {
   departmentId String?  @map("department_id") // Optional: user's department
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
+  // Password reset fields
+  passwordResetToken   String?   @map("password_reset_token")
+  passwordResetExpires DateTime? @map("password_reset_expires")
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   lastLoginAt  DateTime? @map("last_login_at")
@@ -117,6 +121,7 @@ model User {
   @@index([companyId])
   @@index([departmentId])
   @@index([username])
+  @@index([passwordResetToken])
   @@map("users")
 }
 

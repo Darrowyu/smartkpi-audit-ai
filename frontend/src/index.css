@@ -13,26 +13,34 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    /* Primary: #1E4B8E (深蓝) */
+    --primary: 213 65% 34%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    /* Secondary: #5B9BD5 (浅蓝) */
+    --secondary: 210 58% 60%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent: #5B9BD5 (浅蓝) */
+    --accent: 210 58% 60%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 213 65% 34%;
 
     --radius: 0.5rem;
+
+    /* Custom brand colors */
+    --brand-primary: #1E4B8E;
+    --brand-secondary: #5B9BD5;
+    --brand-dark: #163a6e;
   }
 
   .dark {
@@ -72,5 +80,30 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility classes for brand colors */
+@layer utilities {
+  .bg-brand-primary {
+    background-color: var(--brand-primary);
+  }
+  .bg-brand-secondary {
+    background-color: var(--brand-secondary);
+  }
+  .bg-brand-dark {
+    background-color: var(--brand-dark);
+  }
+  .text-brand-primary {
+    color: var(--brand-primary);
+  }
+  .text-brand-secondary {
+    color: var(--brand-secondary);
+  }
+  .border-brand-primary {
+    border-color: var(--brand-primary);
+  }
+  .ring-brand-primary {
+    --tw-ring-color: var(--brand-primary);
   }
 }

@@ -18,6 +18,8 @@ const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const UploadPage = lazy(() => import('@/pages/UploadPage'));
 const HistoryPage = lazy(() => import('@/pages/HistoryPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -30,6 +32,14 @@ export const router = createBrowserRouter([
     {
         path: '/login',
         element: <SuspenseWrapper><LoginPage /></SuspenseWrapper>,
+    },
+    {
+        path: '/forgot-password',
+        element: <SuspenseWrapper><ForgotPasswordPage /></SuspenseWrapper>,
+    },
+    {
+        path: '/reset-password',
+        element: <SuspenseWrapper><ResetPasswordPage /></SuspenseWrapper>,
     },
     {
         path: '/',

@@ -2,7 +2,6 @@
   "title": "智能KPI",
   "dashboard": "仪表盘",
   "history": "历史记录",
-  "settings": "设置",
   "uploadTitle": "上传 KPI 考核数据",
   "dropFile": "拖放文件至此",
   "dragDrop": "拖放 .xlsx 文件至此，或点击浏览",
@@ -60,6 +59,10 @@
   "aboutApp": "关于应用",
   "version": "版本 1.0.0",
   "privacyNote": "所有数据通过后端API安全处理。",
+  "settings": {
+    "subtitle": "管理您的个人偏好设置",
+    "profile": "账户信息"
+  },
   "backToDashboard": "返回仪表盘",
   "startAudit": "开始智能考核",
   "learnMore": "了解更多",
@@ -232,7 +235,10 @@
     "organization": "组织架构",
     "users": "用户管理",
     "permissions": "权限管理",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "businessSection": "业务功能",
+    "personalSection": "个人",
+    "adminSection": "系统管理"
   },
   "notifications": {
     "title": "通知",
@@ -503,5 +509,32 @@
   "common": {
     "confirm": "确定",
     "loadFailed": "加载失败"
+  },
+  "forgotPasswordPage": {
+    "title": "忘记密码",
+    "description": "请输入您的邮箱地址，我们将发送密码重置链接到您的邮箱。",
+    "emailPlaceholder": "请输入注册邮箱",
+    "sendLink": "发送重置链接",
+    "backToLogin": "返回登录",
+    "emailSent": "邮件已发送",
+    "checkInbox": "请查收您的邮箱，点击邮件中的链接重置密码。链接有效期24小时。",
+    "requestFailed": "请求失败，请稍后重试"
+  },
+  "resetPasswordPage": {
+    "title": "重置密码",
+    "description": "请输入您的新密码。",
+    "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "resetButton": "重置密码",
+    "passwordMismatch": "两次输入的密码不一致",
+    "passwordTooShort": "密码至少6个字符",
+    "invalidToken": "无效的重置链接",
+    "invalidLink": "链接无效或已过期",
+    "invalidLinkDesc": "请重新申请密码重置链接。",
+    "requestNewLink": "重新申请重置链接",
+    "success": "密码重置成功",
+    "successDesc": "您的密码已成功重置，3秒后将跳转到登录页面。",
+    "goToLogin": "立即登录",
+    "resetFailed": "重置失败，请稍后重试"
   }
 }

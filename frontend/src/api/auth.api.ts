@@ -7,14 +7,15 @@ export interface LoginData {
 
 export interface AuthUser {
   id: string;
-  username: string; // 用户名
-  email?: string; // 邮箱可选
+  username: string;
+  email?: string;
   firstName?: string;
   lastName?: string;
   role: string;
   companyId: string;
-  groupId?: string; // 集团ID（可选）
-  company?: { id: string; name: string }; // 公司信息（可选）
+  groupId?: string;
+  company?: { id: string; name: string };
+  department?: { id: string; name: string };
   language: string;
 }
 
@@ -37,5 +38,15 @@ export const authApi = {
 
   logout() {
     removeToken();
+  },
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const res = await apiClient.post('/auth/forgot-password', { email });
+    return res.data;
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const res = await apiClient.post('/auth/reset-password', { token, newPassword });
+    return res.data;
   },
 };

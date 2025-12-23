@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import FileUpload from './components/FileUpload';
 import HistoryView from './components/HistoryView';
 import SettingsView from './components/SettingsView';
@@ -12,11 +13,11 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { filesApi } from './api/files.api';
 import { kpiAnalysisApi } from './api/kpi-analysis.api';
 import { KPIAnalysisResult, Language, View } from './types';
-import { translations } from './utils/i18n';
 import { ArrowLeft } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const { t, i18n } = useTranslation();
   const [language, setLanguage] = useState<Language>((user?.language as Language) || 'zh');
   const [currentView, setCurrentView] = useState<View>('landing');
 
@@ -24,7 +25,10 @@ const AppContent: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const t = translations[language];
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+  };
 
   if (isLoading) {
     return (
@@ -63,7 +67,7 @@ const AppContent: React.FC = () => {
 
   const renderSidebarContent = () => {
     // 首页
-    if (currentView === 'landing') return <LandingPage onStart={() => setCurrentView('dashboard')} t={t} />;
+    if (currentView === 'landing') return <LandingPage onStart={() => setCurrentView('dashboard')} />;
 
     // 仪表盘页面
     if (currentView === 'dashboard') return <DashboardView language={language} />;
@@ -96,16 +100,16 @@ const AppContent: React.FC = () => {
     if (currentView === 'group-dashboard') return <GroupDashboardView />;
 
     // 历史记录页面
-    if (currentView === 'history') return <HistoryView onSelectResult={handleHistorySelect} t={t} language={language} />;
+    if (currentView === 'history') return <HistoryView onSelectResult={handleHistorySelect} language={language} />;
 
     // 组织管理页面
     if (currentView === 'organization') return <OrganizationManagement language={language} />;
 
     // 公司设置页面
-    if (currentView === 'company') return <CompanySettings language={language} t={t} />;
+    if (currentView === 'company') return <CompanySettings language={language} />;
 
     // 设置页面
-    if (currentView === 'settings') return <SettingsView language={language} setLanguage={setLanguage} t={t} onLogout={logout} />;
+    if (currentView === 'settings') return <SettingsView language={language} setLanguage={handleLanguageChange} onLogout={logout} />;
 
     // 上传页面
     if (currentView === 'upload') {
@@ -113,13 +117,13 @@ const AppContent: React.FC = () => {
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
           <div className="w-full max-w-2xl">
             <button onClick={() => setCurrentView('landing')} className="mb-6 text-slate-500 hover:text-indigo-600 flex items-center gap-1 text-sm">
-              <ArrowLeft className="w-4 h-4" />{t.backToHome}
+              <ArrowLeft className="w-4 h-4" />{t('backToHome')}
             </button>
             <div className="text-center space-y-2 mb-10">
-              <h2 className="text-3xl font-bold text-slate-900">{t.uploadTitle}</h2>
-              <p className="text-slate-500">{t.demoTip}</p>
+              <h2 className="text-3xl font-bold text-slate-900">{t('uploadTitle')}</h2>
+              <p className="text-slate-500">{t('demoTip')}</p>
             </div>
-            <FileUpload onFileSelect={handleFileSelect} isProcessing={isProcessing} error={error} language={language} t={t} />
+            <FileUpload onFileSelect={handleFileSelect} isProcessing={isProcessing} error={error} language={language} />
           </div>
         </div>
       );
@@ -134,7 +138,7 @@ const AppContent: React.FC = () => {
       currentView={currentView}
       setCurrentView={setCurrentView}
       language={language}
-      setLanguage={setLanguage}
+      setLanguage={handleLanguageChange}
       onLogout={logout}
     >
       {renderSidebarContent()}

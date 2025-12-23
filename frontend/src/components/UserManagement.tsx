@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usersApi, User, CreateUserData, UpdateUserData } from '../api/users.api';
 import { getDepartments, Department } from '../api/departments.api';
 import { companiesApi, Company } from '../api/companies.api';
 import { useAuth } from '../context/AuthContext';
-import { translations } from '../utils/i18n';
 import { Language, UserRole } from '../types';
 import { Users, Plus, Edit, Trash2, Search, Shield, UserCheck, X } from 'lucide-react';
 
 interface Props {
   language: Language;
-  t: typeof translations['en'];
 }
 
 const UserManagement: React.FC<Props> = ({ language }) => {
   const { user: currentUser } = useAuth();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -96,20 +96,20 @@ const UserManagement: React.FC<Props> = ({ language }) => {
   };
 
   const handleDelete = async (user: User) => {
-    if (!confirm(`${language === 'zh' ? '确定删除用户' : 'Delete user'} ${user.username}?`)) return;
+    if (!confirm(t('confirmDeleteUser', { name: user.username }))) return;
     try {
       await usersApi.deleteUser(user.id);
       loadUsers();
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Delete failed');
+      alert(e.response?.data?.message || t('deleteFailed'));
     }
   };
 
   const roleLabels: Record<string, string> = {
-    USER: language === 'zh' ? '普通用户' : 'User',
-    MANAGER: language === 'zh' ? '经理' : 'Manager',
-    GROUP_ADMIN: language === 'zh' ? '集团管理员' : 'Group Admin',
-    SUPER_ADMIN: language === 'zh' ? '超级管理员' : 'Super Admin',
+    USER: t('userRole'),
+    MANAGER: t('managerRole'),
+    GROUP_ADMIN: t('groupAdminRole'),
+    SUPER_ADMIN: t('superAdminRole'),
   };
 
   const roleColors: Record<string, string> = {
@@ -123,8 +123,8 @@ const UserManagement: React.FC<Props> = ({ language }) => {
     return (
       <div className="text-center py-20">
         <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-        <h2 className="text-xl text-slate-600">{language === 'zh' ? '权限不足' : 'Access Denied'}</h2>
-        <p className="text-slate-500">{language === 'zh' ? '只有管理员可以管理用户' : 'Only admins can manage users'}</p>
+        <h2 className="text-xl text-slate-600">{t('accessDenied')}</h2>
+        <p className="text-slate-500">{t('onlyAdminsCanManageUsers')}</p>
       </div>
     );
   }
@@ -134,11 +134,11 @@ const UserManagement: React.FC<Props> = ({ language }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
           <Users className="w-6 h-6 text-blue-600" />
-          {language === 'zh' ? '用户管理' : 'User Management'}
+          {t('userManagement')}
         </h2>
         <button onClick={() => { setEditingUser(null); setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: UserRole.USER, language: 'zh' }); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          <Plus className="w-4 h-4" />{language === 'zh' ? '添加用户' : 'Add User'}
+          <Plus className="w-4 h-4" />{t('addUser')}
         </button>
       </div>
 
@@ -147,12 +147,12 @@ const UserManagement: React.FC<Props> = ({ language }) => {
         <div className="flex gap-4">
           <div className="flex-1 relative">
             <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-            <input type="text" placeholder={language === 'zh' ? '搜索用户...' : 'Search users...'} value={search} onChange={(e) => setSearch(e.target.value)}
+            <input type="text" placeholder={t('searchUsers')} value={search} onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
           </div>
           <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
             className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
-            <option value="">{language === 'zh' ? '所有角色' : 'All Roles'}</option>
+            <option value="">{t('allRoles')}</option>
             <option value="USER">{roleLabels.USER}</option>
             <option value="MANAGER">{roleLabels.MANAGER}</option>
             <option value="ADMIN">{roleLabels.ADMIN}</option>
@@ -163,19 +163,19 @@ const UserManagement: React.FC<Props> = ({ language }) => {
       {/* 用户列表 */}
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-500">{language === 'zh' ? '加载中...' : 'Loading...'}</div>
+          <div className="p-8 text-center text-slate-500">{t('loading')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '用户' : 'User'}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '邮箱' : 'Email'}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '部门' : 'Department'}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '角色' : 'Role'}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '状态' : 'Status'}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '最后登录' : 'Last Login'}</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '操作' : 'Actions'}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('user')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('email')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('department')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('role')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('lastLogin')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -200,12 +200,12 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                       <div className="flex items-center gap-1">
                         {user.isActive ? <UserCheck className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-500" />}
                         <span className={`text-sm ${user.isActive ? 'text-green-700' : 'text-red-700'}`}>
-                          {user.isActive ? (language === 'zh' ? '活跃' : 'Active') : (language === 'zh' ? '禁用' : 'Inactive')}
+                          {user.isActive ? t('active') : t('inactive')}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
-                      {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : (language === 'zh' ? '从未登录' : 'Never')}
+                      {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : t('neverLoggedIn')}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
@@ -230,49 +230,49 @@ const UserManagement: React.FC<Props> = ({ language }) => {
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl">
             <div className="p-6 border-b border-slate-100">
               <h3 className="text-xl font-bold text-slate-800">
-                {editingUser ? (language === 'zh' ? '编辑用户' : 'Edit User') : (language === 'zh' ? '添加用户' : 'Add User')}
+                {editingUser ? t('editUser') : t('addUser')}
               </h3>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '用户名' : 'Username'} *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('username')} *</label>
                 <input type="text" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} required disabled={!!editingUser} minLength={2}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 disabled:bg-slate-100" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '名' : 'First Name'}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t('firstName')}</label>
                   <input type="text" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '姓' : 'Last Name'}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t('lastName')}</label>
                   <input type="text" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '邮箱' : 'Email'}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('email')}</label>
                 <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
               </div>
               {!editingUser && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '密码' : 'Password'} *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t('password')} *</label>
                   <input type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} required minLength={6}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
                 </div>
               )}
               {isGroupAdmin && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '子公司' : 'Company'} *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t('company')} *</label>
                   <select
                     value={formData.companyId || ''}
                     onChange={(e) => setFormData({...formData, companyId: e.target.value || undefined})}
                     required
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                   >
-                    <option value="">{language === 'zh' ? '请选择子公司' : 'Select Company'}</option>
+                    <option value="">{t('selectCompany')}</option>
                     {companies.map(company => (
                       <option key={company.id} value={company.id}>{company.name}</option>
                     ))}
@@ -280,20 +280,20 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '部门' : 'Department'}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('department')}</label>
                 <select
                   value={formData.departmentId || ''}
                   onChange={(e) => setFormData({...formData, departmentId: e.target.value || undefined})}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                 >
-                  <option value="">{language === 'zh' ? '无部门' : 'No Department'}</option>
+                  <option value="">{t('noDepartment')}</option>
                   {departments.map(dept => (
                     <option key={dept.id} value={dept.id}>{dept.name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '角色' : 'Role'}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('role')}</label>
                 <select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value as UserRole})}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
                   <option value="USER">{roleLabels.USER}</option>
@@ -303,10 +303,10 @@ const UserManagement: React.FC<Props> = ({ language }) => {
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">
-                  {language === 'zh' ? '取消' : 'Cancel'}
+                  {t('cancel')}
                 </button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  {editingUser ? (language === 'zh' ? '更新' : 'Update') : (language === 'zh' ? '创建' : 'Create')}
+                  {editingUser ? t('update') : t('create')}
                 </button>
               </div>
             </form>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { companiesApi, Company, CreateCompanyData } from '../api/companies.api';
 import { Language } from '../types';
 import { Building2, Plus, Edit, Trash2, Search } from 'lucide-react';
@@ -8,6 +9,7 @@ interface Props {
 }
 
 const CompanyList: React.FC<Props> = ({ language }) => {
+  const { t } = useTranslation();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -64,12 +66,12 @@ const CompanyList: React.FC<Props> = ({ language }) => {
   };
 
   const handleDelete = async (company: Company) => {
-    if (!confirm(language === 'zh' ? `确定要删除子公司"${company.name}"吗？` : `Delete company "${company.name}"?`)) return;
+    if (!confirm(t('confirmDeleteCompany', { name: company.name }))) return;
     try {
       await companiesApi.deleteCompany(company.id);
       loadCompanies();
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Delete failed');
+      alert(e.response?.data?.message || t('deleteFailed'));
     }
   };
 
@@ -79,7 +81,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
           <Building2 className="w-5 h-5 text-blue-600" />
-          {language === 'zh' ? '子公司管理' : 'Company Management'}
+          {t('companyManagement')}
         </h3>
         <button
           onClick={() => {
@@ -90,7 +92,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus className="w-4 h-4" />
-          {language === 'zh' ? '添加子公司' : 'Add Company'}
+          {t('addCompany')}
         </button>
       </div>
 
@@ -100,7 +102,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
           <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
           <input
             type="text"
-            placeholder={language === 'zh' ? '搜索子公司...' : 'Search companies...'}
+            placeholder={t('searchCompanies')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
@@ -110,18 +112,18 @@ const CompanyList: React.FC<Props> = ({ language }) => {
 
       {/* 表格 */}
       {loading ? (
-        <div className="text-center py-8 text-slate-500">{language === 'zh' ? '加载中...' : 'Loading...'}</div>
+        <div className="text-center py-8 text-slate-500">{t('loading')}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '公司名称' : 'Name'}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '公司代码' : 'Code'}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '域名' : 'Domain'}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '用户数' : 'Users'}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '部门数' : 'Departments'}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '操作' : 'Actions'}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('companyName')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('companyCode')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('domain')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('user')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('departments')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">{t('actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -155,12 +157,12 @@ const CompanyList: React.FC<Props> = ({ language }) => {
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl">
             <div className="p-6 border-b border-slate-100">
               <h3 className="text-xl font-bold text-slate-800">
-                {editingCompany ? (language === 'zh' ? '编辑子公司' : 'Edit Company') : (language === 'zh' ? '添加子公司' : 'Add Company')}
+                {editingCompany ? t('editCompany') : t('addCompany')}
               </h3>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '公司名称' : 'Company Name'} *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('companyName')} *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -170,7 +172,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '公司代码' : 'Company Code'} *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('companyCode')} *</label>
                 <input
                   type="text"
                   value={formData.code}
@@ -179,10 +181,10 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                   placeholder="DG001"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 font-mono"
                 />
-                <p className="text-xs text-slate-500 mt-1">{language === 'zh' ? '公司唯一编码，如 DG001、SH002' : 'Unique code, e.g., DG001'}</p>
+                <p className="text-xs text-slate-500 mt-1">{t('companyCodeHint')}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '域名' : 'Domain'}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('domain')}</label>
                 <input
                   type="text"
                   value={formData.domain}
@@ -190,7 +192,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                   placeholder="dongguan.makrite.com"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
-                <p className="text-xs text-slate-500 mt-1">{language === 'zh' ? '可选，用于多租户域名识别' : 'Optional, for multi-tenant domain'}</p>
+                <p className="text-xs text-slate-500 mt-1">{t('domainHintOptional')}</p>
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <button
@@ -198,10 +200,10 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50"
                 >
-                  {language === 'zh' ? '取消' : 'Cancel'}
+                  {t('cancel')}
                 </button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  {editingCompany ? (language === 'zh' ? '更新' : 'Update') : (language === 'zh' ? '创建' : 'Create')}
+                  {editingCompany ? t('update') : t('create')}
                 </button>
               </div>
             </form>

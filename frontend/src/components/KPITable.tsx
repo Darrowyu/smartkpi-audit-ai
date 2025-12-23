@@ -1,13 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { EmployeeKPI, KPIStatus } from '../types';
 import { ChevronRight } from 'lucide-react';
-import { translations } from '../utils/i18n';
 
 interface KPITableProps {
   employees: EmployeeKPI[];
   onSelectEmployee: (emp: EmployeeKPI) => void;
   selectedEmployeeId?: string;
-  t: typeof translations['en'];
 }
 
 const statusStyles = {
@@ -17,18 +16,30 @@ const statusStyles = {
   [KPIStatus.POOR]: "bg-red-100 text-red-700 border-red-200",
 };
 
-const KPITable: React.FC<KPITableProps> = ({ employees, onSelectEmployee, t }) => {
+const KPITable: React.FC<KPITableProps> = ({ employees, onSelectEmployee }) => {
+  const { t } = useTranslation();
+
+  const getStatusLabel = (status: KPIStatus): string => {
+    const statusMap: Record<KPIStatus, string> = {
+      [KPIStatus.EXCELLENT]: t('statusExcellent'),
+      [KPIStatus.GOOD]: t('statusGood'),
+      [KPIStatus.AVERAGE]: t('statusAverage'),
+      [KPIStatus.POOR]: t('statusPoor'),
+    };
+    return statusMap[status] || status;
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            <th className="px-6 py-4">{t.employee}</th>
-            <th className="px-6 py-4">{t.dept}</th>
-            <th className="px-6 py-4 text-center">{t.metricsCount}</th>
-            <th className="px-6 py-4">{t.totalScore}</th>
-            <th className="px-6 py-4">{t.status}</th>
-            <th className="px-6 py-4 text-right">{t.action}</th>
+            <th className="px-6 py-4">{t('employee')}</th>
+            <th className="px-6 py-4">{t('dept')}</th>
+            <th className="px-6 py-4 text-center">{t('metricsCount')}</th>
+            <th className="px-6 py-4">{t('totalScore')}</th>
+            <th className="px-6 py-4">{t('status')}</th>
+            <th className="px-6 py-4 text-right">{t('action')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -54,7 +65,7 @@ const KPITable: React.FC<KPITableProps> = ({ employees, onSelectEmployee, t }) =
               </td>
               <td className="px-6 py-4">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusStyles[emp.status as KPIStatus]}`}>
-                  {t.statusMap[emp.status as KPIStatus] || emp.status}
+                  {getStatusLabel(emp.status as KPIStatus)}
                 </span>
               </td>
               <td className="px-6 py-4 text-right">

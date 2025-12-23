@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Check, X, Save, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Shield, Save, RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -20,7 +20,6 @@ import {
 import { UserRole } from '@/types';
 import { permissionsApi } from '@/api/permissions.api';
 
-// 权限定义
 interface Permission {
     id: string;
     name: string;
@@ -28,55 +27,43 @@ interface Permission {
     module: string;
 }
 
-// 角色权限映射
 interface RolePermissions {
     [role: string]: string[];
 }
 
-// 模块定义
-const modules = [
-    { id: 'kpi-library', name: 'KPI 指标库', icon: '📊' },
-    { id: 'assessment', name: '考核周期', icon: '📅' },
-    { id: 'data-entry', name: '数据填报', icon: '📝' },
-    { id: 'reports', name: '报表中心', icon: '📈' },
-    { id: 'users', name: '用户管理', icon: '👥' },
-    { id: 'settings', name: '系统设置', icon: '⚙️' },
-];
-
-const permissions: Permission[] = [
-    // KPI 指标库
-    { id: 'kpi:view', name: '查看指标', description: '查看 KPI 指标库', module: 'kpi-library' },
-    { id: 'kpi:create', name: '创建指标', description: '创建新的 KPI 指标', module: 'kpi-library' },
-    { id: 'kpi:edit', name: '编辑指标', description: '修改现有 KPI 指标', module: 'kpi-library' },
-    { id: 'kpi:delete', name: '删除指标', description: '删除 KPI 指标', module: 'kpi-library' },
-
-    // 考核周期
-    { id: 'period:view', name: '查看周期', description: '查看考核周期', module: 'assessment' },
-    { id: 'period:create', name: '创建周期', description: '创建新的考核周期', module: 'assessment' },
-    { id: 'period:lock', name: '锁定周期', description: '锁定考核周期', module: 'assessment' },
-
-    // 数据填报
-    { id: 'data:view', name: '查看数据', description: '查看填报数据', module: 'data-entry' },
-    { id: 'data:submit', name: '提交数据', description: '提交填报数据', module: 'data-entry' },
-    { id: 'data:approve', name: '审批数据', description: '审批填报数据', module: 'data-entry' },
-
-    // 报表
-    { id: 'report:view', name: '查看报表', description: '查看绩效报表', module: 'reports' },
-    { id: 'report:export', name: '导出报表', description: '导出绩效数据', module: 'reports' },
-
-    // 用户管理
-    { id: 'user:view', name: '查看用户', description: '查看用户列表', module: 'users' },
-    { id: 'user:create', name: '创建用户', description: '创建新用户', module: 'users' },
-    { id: 'user:edit', name: '编辑用户', description: '修改用户信息', module: 'users' },
-    { id: 'user:delete', name: '删除用户', description: '删除用户', module: 'users' },
-
-    // 系统设置
-    { id: 'settings:view', name: '查看设置', description: '查看系统设置', module: 'settings' },
-    { id: 'settings:edit', name: '修改设置', description: '修改系统设置', module: 'settings' },
-];
-
 export const PermissionsView: React.FC = () => {
-    const [allPermissions, setAllPermissions] = useState<Permission[]>(permissions);
+    const { t } = useTranslation();
+
+    const modules = useMemo(() => [
+        { id: 'kpi-library', name: t('permissions.kpiLibraryModule'), icon: '📊' },
+        { id: 'assessment', name: t('permissions.assessmentModule'), icon: '📅' },
+        { id: 'data-entry', name: t('permissions.dataEntryModule'), icon: '📝' },
+        { id: 'reports', name: t('permissions.reportsModule'), icon: '📈' },
+        { id: 'users', name: t('permissions.usersModule'), icon: '👥' },
+        { id: 'settings', name: t('permissions.settingsModule'), icon: '⚙️' },
+    ], [t]);
+
+    const allPermissions: Permission[] = useMemo(() => [
+        { id: 'kpi:view', name: t('permissions.viewKpi'), description: t('permissions.viewKpi'), module: 'kpi-library' },
+        { id: 'kpi:create', name: t('permissions.createKpi'), description: t('permissions.createKpi'), module: 'kpi-library' },
+        { id: 'kpi:edit', name: t('permissions.editKpi'), description: t('permissions.editKpi'), module: 'kpi-library' },
+        { id: 'kpi:delete', name: t('permissions.deleteKpi'), description: t('permissions.deleteKpi'), module: 'kpi-library' },
+        { id: 'period:view', name: t('permissions.viewPeriod'), description: t('permissions.viewPeriod'), module: 'assessment' },
+        { id: 'period:create', name: t('permissions.createPeriod'), description: t('permissions.createPeriod'), module: 'assessment' },
+        { id: 'period:lock', name: t('permissions.lockPeriod'), description: t('permissions.lockPeriod'), module: 'assessment' },
+        { id: 'data:view', name: t('permissions.viewEntry'), description: t('permissions.viewEntry'), module: 'data-entry' },
+        { id: 'data:submit', name: t('permissions.submitEntry'), description: t('permissions.submitEntry'), module: 'data-entry' },
+        { id: 'data:approve', name: t('permissions.approveEntry'), description: t('permissions.approveEntry'), module: 'data-entry' },
+        { id: 'report:view', name: t('permissions.viewReport'), description: t('permissions.viewReport'), module: 'reports' },
+        { id: 'report:export', name: t('permissions.exportReport'), description: t('permissions.exportReport'), module: 'reports' },
+        { id: 'user:view', name: t('permissions.viewUser'), description: t('permissions.viewUser'), module: 'users' },
+        { id: 'user:create', name: t('permissions.createUser'), description: t('permissions.createUser'), module: 'users' },
+        { id: 'user:edit', name: t('permissions.editUser'), description: t('permissions.editUser'), module: 'users' },
+        { id: 'user:delete', name: t('permissions.deleteUser'), description: t('permissions.deleteUser'), module: 'users' },
+        { id: 'settings:view', name: t('permissions.viewSettings'), description: t('permissions.viewSettings'), module: 'settings' },
+        { id: 'settings:edit', name: t('permissions.editSettings'), description: t('permissions.editSettings'), module: 'settings' },
+    ], [t]);
+
     const [rolePermissions, setRolePermissions] = useState<RolePermissions>({});
     const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.MANAGER);
     const [hasChanges, setHasChanges] = useState(false);
@@ -90,16 +77,10 @@ export const PermissionsView: React.FC = () => {
     const loadData = async () => {
         try {
             setIsLoading(true);
-            const [perms, roles] = await Promise.all([
-                permissionsApi.getAllPermissions(),
-                permissionsApi.getRolePermissions()
-            ]);
-            setAllPermissions(perms);
+            const roles = await permissionsApi.getRolePermissions();
             setRolePermissions(roles);
-        } catch (error) {
-            console.error('Failed to load permissions:', error);
-            // 这里不阻塞，使用默认的 permissions 列表
-            setAllPermissions(permissions);
+        } catch (_error) {
+            console.error('Failed to load permissions:', _error);
         } finally {
             setIsLoading(false);
         }
@@ -123,24 +104,24 @@ export const PermissionsView: React.FC = () => {
     const handleSave = async () => {
         try {
             await permissionsApi.saveRolePermissions(rolePermissions);
-            toast({ title: '权限配置已保存', description: '系统权限规则已更新' });
+            toast({ title: t('permissions.saveSuccess') });
             setHasChanges(false);
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: '保存失败', description: '请稍后重试' });
+        } catch (_error) {
+            console.error(_error);
+            toast({ variant: 'destructive', title: t('permissions.saveFailed') });
         }
     };
 
     const handleReset = async () => {
-        if (!confirm('确定要重置为系统默认权限吗？这将覆盖所有自定义配置。')) return;
+        if (!confirm(t('confirmReset'))) return;
         try {
             await permissionsApi.resetToDefault();
-            toast({ title: '已重置', description: '权限配置已恢复为默认值' });
+            toast({ title: t('permissions.resetSuccess') });
             await loadData();
             setHasChanges(false);
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: '重置失败', description: '请稍后重试' });
+        } catch (_error) {
+            console.error(_error);
+            toast({ variant: 'destructive', title: t('permissions.resetFailed') });
         }
     };
 
@@ -149,32 +130,30 @@ export const PermissionsView: React.FC = () => {
     };
 
     if (isLoading) {
-        return <div>加载权限配置中...</div>;
+        return <div>{t('loading')}</div>;
     }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">权限管理</h2>
-                    <p className="text-muted-foreground">配置不同角色的系统访问权限</p>
+                    <h2 className="text-3xl font-bold tracking-tight">{t('permissions.title')}</h2>
+                    <p className="text-muted-foreground">{t('permissions.subtitle')}</p>
                 </div>
                 <div className="flex space-x-2">
                     <Button variant="outline" onClick={handleReset} disabled={isLoading}>
-                        <RotateCcw className="mr-2 h-4 w-4" /> 重置默认
+                        <RotateCcw className="mr-2 h-4 w-4" /> {t('permissions.reset')}
                     </Button>
                     <Button onClick={handleSave} disabled={!hasChanges || isLoading}>
-                        <Save className="mr-2 h-4 w-4" /> 保存更改
+                        <Save className="mr-2 h-4 w-4" /> {t('permissions.saveChanges')}
                     </Button>
                 </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-4">
-                {/* 角色选择卡片 */}
                 <Card className="md:col-span-1">
                     <CardHeader>
-                        <CardTitle className="text-lg">选择角色</CardTitle>
-                        <CardDescription>选择要配置权限的角色</CardDescription>
+                        <CardTitle className="text-lg">{t('permissions.selectRole')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                         {Object.values(UserRole).map((role) => (
@@ -191,17 +170,16 @@ export const PermissionsView: React.FC = () => {
                     </CardContent>
                 </Card>
 
-                {/* 权限配置表格 */}
                 <Card className="md:col-span-3">
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle>
                                     <Badge variant="outline" className="mr-2">{selectedRole}</Badge>
-                                    权限配置
+                                    {t('permissions.title')}
                                 </CardTitle>
                                 <CardDescription>
-                                    当前角色拥有 {(rolePermissions[selectedRole] || []).length} 项权限
+                                    {(rolePermissions[selectedRole] || []).length} {t('permissions.permission')}
                                 </CardDescription>
                             </div>
                         </div>
@@ -221,9 +199,9 @@ export const PermissionsView: React.FC = () => {
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>权限</TableHead>
-                                                <TableHead>说明</TableHead>
-                                                <TableHead className="w-24 text-center">状态</TableHead>
+                                                <TableHead>{t('permissions.permission')}</TableHead>
+                                                <TableHead>{t('kpiLibrary.description')}</TableHead>
+                                                <TableHead className="w-24 text-center">{t('permissions.granted')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -251,4 +229,3 @@ export const PermissionsView: React.FC = () => {
         </div>
     );
 };
-

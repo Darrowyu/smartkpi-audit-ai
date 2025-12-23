@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
 import {
   DropdownMenu,
@@ -9,25 +10,40 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { notificationsApi, Notification, NotificationType } from '@/api/notifications.api';
 import { formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { zhCN, enUS } from 'date-fns/locale';
 
-const typeConfig: Record<NotificationType, { color: string; label: string }> = {
-  [NotificationType.SUBMISSION_PENDING]: { color: 'bg-yellow-500', label: '待审批' },
-  [NotificationType.SUBMISSION_APPROVED]: { color: 'bg-green-500', label: '已通过' },
-  [NotificationType.SUBMISSION_REJECTED]: { color: 'bg-red-500', label: '已驳回' },
-  [NotificationType.CALCULATION_COMPLETE]: { color: 'bg-blue-500', label: '计算完成' },
-  [NotificationType.PERIOD_ACTIVATED]: { color: 'bg-purple-500', label: '周期激活' },
-  [NotificationType.PERIOD_LOCKED]: { color: 'bg-gray-500', label: '周期锁定' },
-  [NotificationType.LOW_PERFORMANCE_ALERT]: { color: 'bg-orange-500', label: '低绩效' },
-  [NotificationType.ASSIGNMENT_CREATED]: { color: 'bg-cyan-500', label: '新分配' },
-  [NotificationType.SYSTEM_ANNOUNCEMENT]: { color: 'bg-indigo-500', label: '系统公告' },
+const typeColorMap: Record<NotificationType, string> = {
+  [NotificationType.SUBMISSION_PENDING]: 'bg-yellow-500',
+  [NotificationType.SUBMISSION_APPROVED]: 'bg-green-500',
+  [NotificationType.SUBMISSION_REJECTED]: 'bg-red-500',
+  [NotificationType.CALCULATION_COMPLETE]: 'bg-blue-500',
+  [NotificationType.PERIOD_ACTIVATED]: 'bg-purple-500',
+  [NotificationType.PERIOD_LOCKED]: 'bg-gray-500',
+  [NotificationType.LOW_PERFORMANCE_ALERT]: 'bg-orange-500',
+  [NotificationType.ASSIGNMENT_CREATED]: 'bg-cyan-500',
+  [NotificationType.SYSTEM_ANNOUNCEMENT]: 'bg-indigo-500',
+};
+
+const typeLabelKeyMap: Record<NotificationType, string> = {
+  [NotificationType.SUBMISSION_PENDING]: 'notifications.submissionPending',
+  [NotificationType.SUBMISSION_APPROVED]: 'notifications.submissionApproved',
+  [NotificationType.SUBMISSION_REJECTED]: 'notifications.submissionRejected',
+  [NotificationType.CALCULATION_COMPLETE]: 'notifications.calculationComplete',
+  [NotificationType.PERIOD_ACTIVATED]: 'notifications.periodActivated',
+  [NotificationType.PERIOD_LOCKED]: 'notifications.periodLocked',
+  [NotificationType.LOW_PERFORMANCE_ALERT]: 'notifications.lowPerformanceAlert',
+  [NotificationType.ASSIGNMENT_CREATED]: 'notifications.assignmentCreated',
+  [NotificationType.SYSTEM_ANNOUNCEMENT]: 'notifications.systemAnnouncement',
 };
 
 export function NotificationDropdown() {
+  const { t, i18n } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const dateLocale = i18n.language === 'zh' ? zhCN : enUS;
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -113,7 +129,7 @@ export function NotificationDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <div className="flex items-center justify-between p-3 border-b">
-          <h4 className="font-semibold">通知</h4>
+          <h4 className="font-semibold">{t('notifications.title')}</h4>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -122,18 +138,18 @@ export function NotificationDropdown() {
               className="text-xs h-7"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              全部已读
+              {t('notifications.markAllRead')}
             </Button>
           )}
         </div>
         <div className="h-[300px] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              加载中...
+              {t('notifications.loading')}
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              暂无通知
+              {t('notifications.empty')}
             </div>
           ) : (
             <div className="divide-y">
@@ -144,7 +160,7 @@ export function NotificationDropdown() {
                 >
                   <div className="flex items-start gap-2">
                     <div
-                      className={`w-2 h-2 rounded-full mt-2 ${typeConfig[n.type]?.color || 'bg-gray-400'}`}
+                      className={`w-2 h-2 rounded-full mt-2 ${typeColorMap[n.type] || 'bg-gray-400'}`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -152,7 +168,7 @@ export function NotificationDropdown() {
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatDistanceToNow(new Date(n.createdAt), {
                             addSuffix: true,
-                            locale: zhCN,
+                            locale: dateLocale,
                           })}
                         </span>
                       </div>
@@ -198,7 +214,7 @@ export function NotificationDropdown() {
               }}
             >
               <Trash2 className="h-3 w-3 mr-1" />
-              清除已读通知
+              {t('notifications.clearRead')}
             </Button>
           </div>
         )}

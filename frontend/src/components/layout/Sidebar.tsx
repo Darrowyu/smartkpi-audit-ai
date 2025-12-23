@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Languages, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight } from 'lucide-react';
 import { View, Language } from '../../types';
 import { SimpleAvatar as Avatar } from '../ui/avatar';
@@ -17,43 +18,44 @@ interface SidebarProps {
 interface NavItem {
   view: View;
   icon: LucideIcon;
-  label: { en: string; zh: string };
+  labelKey: string; // i18n key
   adminOnly?: boolean;
 }
 
 interface NavGroup {
   id: string;
   icon: LucideIcon;
-  label: { en: string; zh: string };
+  labelKey: string; // i18n key
   adminOnly?: boolean;
   children: NavItem[];
 }
 
 const mainNavItems: NavItem[] = [ // 主导航（所有用户可见）
-  { view: 'landing', icon: Home, label: { en: 'Home', zh: '首页' } },
-  { view: 'dashboard', icon: LayoutDashboard, label: { en: 'Dashboard', zh: '仪表盘' } },
-  { view: 'kpi-library', icon: Target, label: { en: 'KPI Library', zh: '指标库' } },
-  { view: 'assessment', icon: Calendar, label: { en: 'Assessment', zh: '考核周期' } },
-  { view: 'assignment', icon: ClipboardList, label: { en: 'Assignment', zh: '指标分配' } },
-  { view: 'data-entry', icon: FileSpreadsheet, label: { en: 'Data Entry', zh: '数据填报' } },
-  { view: 'reports', icon: FileText, label: { en: 'Reports', zh: '报表中心' } },
-  { view: 'settings', icon: Settings, label: { en: 'My Settings', zh: '个人设置' } },
+  { view: 'landing', icon: Home, labelKey: 'sidebar.home' },
+  { view: 'dashboard', icon: LayoutDashboard, labelKey: 'sidebar.dashboard' },
+  { view: 'kpi-library', icon: Target, labelKey: 'sidebar.kpiLibrary' },
+  { view: 'assessment', icon: Calendar, labelKey: 'sidebar.assessment' },
+  { view: 'assignment', icon: ClipboardList, labelKey: 'sidebar.assignment' },
+  { view: 'data-entry', icon: FileSpreadsheet, labelKey: 'sidebar.dataEntry' },
+  { view: 'reports', icon: FileText, labelKey: 'sidebar.reports' },
+  { view: 'settings', icon: Settings, labelKey: 'sidebar.mySettings' },
 ];
 
 const adminNavGroup: NavGroup = { // 系统设置（管理员专属）
   id: 'admin-settings',
   icon: Shield,
-  label: { en: 'Admin', zh: '系统管理' },
+  labelKey: 'sidebar.admin',
   adminOnly: true,
   children: [
-    { view: 'group-dashboard', icon: Building2, label: { en: 'Group Center', zh: '集团总览' }, adminOnly: true },
-    { view: 'organization', icon: Building2, label: { en: 'Organization', zh: '组织架构' }, adminOnly: true },
-    { view: 'team-management', icon: Users, label: { en: 'Users', zh: '用户管理' }, adminOnly: true },
-    { view: 'permissions', icon: Shield, label: { en: 'Permissions', zh: '权限管理' }, adminOnly: true },
+    { view: 'group-dashboard', icon: Building2, labelKey: 'sidebar.groupCenter', adminOnly: true },
+    { view: 'organization', icon: Building2, labelKey: 'sidebar.organization', adminOnly: true },
+    { view: 'team-management', icon: Users, labelKey: 'sidebar.users', adminOnly: true },
+    { view: 'permissions', icon: Shield, labelKey: 'sidebar.permissions', adminOnly: true },
   ],
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, language, setLanguage, onLogout }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
   const [adminExpanded, setAdminExpanded] = useState(false);
@@ -93,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, l
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
                 ${isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
               <Icon className="w-5 h-5" />
-              <span>{item.label[language]}</span>
+              <span>{t(item.labelKey)}</span>
             </button>
           );
         })}
@@ -106,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, l
                 ${isAdminViewActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
               <div className="flex items-center gap-3">
                 <Settings className="w-5 h-5" />
-                <span>{adminNavGroup.label[language]}</span>
+                <span>{t(adminNavGroup.labelKey)}</span>
               </div>
               {adminExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </button>
@@ -120,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, l
                       className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors
                         ${isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                       <Icon className="w-4 h-4" />
-                      <span>{item.label[language]}</span>
+                      <span>{t(item.labelKey)}</span>
                     </button>
                   );
                 })}
@@ -140,10 +142,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, l
         <button onClick={onLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
           <LogOut className="w-5 h-5" />
-          <span>{language === 'en' ? 'Logout' : '退出登录'}</span>
+          <span>{t('sidebar.logout')}</span>
         </button>
       </div>
     </div>
   );
 };
-

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { groupsApi, GroupStats } from '../api/groups.api';
 import { companiesApi, CompanyStats } from '../api/companies.api';
@@ -9,7 +10,6 @@ import CompanyList from './CompanyList';
 import DepartmentManagement from './DepartmentManagement';
 import UserManagement from './UserManagement';
 import GroupSettings from './GroupSettings';
-import { translations } from '../utils/i18n';
 
 interface Props {
   language: Language;
@@ -19,6 +19,7 @@ type SidebarView = 'overview' | 'group-settings' | 'companies' | 'departments' |
 
 const OrganizationManagement: React.FC<Props> = ({ language }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [currentView, setCurrentView] = useState<SidebarView>('overview');
   const [groupStats, setGroupStats] = useState<GroupStats | null>(null);
   const [companyStats, setCompanyStats] = useState<CompanyStats | null>(null);
@@ -56,15 +57,15 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
   };
 
   const sidebarItems = [
-    { id: 'overview' as SidebarView, icon: LayoutGrid, label: language === 'zh' ? '概览' : 'Overview', visible: true },
-    { id: 'group-settings' as SidebarView, icon: Settings, label: language === 'zh' ? '集团设置' : 'Group Settings', visible: isGroupAdmin },
-    { id: 'companies' as SidebarView, icon: Building2, label: language === 'zh' ? '子公司' : 'Companies', visible: isGroupAdmin },
-    { id: 'departments' as SidebarView, icon: Briefcase, label: language === 'zh' ? '部门' : 'Departments', visible: isGroupAdmin },
-    { id: 'users' as SidebarView, icon: Users, label: language === 'zh' ? '用户' : 'Users', visible: isGroupAdmin },
+    { id: 'overview' as SidebarView, icon: LayoutGrid, label: t('overview'), visible: true },
+    { id: 'group-settings' as SidebarView, icon: Settings, label: t('groupSettings'), visible: isGroupAdmin },
+    { id: 'companies' as SidebarView, icon: Building2, label: t('companies'), visible: isGroupAdmin },
+    { id: 'departments' as SidebarView, icon: Briefcase, label: t('departments'), visible: isGroupAdmin },
+    { id: 'users' as SidebarView, icon: Users, label: t('user'), visible: isGroupAdmin },
   ];
 
   const breadcrumbs = [
-    { label: language === 'zh' ? '组织管理' : 'Organization', active: currentView === 'overview' },
+    { label: t('organizationManagement'), active: currentView === 'overview' },
     { label: sidebarItems.find(item => item.id === currentView)?.label || '', active: true },
   ];
 
@@ -79,7 +80,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
               <Building2 className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">{isGroupAdmin ? (language === 'zh' ? '集团' : 'Group') : (language === 'zh' ? '公司' : 'Company')}</p>
+              <p className="text-sm text-slate-500">{isGroupAdmin ? t('group') : t('company')}</p>
               <p className="text-xl font-bold text-slate-900">{groupName}</p>
             </div>
           </div>
@@ -92,7 +93,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
               <Building2 className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">{language === 'zh' ? '子公司' : 'Companies'}</p>
+              <p className="text-sm text-slate-500">{t('companies')}</p>
               <p className="text-xl font-bold text-slate-900">{isGroupAdmin ? (groupStats?.totalCompanies || 0) : 1}</p>
             </div>
           </div>
@@ -105,7 +106,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
               <Briefcase className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">{language === 'zh' ? '部门' : 'Departments'}</p>
+              <p className="text-sm text-slate-500">{t('departments')}</p>
               <p className="text-xl font-bold text-slate-900">{groupStats?.totalDepartments || companyStats?.departments || 0}</p>
             </div>
           </div>
@@ -118,7 +119,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
               <Users className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">{language === 'zh' ? '用户' : 'Users'}</p>
+              <p className="text-sm text-slate-500">{t('user')}</p>
               <p className="text-xl font-bold text-slate-900">{groupStats?.totalUsers || companyStats?.users || 0}</p>
             </div>
           </div>
@@ -167,7 +168,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
           {currentView === 'group-settings' && <GroupSettings language={language} onUpdate={loadStats} />}
           {currentView === 'companies' && <CompanyList language={language} />}
           {currentView === 'departments' && <DepartmentManagement language={language} />}
-          {currentView === 'users' && <UserManagement language={language} t={translations[language]} />}
+          {currentView === 'users' && <UserManagement language={language} />}
         </div>
       </div>
     </div>

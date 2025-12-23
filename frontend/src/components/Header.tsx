@@ -1,7 +1,7 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart3, Languages, Home, Building2 } from 'lucide-react';
 import { Language, View } from '../types';
-import { translations } from '../utils/i18n';
 import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
@@ -9,11 +9,11 @@ interface HeaderProps {
   setLanguage: (lang: Language) => void;
   currentView: View;
   setCurrentView: (view: View) => void;
-  t: typeof translations['en'];
-  hasAnalysis?: boolean; // 可选参数
+  hasAnalysis?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ language, setLanguage, currentView, setCurrentView, t }) => {
+const Header: React.FC<HeaderProps> = ({ language, setLanguage, currentView, setCurrentView }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const toggleLanguage = () => setLanguage(language === 'en' ? 'zh' : 'en');
   const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
@@ -36,8 +36,8 @@ const Header: React.FC<HeaderProps> = ({ language, setLanguage, currentView, set
             <button onClick={() => setCurrentView('landing')} className={navClass('landing')}>
               <Home className="w-4 h-4 inline-block mr-1 mb-0.5" />{language === 'en' ? 'Home' : '首页'}
             </button>
-            <button onClick={() => setCurrentView('dashboard')} className={navClass('dashboard')}>{t.dashboard}</button>
-            <button onClick={() => setCurrentView('history')} className={navClass('history')}>{t.history}</button>
+            <button onClick={() => setCurrentView('dashboard')} className={navClass('dashboard')}>{t('dashboard')}</button>
+            <button onClick={() => setCurrentView('history')} className={navClass('history')}>{t('history')}</button>
             {isAdmin && (
               <>
                 <button onClick={() => setCurrentView('organization')} className={navClass('organization')}>{language === 'en' ? 'Organization' : '组织'}</button>
@@ -46,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ language, setLanguage, currentView, set
                 </button>
               </>
             )}
-            <button onClick={() => setCurrentView('settings')} className={navClass('settings')}>{t.settings}</button>
+            <button onClick={() => setCurrentView('settings')} className={navClass('settings')}>{t('settings')}</button>
           </nav>
           <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
           <button onClick={toggleLanguage} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-full">

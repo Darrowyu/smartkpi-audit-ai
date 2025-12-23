@@ -1,6 +1,6 @@
 import { pdf, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { KPIAnalysisResult, KPIStatus } from '../types';
-import { translations } from './i18n';
+import i18n from '../i18n';
 import React from 'react';
 
 type Language = 'en' | 'zh';
@@ -51,8 +51,18 @@ const getStatusStyle = (status: KPIStatus) => {
 };
 
 
+const getStatusLabel = (status: KPIStatus, t: (key: string) => string): string => {
+  const statusMap: Record<KPIStatus, string> = {
+    [KPIStatus.EXCELLENT]: t('statusExcellent'),
+    [KPIStatus.GOOD]: t('statusGood'),
+    [KPIStatus.AVERAGE]: t('statusAverage'),
+    [KPIStatus.POOR]: t('statusPoor'),
+  };
+  return statusMap[status] || status;
+};
+
 const KPIReportDocument = ({ data, language }: { data: KPIAnalysisResult; language: Language }) => {
-  const t = translations[language];
+  const t = (key: string) => i18n.t(key, { lng: language });
   const totalEmployees = data.employees.length;
   const avgScore = (data.employees.reduce((acc, emp) => acc + emp.totalScore, 0) / totalEmployees).toFixed(1);
   const topPerformer = [...data.employees].sort((a, b) => b.totalScore - a.totalScore)[0];
@@ -63,12 +73,12 @@ const KPIReportDocument = ({ data, language }: { data: KPIAnalysisResult; langua
       // Header
       React.createElement(View, { style: styles.header },
         React.createElement(Text, { style: styles.title }, 'SmartKPI.AI'),
-        React.createElement(Text, { style: styles.subtitle }, t.reportTitle),
-        React.createElement(Text, { style: styles.period }, `${t.period}: ${data.period}`)
+        React.createElement(Text, { style: styles.subtitle }, t('reportTitle')),
+        React.createElement(Text, { style: styles.period }, `${t('period')}: ${data.period}`)
       ),
       // Summary
       React.createElement(View, { style: styles.section },
-        React.createElement(Text, { style: styles.sectionTitle }, t.execSummary),
+        React.createElement(Text, { style: styles.sectionTitle }, t('execSummary')),
         React.createElement(Text, { style: styles.summary }, data.summary)
       ),
       // Stats
@@ -76,26 +86,26 @@ const KPIReportDocument = ({ data, language }: { data: KPIAnalysisResult; langua
         React.createElement(Text, { style: styles.sectionTitle }, language === 'zh' ? '统计概览' : 'Statistics'),
         React.createElement(View, { style: styles.statsRow },
           React.createElement(View, { style: styles.statBox },
-            React.createElement(Text, { style: styles.statLabel }, t.teamAvg),
+            React.createElement(Text, { style: styles.statLabel }, t('teamAvg')),
             React.createElement(Text, { style: styles.statValue }, `${avgScore}%`)
           ),
           React.createElement(View, { style: styles.statBox },
-            React.createElement(Text, { style: styles.statLabel }, t.totalEmp),
+            React.createElement(Text, { style: styles.statLabel }, t('totalEmp')),
             React.createElement(Text, { style: styles.statValue }, String(totalEmployees))
           ),
           React.createElement(View, { style: styles.statBox },
-            React.createElement(Text, { style: styles.statLabel }, t.topPerf),
+            React.createElement(Text, { style: styles.statLabel }, t('topPerf')),
             React.createElement(Text, { style: styles.statValue }, `${topPerformer?.name} (${topPerformer?.totalScore}%)`)
           ),
           React.createElement(View, { style: styles.statBox },
-            React.createElement(Text, { style: styles.statLabel }, t.lowPerf),
+            React.createElement(Text, { style: styles.statLabel }, t('lowPerf')),
             React.createElement(Text, { style: styles.statValue }, `${lowPerformer?.name} (${lowPerformer?.totalScore}%)`)
           )
         )
       ),
       // Employee Table
       React.createElement(View, { style: styles.section },
-        React.createElement(Text, { style: styles.sectionTitle }, t.detailedRecords),
+        React.createElement(Text, { style: styles.sectionTitle }, t('detailedRecords')),
         React.createElement(View, { style: styles.table },
           React.createElement(View, { style: styles.tableHeader },
             React.createElement(Text, { style: styles.tableHeaderCell }, language === 'zh' ? '员工' : 'Employee'),
@@ -108,7 +118,7 @@ const KPIReportDocument = ({ data, language }: { data: KPIAnalysisResult; langua
               React.createElement(Text, { style: styles.tableCell }, emp.name),
               React.createElement(Text, { style: styles.tableCell }, emp.department),
               React.createElement(Text, { style: styles.tableCell }, `${emp.totalScore}%`),
-              React.createElement(Text, { style: [styles.tableCell, getStatusStyle(emp.status)] }, t.statusMap[emp.status])
+              React.createElement(Text, { style: [styles.tableCell, getStatusStyle(emp.status)] }, getStatusLabel(emp.status, t))
             )
           )
         )

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Pencil, Trash2, MoreHorizontal, User as UserIcon } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,41 +41,47 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
 import { usersApi, User } from '@/api/users.api';
 import { UserRole, Language } from '@/types';
-import { translations } from '@/utils/i18n';
 
 interface TeamManagementViewProps {
   language: Language;
 }
 
-const userSchema = z.object({
-  username: z.string().min(2, '用户名至少2个字符'),
-  email: z.string().email('请输入有效的邮箱地址'),
-  password: z.string().min(6, '密码至少6个字符').optional(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  role: z.enum([
-    UserRole.SUPER_ADMIN,
-    UserRole.GROUP_ADMIN,
-    UserRole.MANAGER,
-    UserRole.USER
-  ]),
-});
+type UserFormValues = {
+  username: string;
+  email: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  role: UserRole;
+};
 
-type UserFormValues = z.infer<typeof userSchema>;
-
-export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language }) => {
+export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const { toast } = useToast();
-  const t = translations[language];
+
+  const userSchema = z.object({
+    username: z.string().min(2, t('teamView.usernameMinLength')),
+    email: z.string().email(t('teamView.emailInvalid')),
+    password: z.string().min(6, t('teamView.passwordMinLength')).optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    role: z.enum([
+      UserRole.SUPER_ADMIN,
+      UserRole.GROUP_ADMIN,
+      UserRole.MANAGER,
+      UserRole.USER
+    ]),
+  });
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -88,11 +95,11 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
     try {
       const res = await usersApi.findAll({ search: searchTerm });
       setUsers(res.data);
-    } catch (error) {
+    } catch (_error) {
       toast({
         variant: 'destructive',
-        title: '获取用户失败',
-        description: '无法加载用户列表',
+        title: t('teamView.getUsersFailed'),
+        description: t('teamView.getUsersFailedDesc'),
       });
     } finally {
       setLoading(false);
@@ -110,19 +117,16 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
   const onSubmit = async (data: UserFormValues) => {
     try {
       if (editingUser) {
-        // Update
-        // Password is optional for update
         const { password, ...updateData } = data;
         await usersApi.update(editingUser.id, password ? data : updateData);
-        toast({ title: '用户已更新' });
+        toast({ title: t('teamView.userUpdated') });
       } else {
-        // Create
         if (!data.password) {
-          form.setError('password', { message: '创建用户必须设置密码' });
+          form.setError('password', { message: t('teamView.passwordRequired') });
           return;
         }
         await usersApi.create(data as any);
-        toast({ title: '用户已创建' });
+        toast({ title: t('teamView.userCreated') });
       }
       setIsDialogOpen(false);
       setEditingUser(null);
@@ -131,8 +135,8 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: '操作失败',
-        description: error.response?.data?.message || '请重试',
+        title: t('teamView.operationFailed'),
+        description: error.response?.data?.message || t('teamView.pleaseRetry'),
       });
     }
   };
@@ -150,13 +154,13 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除此用户吗？此操作不可恢复。')) return;
+    if (!confirm(t('teamView.deleteUserConfirm'))) return;
     try {
       await usersApi.remove(id);
-      toast({ title: '用户已删除' });
+      toast({ title: t('teamView.userDeleted') });
       fetchUsers();
-    } catch (error) {
-      toast({ variant: 'destructive', title: '删除失败' });
+    } catch (_error) {
+      toast({ variant: 'destructive', title: t('teamView.operationFailed') });
     }
   };
 
@@ -177,11 +181,11 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t.teamManagement}</h2>
-          <p className="text-muted-foreground">{t.manageUsers}</p>
+          <h2 className="text-3xl font-bold tracking-tight">{t('teamManagement')}</h2>
+          <p className="text-muted-foreground">{t('manageUsers')}</p>
         </div>
         <Button onClick={openCreateDialog}>
-          <Plus className="mr-2 h-4 w-4" /> {t.addUser}
+          <Plus className="mr-2 h-4 w-4" /> {t('addUser')}
         </Button>
       </div>
 
@@ -190,7 +194,7 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
           <div className="flex items-center space-x-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="搜索用户..."
+              placeholder={t('teamView.searchUsers')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
@@ -201,25 +205,24 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>用户</TableHead>
-                <TableHead>角色</TableHead>
-                <TableHead>邮箱</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead className="text-right">操作</TableHead>
+                <TableHead>{t('user')}</TableHead>
+                <TableHead>{t('role')}</TableHead>
+                <TableHead>{t('email')}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                <TableHead className="text-right">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8">加载中...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8">{t('loading')}</TableCell></TableRow>
               ) : users.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8">暂无用户</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-8">{t('teamView.noUsers')}</TableCell></TableRow>
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
-                          {/* <AvatarImage src="/avatars/01.png" alt="@shadcn" /> */}
                           <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
@@ -241,7 +244,7 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                        {user.isActive ? 'Active' : 'Inactive'}
+                        {user.isActive ? t('active') : t('inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -253,13 +256,13 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleEdit(user)}>
-                            <Pencil className="mr-2 h-4 w-4" /> 编辑
+                            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(user.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" /> 删除
+                            <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -275,63 +278,62 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = ({ language
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingUser ? '编辑用户' : '创建新用户'}</DialogTitle>
+            <DialogTitle>{editingUser ? t('teamView.editUserTitle') : t('teamView.createUserTitle')}</DialogTitle>
             <DialogDescription>
-              {editingUser ? '修改用户信息及其角色分配' : '添加新的系统用户并分配初始角色'}
+              {editingUser ? t('teamView.editUserDesc') : t('teamView.createUserDesc')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label>用户名</Label>
+              <Label>{t('username')}</Label>
               <Input {...form.register('username')} disabled={!!editingUser} />
               {form.formState.errors.username && <p className="text-red-500 text-xs">{form.formState.errors.username.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label>邮箱</Label>
+              <Label>{t('email')}</Label>
               <Input {...form.register('email')} />
               {form.formState.errors.email && <p className="text-red-500 text-xs">{form.formState.errors.email.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>名 (First Name)</Label>
+                <Label>{t('firstName')}</Label>
                 <Input {...form.register('firstName')} />
               </div>
               <div className="space-y-2">
-                <Label>姓 (Last Name)</Label>
+                <Label>{t('lastName')}</Label>
                 <Input {...form.register('lastName')} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>角色</Label>
+              <Label>{t('role')}</Label>
               <Select
                 onValueChange={(val) => form.setValue('role', val as UserRole)}
                 defaultValue={form.watch('role')}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={UserRole.USER}>User (普通用户)</SelectItem>
-                  <SelectItem value={UserRole.MANAGER}>Manager (经理)</SelectItem>
-                  <SelectItem value={UserRole.GROUP_ADMIN}>Group Admin (集团管理员)</SelectItem>
-                  {/* Super Admin usually cannot be created here easily, but let's allow it for now */}
-                  <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin (超级管理员)</SelectItem>
+                  <SelectItem value={UserRole.USER}>{t('roleUser')}</SelectItem>
+                  <SelectItem value={UserRole.MANAGER}>{t('roleManager')}</SelectItem>
+                  <SelectItem value={UserRole.GROUP_ADMIN}>{t('roleGroupAdmin')}</SelectItem>
+                  <SelectItem value={UserRole.SUPER_ADMIN}>{t('roleSuperAdmin')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>密码 {editingUser && '(留空保持不变)'}</Label>
+              <Label>{t('password')} {editingUser && t('teamView.passwordKeepEmpty')}</Label>
               <Input type="password" {...form.register('password')} />
               {form.formState.errors.password && <p className="text-red-500 text-xs">{form.formState.errors.password.message}</p>}
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>取消</Button>
-              <Button type="submit">保存</Button>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{t('cancel')}</Button>
+              <Button type="submit">{t('save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

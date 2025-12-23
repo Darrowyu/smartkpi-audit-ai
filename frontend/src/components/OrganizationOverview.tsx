@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { companiesApi } from '../api/companies.api';
 import { getDepartments } from '../api/departments.api';
@@ -19,6 +20,7 @@ interface TreeNode {
 
 const OrganizationOverview: React.FC<Props> = ({ language }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root']));
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ const OrganizationOverview: React.FC<Props> = ({ language }) => {
           <span className="font-medium text-slate-900">{node.name}</span>
           {node.count !== undefined && (
             <span className="ml-auto text-sm text-slate-500">
-              {node.count} {language === 'zh' ? '人' : 'users'}
+              {node.count} {t('users')}
             </span>
           )}
         </div>
@@ -150,13 +152,13 @@ const OrganizationOverview: React.FC<Props> = ({ language }) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8 text-slate-500">{language === 'zh' ? '加载中...' : 'Loading...'}</div>;
+    return <div className="text-center py-8 text-slate-500">{t('loading')}</div>;
   }
 
   return (
     <div>
       <h3 className="text-lg font-bold text-slate-900 mb-4">
-        {language === 'zh' ? '组织架构' : 'Organization Structure'}
+        {t('organizationStructure')}
       </h3>
       <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
         {treeData && renderNode(treeData)}

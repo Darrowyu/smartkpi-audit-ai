@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardBody } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/table';
 import { Badge } from '../ui/badge';
 import { Search, Filter, Plus, MoreHorizontal } from 'lucide-react';
-import { translations } from '../../utils/i18n';
 import { Language, KPIStatus } from '../../types';
 
 interface KPIManagementViewProps {
@@ -29,18 +29,28 @@ const statusVariantMap: Record<KPIStatus, 'success' | 'info' | 'warning' | 'dang
 };
 
 export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }) => {
-  const t = translations[language];
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredKPIs = mockKPIs.filter(kpi =>
     kpi.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const getStatusLabel = (status: KPIStatus): string => {
+    const statusMap: Record<KPIStatus, string> = {
+      [KPIStatus.EXCELLENT]: t('statusExcellent'),
+      [KPIStatus.GOOD]: t('statusGood'),
+      [KPIStatus.AVERAGE]: t('statusAverage'),
+      [KPIStatus.POOR]: t('statusPoor'),
+    };
+    return statusMap[status] || status;
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">{t.kpiManagement}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t('kpiManagement')}</h1>
       </div>
 
       {/* Search and Actions */}
@@ -49,7 +59,7 @@ export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }
           <div className="flex-1 w-full sm:max-w-md">
             <Input
               type="text"
-              placeholder={t.searchKPI}
+              placeholder={t('searchKPI')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               icon={Search}
@@ -57,10 +67,10 @@ export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }
           </div>
           <div className="flex gap-3">
             <Button variant="outline" icon={Filter}>
-              {t.filter}
+              {t('filter')}
             </Button>
             <Button variant="primary" icon={Plus}>
-              {t.createKPI}
+              {t('createKPI')}
             </Button>
           </div>
         </CardBody>
@@ -71,13 +81,13 @@ export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t.kpiName} <span className="text-slate-400 ml-1">↕</span></TableHead>
-              <TableHead>{t.category}</TableHead>
-              <TableHead>{t.currentValue}</TableHead>
-              <TableHead>{t.targetValue}</TableHead>
-              <TableHead>{t.status}</TableHead>
-              <TableHead>{t.owner}</TableHead>
-              <TableHead>{t.operations}</TableHead>
+              <TableHead>{t('kpiName')} <span className="text-slate-400 ml-1">↕</span></TableHead>
+              <TableHead>{t('category')}</TableHead>
+              <TableHead>{t('currentValue')}</TableHead>
+              <TableHead>{t('targetValue')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead>{t('owner')}</TableHead>
+              <TableHead>{t('operations')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -99,7 +109,7 @@ export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }
                 </TableCell>
                 <TableCell>
                   <Badge variant={statusVariantMap[kpi.status as KPIStatus]}>
-                    {t.statusMap[kpi.status as KPIStatus]}
+                    {getStatusLabel(kpi.status as KPIStatus)}
                   </Badge>
                 </TableCell>
                 <TableCell>

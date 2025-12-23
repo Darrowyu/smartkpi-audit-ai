@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -21,7 +22,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import {
     Select,
@@ -32,12 +32,11 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 import { kpiLibraryApi } from '@/api/kpi-library.api';
 import { KPIDefinition, FormulaType, AssessmentFrequency } from '@/types';
 
-// Form values type
 interface KPIFormValues {
     code: string;
     name: string;
@@ -51,31 +50,8 @@ interface KPIFormValues {
     unit?: string;
 }
 
-// Zod Schema for Validation
-const kpiSchema = z.object({
-    code: z.string().min(1, '请输入指标编码'),
-    name: z.string().min(1, '请输入指标名称'),
-    description: z.string().optional(),
-    formulaType: z.enum([
-        FormulaType.POSITIVE,
-        FormulaType.NEGATIVE,
-        FormulaType.BINARY,
-        FormulaType.STEPPED,
-        FormulaType.CUSTOM,
-    ]),
-    customFormula: z.string().optional(),
-    frequency: z.enum([
-        AssessmentFrequency.MONTHLY,
-        AssessmentFrequency.QUARTERLY,
-        AssessmentFrequency.YEARLY,
-    ]),
-    defaultWeight: z.number().min(0).max(100),
-    scoreCap: z.number().min(0),
-    scoreFloor: z.number().min(0),
-    unit: z.string().optional(),
-});
-
 export const KPILibraryView: React.FC = () => {
+    const { t } = useTranslation();
     const [kpis, setKpis] = useState<KPIDefinition[]>([]);
     const [loading, setLoading] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -83,6 +59,29 @@ export const KPILibraryView: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const { toast } = useToast();
+
+    const kpiSchema = z.object({
+        code: z.string().min(1, t('kpiLibrary.enterKpiCode')),
+        name: z.string().min(1, t('kpiLibrary.enterKpiName')),
+        description: z.string().optional(),
+        formulaType: z.enum([
+            FormulaType.POSITIVE,
+            FormulaType.NEGATIVE,
+            FormulaType.BINARY,
+            FormulaType.STEPPED,
+            FormulaType.CUSTOM,
+        ]),
+        customFormula: z.string().optional(),
+        frequency: z.enum([
+            AssessmentFrequency.MONTHLY,
+            AssessmentFrequency.QUARTERLY,
+            AssessmentFrequency.YEARLY,
+        ]),
+        defaultWeight: z.number().min(0).max(100),
+        scoreCap: z.number().min(0),
+        scoreFloor: z.number().min(0),
+        unit: z.string().optional(),
+    });
 
     const form = useForm<KPIFormValues>({
         resolver: zodResolver(kpiSchema),
@@ -100,11 +99,10 @@ export const KPILibraryView: React.FC = () => {
         try {
             const res = await kpiLibraryApi.findAll({ search: searchTerm });
             setKpis(res.data);
-        } catch (error) {
+        } catch (_error) {
             toast({
                 variant: 'destructive',
-                title: '获取指标失败',
-                description: '无法加载指标库数据',
+                title: t('common.loadFailed'),
             });
         } finally {
             setLoading(false);
@@ -119,10 +117,10 @@ export const KPILibraryView: React.FC = () => {
         try {
             if (editingKPI) {
                 await kpiLibraryApi.update(editingKPI.id, data);
-                toast({ title: '更新成功', description: '指标已更新' });
+                toast({ title: t('kpiLibrary.updateSuccess') });
             } else {
                 await kpiLibraryApi.create(data);
-                toast({ title: '创建成功', description: '新指标已添加到库' });
+                toast({ title: t('kpiLibrary.createSuccess') });
             }
             setIsDialogOpen(false);
             setEditingKPI(null);
@@ -131,8 +129,8 @@ export const KPILibraryView: React.FC = () => {
         } catch (error: any) {
             toast({
                 variant: 'destructive',
-                title: editingKPI ? '更新失败' : '创建失败',
-                description: error.response?.data?.message || '操作失败，请重试',
+                title: t('kpiLibrary.operationFailed'),
+                description: error.response?.data?.message,
             });
         }
     };
@@ -155,13 +153,13 @@ export const KPILibraryView: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('确定要删除这个指标吗？')) return;
+        if (!confirm(t('kpiLibrary.deleteConfirm'))) return;
         try {
             await kpiLibraryApi.remove(id);
-            toast({ title: '删除成功' });
+            toast({ title: t('kpiLibrary.deleteSuccess') });
             fetchKPIs();
-        } catch (error) {
-            toast({ variant: 'destructive', title: '删除失败' });
+        } catch (_error) {
+            toast({ variant: 'destructive', title: t('kpiLibrary.operationFailed') });
         }
     };
 
@@ -169,11 +167,11 @@ export const KPILibraryView: React.FC = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">KPI 指标库</h2>
-                    <p className="text-muted-foreground">管理企业核心绩效指标定义与计算规则</p>
+                    <h2 className="text-3xl font-bold tracking-tight">{t('kpiLibrary.title')}</h2>
+                    <p className="text-muted-foreground">{t('kpiLibrary.subtitle')}</p>
                 </div>
                 <Button onClick={() => { setEditingKPI(null); form.reset(); setIsDialogOpen(true); }}>
-                    <Plus className="mr-2 h-4 w-4" /> 新建指标
+                    <Plus className="mr-2 h-4 w-4" /> {t('kpiLibrary.createKPI')}
                 </Button>
             </div>
 
@@ -182,7 +180,7 @@ export const KPILibraryView: React.FC = () => {
                     <div className="flex items-center space-x-2">
                         <Search className="h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="搜索指标名称或编码..."
+                            placeholder={t('kpiLibrary.search')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="max-w-sm"
@@ -194,22 +192,22 @@ export const KPILibraryView: React.FC = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>编码</TableHead>
-                                    <TableHead>名称</TableHead>
-                                    <TableHead>计分类型</TableHead>
-                                    <TableHead>频率</TableHead>
-                                    <TableHead>默认权重</TableHead>
-                                    <TableHead className="text-right">操作</TableHead>
+                                    <TableHead>{t('kpiLibrary.kpiCode')}</TableHead>
+                                    <TableHead>{t('kpiLibrary.kpiName')}</TableHead>
+                                    <TableHead>{t('kpiLibrary.formulaType')}</TableHead>
+                                    <TableHead>{t('kpiLibrary.frequency')}</TableHead>
+                                    <TableHead>{t('kpiLibrary.defaultWeight')}</TableHead>
+                                    <TableHead className="text-right">{t('kpiLibrary.actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-10">加载中...</TableCell>
+                                        <TableCell colSpan={6} className="text-center py-10">{t('loading')}</TableCell>
                                     </TableRow>
                                 ) : kpis.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-10">暂无数据</TableCell>
+                                        <TableCell colSpan={6} className="text-center py-10">{t('kpiLibrary.noData')}</TableCell>
                                     </TableRow>
                                 ) : (
                                     kpis.map((kpi) => (
@@ -239,48 +237,48 @@ export const KPILibraryView: React.FC = () => {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>{editingKPI ? '编辑指标' : '新建指标'}</DialogTitle>
-                        <DialogDescription>配置指标的基本信息和计分规则。</DialogDescription>
+                        <DialogTitle>{editingKPI ? t('kpiLibrary.editKPI') : t('kpiLibrary.createKPI')}</DialogTitle>
+                        <DialogDescription>{t('kpiLibrary.subtitle')}</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>指标编码</Label>
-                                <Input {...form.register('code')} placeholder="如：SALES_RATE" disabled={!!editingKPI} />
+                                <Label>{t('kpiLibrary.kpiCode')}</Label>
+                                <Input {...form.register('code')} placeholder="e.g., SALES_RATE" disabled={!!editingKPI} />
                                 {form.formState.errors.code && <p className="text-red-500 text-xs">{form.formState.errors.code.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label>指标名称</Label>
-                                <Input {...form.register('name')} placeholder="如：销售达成率" />
+                                <Label>{t('kpiLibrary.kpiName')}</Label>
+                                <Input {...form.register('name')} />
                                 {form.formState.errors.name && <p className="text-red-500 text-xs">{form.formState.errors.name.message}</p>}
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label>指标说明</Label>
+                            <Label>{t('kpiLibrary.description')}</Label>
                             <Input {...form.register('description')} />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>计分逻辑</Label>
+                                <Label>{t('kpiLibrary.formulaType')}</Label>
                                 <Select
                                     onValueChange={(val) => form.setValue('formulaType', val as FormulaType)}
                                     defaultValue={form.watch('formulaType')}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="选择类型" />
+                                        <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={FormulaType.POSITIVE}>正向指标 (越大越好)</SelectItem>
-                                        <SelectItem value={FormulaType.NEGATIVE}>反向指标 (越小越好)</SelectItem>
-                                        <SelectItem value={FormulaType.BINARY}>二元指标 (0/1)</SelectItem>
-                                        <SelectItem value={FormulaType.CUSTOM}>自定义公式</SelectItem>
+                                        <SelectItem value={FormulaType.POSITIVE}>{t('kpiLibrary.formulaHigherBetter')}</SelectItem>
+                                        <SelectItem value={FormulaType.NEGATIVE}>{t('kpiLibrary.formulaLowerBetter')}</SelectItem>
+                                        <SelectItem value={FormulaType.BINARY}>{t('kpiLibrary.formulaBoolean')}</SelectItem>
+                                        <SelectItem value={FormulaType.CUSTOM}>{t('kpiLibrary.formulaCustom')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>考核频率</Label>
+                                <Label>{t('kpiLibrary.frequency')}</Label>
                                 <Select
                                     onValueChange={(val) => form.setValue('frequency', val as AssessmentFrequency)}
                                     defaultValue={form.watch('frequency')}
@@ -289,9 +287,9 @@ export const KPILibraryView: React.FC = () => {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={AssessmentFrequency.MONTHLY}>月度</SelectItem>
-                                        <SelectItem value={AssessmentFrequency.QUARTERLY}>季度</SelectItem>
-                                        <SelectItem value={AssessmentFrequency.YEARLY}>年度</SelectItem>
+                                        <SelectItem value={AssessmentFrequency.MONTHLY}>{t('kpiLibrary.freqMonthly')}</SelectItem>
+                                        <SelectItem value={AssessmentFrequency.QUARTERLY}>{t('kpiLibrary.freqQuarterly')}</SelectItem>
+                                        <SelectItem value={AssessmentFrequency.YEARLY}>{t('kpiLibrary.freqYearly')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -299,22 +297,22 @@ export const KPILibraryView: React.FC = () => {
 
                         <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-2">
-                                <Label>默认权重 (%)</Label>
+                                <Label>{t('kpiLibrary.defaultWeight')} (%)</Label>
                                 <Input type="number" {...form.register('defaultWeight')} />
                             </div>
                             <div className="space-y-2">
-                                <Label>得分上限</Label>
+                                <Label>{t('kpiLibrary.scoreCap')}</Label>
                                 <Input type="number" {...form.register('scoreCap')} />
                             </div>
                             <div className="space-y-2">
-                                <Label>得分下限</Label>
+                                <Label>{t('kpiLibrary.scoreFloor')}</Label>
                                 <Input type="number" {...form.register('scoreFloor')} />
                             </div>
                         </div>
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>取消</Button>
-                            <Button type="submit">保存</Button>
+                            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{t('cancel')}</Button>
+                            <Button type="submit">{t('save')}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

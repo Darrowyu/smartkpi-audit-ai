@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, memo } from 'react';
-import { Download, Upload, FileSpreadsheet, Plus, Save, Send } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Download, Upload, Plus, Save, Send } from 'lucide-react';
 import { assessmentApi } from '@/api/assessment.api';
 import { assignmentApi, KPIAssignmentDto } from '@/api/assignment.api';
 import { AssessmentPeriod, PeriodStatus } from '@/types';
@@ -32,6 +33,7 @@ interface DraftData {
 const DRAFT_KEY = 'kpi_data_entry_draft';
 
 export const DataEntryView: React.FC = memo(() => {
+    const { t } = useTranslation();
     const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
     const [selectedPeriod, setSelectedPeriod] = useState<string>('');
     const [assignments, setAssignments] = useState<KPIAssignmentDto[]>([]);
@@ -60,21 +62,21 @@ export const DataEntryView: React.FC = memo(() => {
             );
             setPeriods(activePeriods);
             if (activePeriods.length > 0) setSelectedPeriod(activePeriods[0].id);
-        } catch { toast({ variant: 'destructive', title: '无法加载考核周期' }); }
+        } catch { toast({ variant: 'destructive', title: t('common.loadFailed') }); }
     };
 
     const loadAssignments = async () => {
         try {
             const data = await assignmentApi.findByPeriod(selectedPeriod);
             setAssignments(data || []);
-        } catch { toast({ variant: 'destructive', title: '加载指标分配失败' }); }
+        } catch { toast({ variant: 'destructive', title: t('common.loadFailed') }); }
     };
 
     const loadEmployees = async () => {
         try {
             const res = await apiClient.get('/employees');
             setEmployees(res.data?.data || []);
-        } catch { toast({ variant: 'destructive', title: '加载员工失败' }); }
+        } catch { toast({ variant: 'destructive', title: t('common.loadFailed') }); }
     };
 
     const checkDraft = () => {
@@ -93,21 +95,21 @@ export const DataEntryView: React.FC = memo(() => {
             const data: DraftData = JSON.parse(draft);
             if (data.periodId === selectedPeriod) {
                 setManualEntries(data.entries);
-                toast({ title: '草稿已恢复', description: `保存于 ${data.savedAt}` });
+                toast({ title: t('dataEntry.draftLoaded'), description: t('dataEntry.draftLoadedDesc', { count: data.entries.length, time: data.savedAt }) });
             }
         }
-    }, [selectedPeriod, toast]);
+    }, [selectedPeriod, toast, t]);
 
     const saveDraft = useCallback(() => {
         const data: DraftData = {
             periodId: selectedPeriod,
             entries: manualEntries,
-            savedAt: new Date().toLocaleString('zh-CN'),
+            savedAt: new Date().toLocaleString(),
         };
         localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
         setHasDraft(true);
-        toast({ title: '草稿已保存' });
-    }, [selectedPeriod, manualEntries, toast]);
+        toast({ title: t('dataEntry.draftSaved') });
+    }, [selectedPeriod, manualEntries, toast, t]);
 
     const clearDraft = () => {
         localStorage.removeItem(DRAFT_KEY);
@@ -117,7 +119,7 @@ export const DataEntryView: React.FC = memo(() => {
 
     const addEntry = useCallback(() => {
         if (employees.length === 0 || assignments.length === 0) {
-            toast({ variant: 'destructive', title: '请先确保有员工和指标分配' });
+            toast({ variant: 'destructive', title: t('dataEntry.noEmployeesOrAssignments') });
             return;
         }
         const emp = employees[0];
@@ -131,7 +133,7 @@ export const DataEntryView: React.FC = memo(() => {
             actualValue: '',
             remark: '',
         }]);
-    }, [employees, assignments, toast]);
+    }, [employees, assignments, toast, t]);
 
     const updateEntry = useCallback((index: number, field: keyof ManualEntry, value: string) => {
         setManualEntries(prev => {
@@ -141,9 +143,9 @@ export const DataEntryView: React.FC = memo(() => {
                 updated[index] = { ...updated[index], employeeId: value, employeeName: emp?.name || '' };
             } else if (field === 'assignmentId') {
                 const assign = assignments.find(a => a.id === value);
-                updated[index] = { 
-                    ...updated[index], 
-                    assignmentId: value, 
+                updated[index] = {
+                    ...updated[index],
+                    assignmentId: value,
                     kpiName: assign?.kpiDefinition.name || '',
                     targetValue: assign?.targetValue || 0,
                 };
@@ -161,7 +163,7 @@ export const DataEntryView: React.FC = memo(() => {
     const submitEntries = async () => {
         const validEntries = manualEntries.filter(e => e.actualValue !== '');
         if (validEntries.length === 0) {
-            toast({ variant: 'destructive', title: '请至少填写一条数据' });
+            toast({ variant: 'destructive', title: t('dataEntry.noEmployeesOrAssignments') });
             return;
         }
 
@@ -181,9 +183,9 @@ export const DataEntryView: React.FC = memo(() => {
                 })),
             });
 
-            toast({ title: '提交成功', description: '数据已保存' });
+            toast({ title: t('dataEntry.submitSuccess'), description: t('dataEntry.submitSuccessDesc', { count: validEntries.length }) });
             clearDraft();
-        } catch { toast({ variant: 'destructive', title: '提交失败' }); }
+        } catch { toast({ variant: 'destructive', title: t('dataEntry.submitFailed') }); }
     };
 
     const handleDownload = async () => {
@@ -197,7 +199,7 @@ export const DataEntryView: React.FC = memo(() => {
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
-        } catch { toast({ variant: 'destructive', title: '下载失败' }); }
+        } catch { toast({ variant: 'destructive', title: t('common.loadFailed') }); }
     };
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,25 +208,25 @@ export const DataEntryView: React.FC = memo(() => {
         setUploading(true);
         try {
             await assessmentApi.uploadData(selectedPeriod, file);
-            toast({ title: '上传成功', description: '数据已进入处理队列' });
-        } catch { toast({ variant: 'destructive', title: '上传失败' }); }
+            toast({ title: t('dataEntry.submitSuccess') });
+        } catch { toast({ variant: 'destructive', title: t('dataEntry.submitFailed') }); }
         finally { setUploading(false); e.target.value = ''; }
     };
 
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">数据填报</h2>
-                <p className="text-muted-foreground">通过Excel导入或手工录入KPI考核数据</p>
+                <h2 className="text-3xl font-bold tracking-tight">{t('dataEntry.title')}</h2>
+                <p className="text-muted-foreground">{t('dataEntry.subtitle')}</p>
             </div>
 
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <Label>考核周期</Label>
+                            <Label>{t('dataEntry.selectPeriod')}</Label>
                             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                                <SelectTrigger className="w-[200px]"><SelectValue placeholder="选择周期" /></SelectTrigger>
+                                <SelectTrigger className="w-[200px]"><SelectValue placeholder={t('dashboardView.selectPeriod')} /></SelectTrigger>
                                 <SelectContent>
                                     {periods.map(p => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
                                 </SelectContent>
@@ -232,7 +234,7 @@ export const DataEntryView: React.FC = memo(() => {
                         </div>
                         {hasDraft && (
                             <Button variant="outline" size="sm" onClick={loadDraft}>
-                                恢复草稿
+                                {t('dataEntry.loadDraft')}
                             </Button>
                         )}
                     </div>
@@ -241,28 +243,26 @@ export const DataEntryView: React.FC = memo(() => {
 
             <Tabs defaultValue="excel" className="space-y-4">
                 <TabsList>
-                    <TabsTrigger value="excel">Excel 导入</TabsTrigger>
-                    <TabsTrigger value="manual">手工录入</TabsTrigger>
+                    <TabsTrigger value="excel">{t('dataEntry.excelImport')}</TabsTrigger>
+                    <TabsTrigger value="manual">{t('dataEntry.manualEntry')}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="excel">
                     <div className="grid gap-6 md:grid-cols-2">
                         <Card>
                             <CardHeader>
-                                <CardTitle>下载模板</CardTitle>
-                                <CardDescription>获取包含当前分配指标的Excel填报模板（表头已保护）</CardDescription>
+                                <CardTitle>{t('dataEntry.downloadTemplate')}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <Button onClick={handleDownload} disabled={!selectedPeriod} className="w-full">
-                                    <Download className="mr-2 h-4 w-4" /> 下载专属模板
+                                    <Download className="mr-2 h-4 w-4" /> {t('dataEntry.downloadTemplate')}
                                 </Button>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader>
-                                <CardTitle>上传数据</CardTitle>
-                                <CardDescription>上传填写好的Excel文件</CardDescription>
+                                <CardTitle>{t('dataEntry.uploadFile')}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <Label htmlFor="excel-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
@@ -271,7 +271,7 @@ export const DataEntryView: React.FC = memo(() => {
                                     ) : (
                                         <>
                                             <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                                            <span className="text-sm text-gray-500">点击上传 .xlsx 文件</span>
+                                            <span className="text-sm text-gray-500">.xlsx</span>
                                         </>
                                     )}
                                 </Label>
@@ -286,15 +286,14 @@ export const DataEntryView: React.FC = memo(() => {
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <CardTitle>手工录入</CardTitle>
-                                    <CardDescription>逐条录入员工KPI数据，支持草稿保存</CardDescription>
+                                    <CardTitle>{t('dataEntry.manualEntry')}</CardTitle>
                                 </div>
                                 <div className="flex gap-2">
                                     <Button variant="outline" size="sm" onClick={saveDraft} disabled={manualEntries.length === 0}>
-                                        <Save className="mr-2 h-4 w-4" /> 保存草稿
+                                        <Save className="mr-2 h-4 w-4" /> {t('dataEntry.saveDraft')}
                                     </Button>
                                     <Button size="sm" onClick={addEntry}>
-                                        <Plus className="mr-2 h-4 w-4" /> 添加行
+                                        <Plus className="mr-2 h-4 w-4" /> {t('dataEntry.addEntry')}
                                     </Button>
                                 </div>
                             </div>
@@ -303,17 +302,17 @@ export const DataEntryView: React.FC = memo(() => {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>员工</TableHead>
-                                        <TableHead>指标</TableHead>
-                                        <TableHead>目标值</TableHead>
-                                        <TableHead>实际值</TableHead>
-                                        <TableHead>备注</TableHead>
+                                        <TableHead>{t('dataEntry.employee')}</TableHead>
+                                        <TableHead>{t('dataEntry.kpi')}</TableHead>
+                                        <TableHead>{t('assignment.targetValue')}</TableHead>
+                                        <TableHead>{t('dataEntry.actualValue')}</TableHead>
+                                        <TableHead>{t('dataEntry.remark')}</TableHead>
                                         <TableHead></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {manualEntries.length === 0 ? (
-                                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">点击"添加行"开始录入</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">{t('assignment.noData')}</TableCell></TableRow>
                                     ) : manualEntries.map((entry, idx) => (
                                         <TableRow key={idx}>
                                             <TableCell>
@@ -334,13 +333,13 @@ export const DataEntryView: React.FC = memo(() => {
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">{entry.targetValue}</TableCell>
                                             <TableCell>
-                                                <Input type="number" className="w-[100px]" value={entry.actualValue} onChange={e => updateEntry(idx, 'actualValue', e.target.value)} placeholder="填写" />
+                                                <Input type="number" className="w-[100px]" value={entry.actualValue} onChange={e => updateEntry(idx, 'actualValue', e.target.value)} />
                                             </TableCell>
                                             <TableCell>
-                                                <Input className="w-[120px]" value={entry.remark} onChange={e => updateEntry(idx, 'remark', e.target.value)} placeholder="可选" />
+                                                <Input className="w-[120px]" value={entry.remark} onChange={e => updateEntry(idx, 'remark', e.target.value)} />
                                             </TableCell>
                                             <TableCell>
-                                                <Button variant="ghost" size="sm" onClick={() => removeEntry(idx)}>删除</Button>
+                                                <Button variant="ghost" size="sm" onClick={() => removeEntry(idx)}>{t('delete')}</Button>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -349,7 +348,7 @@ export const DataEntryView: React.FC = memo(() => {
                             {manualEntries.length > 0 && (
                                 <div className="mt-4 flex justify-end">
                                     <Button onClick={submitEntries}>
-                                        <Send className="mr-2 h-4 w-4" /> 提交数据
+                                        <Send className="mr-2 h-4 w-4" /> {t('dataEntry.submit')}
                                     </Button>
                                 </div>
                             )}

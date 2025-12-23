@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { Language } from '../../types';
-import { Eye, EyeOff, LayoutDashboard, BarChart3, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, LayoutDashboard, BarChart3, ShieldCheck, Languages } from 'lucide-react';
 import logoImage from '../../assets/images/Makrite_KPI_logo.png';
 
 interface Props {
@@ -11,12 +12,19 @@ interface Props {
 
 export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
   const { login } = useAuth();
+  const { t, i18n } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [currentLang, setCurrentLang] = useState<Language>(language);
+
+  const handleLangChange = () => {
+    const newLang = currentLang === 'zh' ? 'en' : 'zh';
+    setCurrentLang(newLang);
+    i18n.changeLanguage(newLang);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +37,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
       const errorMessage = err instanceof Error && 'response' in err 
         ? (err as { response?: { data?: { message?: string } } }).response?.data?.message 
         : undefined;
-      setError(errorMessage || (currentLang === 'zh' ? '登录失败' : 'Login failed'));
+      setError(errorMessage || t('loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -50,14 +58,12 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
         {/* Main Content */}
         <div className="relative z-10">
           <h1 className="text-4xl font-bold leading-tight mb-6 tracking-tight">
-            <span className="text-white">{currentLang === 'zh' ? '让绩效' : 'Make KPI'}</span>
+            <span className="text-white">{t('makeKpiSimple')}</span>
             <br />
-            <span className="text-[#5B9BD5]">{currentLang === 'zh' ? '回归简单' : 'Simple Again'}</span>
+            <span className="text-[#5B9BD5]">{t('simpleAgain')}</span>
           </h1>
           <p className="text-white/70 text-lg max-w-md leading-relaxed">
-            {currentLang === 'zh' 
-              ? '结合 AI 技术的下一代绩效管理系统，让数据驱动决策，提升组织效能。' 
-              : 'Next-generation performance management system powered by AI. Data-driven decisions for better organizational efficiency.'}
+            {t('kpiDesc')}
           </p>
         </div>
 
@@ -66,29 +72,38 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
           <div className="space-y-6">
             <FeatureItem 
               icon={LayoutDashboard} 
-              title={currentLang === 'zh' ? '多维度仪表盘' : 'Multi-dimensional Dashboard'} 
-              desc={currentLang === 'zh' ? '实时监控核心指标，全景视图掌控全局' : 'Real-time monitoring of core metrics with panoramic views'} 
+              title={t('multiDashboard')} 
+              desc={t('multiDashboardDesc')} 
             />
             <FeatureItem 
               icon={BarChart3} 
-              title={currentLang === 'zh' ? '智能数据分析' : 'Intelligent Analytics'} 
-              desc={currentLang === 'zh' ? 'AI 驱动的深度洞察与趋势预测' : 'AI-driven deep insights and trend forecasting'} 
+              title={t('intelligentAnalytics')} 
+              desc={t('intelligentAnalyticsDesc')} 
             />
             <FeatureItem 
               icon={ShieldCheck} 
-              title={currentLang === 'zh' ? '企业级安全' : 'Enterprise Security'} 
-              desc={currentLang === 'zh' ? '基于角色的权限控制与数据加密' : 'Role-based access control and data encryption'} 
+              title={t('enterpriseSecurity')} 
+              desc={t('enterpriseSecurityDesc')} 
             />
           </div>
           
           <div className="pt-8 border-t border-white/20 text-white/50 text-sm">
-            &copy; 2025 SmartKPI Audit AI. {currentLang === 'zh' ? '保留所有权利' : 'All rights reserved'}.
+            &copy; 2025 SmartKPI Audit AI. {t('allRightsReserved')}.
           </div>
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-white">
+      <div className="flex-1 flex items-center justify-center p-6 bg-white relative">
+        {/* Language Toggle */}
+        <button
+          onClick={handleLangChange}
+          className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-full border border-slate-200 transition-colors"
+        >
+          <Languages className="w-3.5 h-3.5" />
+          <span>{currentLang === 'zh' ? 'EN' : '中文'}</span>
+        </button>
+
         <div className="w-full max-w-[400px]">
           {/* Mobile Logo */}
           <div className="lg:hidden flex justify-center mb-10">
@@ -103,10 +118,10 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-slate-900">
-              {currentLang === 'zh' ? '欢迎回来' : 'Welcome back'}
+              {t('welcomeBack')}
             </h2>
             <p className="text-slate-500 mt-2">
-              {currentLang === 'zh' ? '请输入您的凭证以访问工作台' : 'Please enter your credentials to access workspace'}
+              {t('enterCredentials')}
             </p>
           </div>
 
@@ -117,17 +132,17 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email/Username Field */}
+            {/* Username Field */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">
-                {currentLang === 'zh' ? '工作邮箱' : 'Work Email'}
+                {t('username')}
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-[#1E4B8E] focus:ring-2 focus:ring-[#1E4B8E]/20 transition-all outline-none"
-                placeholder="name@company.com"
+                placeholder={currentLang === 'zh' ? '请输入用户名' : 'Enter your username'}
                 required
               />
             </div>
@@ -136,10 +151,10 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium text-slate-700">
-                  {currentLang === 'zh' ? '密码' : 'Password'}
+                  {t('password')}
                 </label>
                 <a href="#" className="text-sm text-slate-500 hover:text-[#1E4B8E] transition-colors">
-                  {currentLang === 'zh' ? '忘记密码?' : 'Forgot password?'}
+                  {t('forgotPassword')}
                 </a>
               </div>
               <div className="relative">
@@ -170,7 +185,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                currentLang === 'zh' ? '立即登录' : 'Sign In'
+                t('signIn')
               )}
             </button>
           </form>
@@ -178,11 +193,11 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
           {/* Register Link */}
           <div className="mt-6 text-center">
             <span className="text-slate-500">
-              {currentLang === 'zh' ? '还没有账户?' : 'Don\'t have an account?'}
+              {t('noAccount')}
             </span>
             {' '}
             <a href="#" className="text-[#1E4B8E] font-medium hover:text-[#163a6e] transition-colors">
-              {currentLang === 'zh' ? '免费注册' : 'Sign up free'}
+              {t('signUpFree')}
             </a>
           </div>
 
@@ -192,7 +207,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  {currentLang === 'zh' ? '演示账户' : 'Demo Account'}
+                  {t('demoAccount')}
                 </span>
               </div>
               <div className="flex justify-between text-sm">

@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { companiesApi, Company, CompanyStats } from '../api/companies.api';
 import { useAuth } from '../context/AuthContext';
-import { translations } from '../utils/i18n';
 import { Language } from '../types';
 import { Building2, Users, Briefcase, UserCircle, FileText, BarChart3, Edit, X, Check, Calendar } from 'lucide-react';
 
 interface Props {
   language: Language;
-  t: typeof translations['en'];
 }
 
 const CompanySettings: React.FC<Props> = ({ language }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [company, setCompany] = useState<Company | null>(null);
   const [stats, setStats] = useState<CompanyStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +53,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
       setCompany(updated);
       setShowEditModal(false);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : (language === 'zh' ? '更新失败' : 'Update failed');
+      const msg = e instanceof Error ? e.message : t('updateFailed');
       alert(msg);
     } finally {
       setSaving(false);
@@ -63,7 +63,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-slate-500">{language === 'zh' ? '加载中...' : 'Loading...'}</div>
+        <div className="text-slate-500">{t('loading')}</div>
       </div>
     );
   }
@@ -71,7 +71,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
   if (!company) {
     return (
       <div className="text-center py-20">
-        <p className="text-slate-500">{language === 'zh' ? '无法加载公司信息' : 'Failed to load company info'}</p>
+        <p className="text-slate-500">{t('failedToLoadCompany')}</p>
       </div>
     );
   }
@@ -81,7 +81,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
           <Building2 className="w-6 h-6 text-blue-600" />
-          {language === 'zh' ? '公司管理' : 'Company Management'}
+          {t('companyManagement')}
         </h2>
         {isAdmin && (
           <button
@@ -89,7 +89,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Edit className="w-4 h-4" />
-            {language === 'zh' ? '编辑' : 'Edit'}
+            {t('edit')}
           </button>
         )}
       </div>
@@ -97,30 +97,30 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
       {/* 公司基本信息 */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">
-          {language === 'zh' ? '基本信息' : 'Basic Information'}
+          {t('basicInfo')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '公司名称' : 'Company Name'}
+              {t('companyName')}
             </label>
             <p className="text-slate-900 font-medium">{company.name}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '公司代码' : 'Company Code'}
+              {t('companyCode')}
             </label>
             <p className="text-slate-900 font-medium">{(company as { code?: string }).code || '-'}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '域名标识' : 'Domain'}
+              {t('domain')}
             </label>
             <p className="text-slate-900 font-medium">{company.domain || '-'}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '创建时间' : 'Created At'}
+              {t('createdAt')}
             </label>
             <p className="text-slate-900 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
@@ -129,10 +129,10 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '状态' : 'Status'}
+              {t('status')}
             </label>
             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${company.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {company.isActive ? (language === 'zh' ? '活跃' : 'Active') : (language === 'zh' ? '禁用' : 'Inactive')}
+              {company.isActive ? t('active') : t('inactive')}
             </span>
           </div>
         </div>
@@ -142,14 +142,14 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
       {stats && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">
-            {language === 'zh' ? '数据统计' : 'Statistics'}
+            {t('statistics')}
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <StatCard icon={<Users className="w-5 h-5 text-blue-600" />} label={language === 'zh' ? '用户' : 'Users'} value={stats.users} />
-            <StatCard icon={<Briefcase className="w-5 h-5 text-green-600" />} label={language === 'zh' ? '部门' : 'Departments'} value={stats.departments} />
-            <StatCard icon={<UserCircle className="w-5 h-5 text-purple-600" />} label={language === 'zh' ? '员工' : 'Employees'} value={stats.employees} />
-            <StatCard icon={<FileText className="w-5 h-5 text-orange-600" />} label={language === 'zh' ? '文件' : 'Files'} value={stats.files} />
-            <StatCard icon={<BarChart3 className="w-5 h-5 text-blue-600" />} label={language === 'zh' ? '分析' : 'Analyses'} value={stats.analyses} />
+            <StatCard icon={<Users className="w-5 h-5 text-blue-600" />} label={t('user')} value={stats.users} />
+            <StatCard icon={<Briefcase className="w-5 h-5 text-green-600" />} label={t('departments')} value={stats.departments} />
+            <StatCard icon={<UserCircle className="w-5 h-5 text-purple-600" />} label={t('employees')} value={stats.employees} />
+            <StatCard icon={<FileText className="w-5 h-5 text-orange-600" />} label={t('files')} value={stats.files} />
+            <StatCard icon={<BarChart3 className="w-5 h-5 text-blue-600" />} label={t('analyses')} value={stats.analyses} />
           </div>
         </div>
       )}
@@ -160,7 +160,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h3 className="text-xl font-bold text-slate-800">
-                {language === 'zh' ? '编辑公司信息' : 'Edit Company'}
+                {t('editCompany')}
               </h3>
               <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -169,7 +169,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {language === 'zh' ? '公司名称' : 'Company Name'} *
+                  {t('companyName')} *
                 </label>
                 <input
                   type="text"
@@ -181,7 +181,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {language === 'zh' ? '公司代码' : 'Company Code'}
+                  {t('companyCode')}
                 </label>
                 <input
                   type="text"
@@ -191,12 +191,12 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  {language === 'zh' ? '公司内部编码，如 DG001、SH002' : 'Internal company code, e.g., DG001'}
+                  {t('companyCodeHint')}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {language === 'zh' ? '域名标识' : 'Domain'}
+                  {t('domain')}
                 </label>
                 <input
                   type="text"
@@ -206,7 +206,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  {language === 'zh' ? '用于多租户域名识别，如 dongguan.makrite.com' : 'For multi-tenant domain, e.g., dongguan.makrite.com'}
+                  {t('domainHint')}
                 </p>
               </div>
               <div className="flex justify-end gap-3 pt-4">
@@ -215,7 +215,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
                   onClick={() => setShowEditModal(false)}
                   className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50"
                 >
-                  {language === 'zh' ? '取消' : 'Cancel'}
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
@@ -225,7 +225,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
                   {saving ? '...' : (
                     <>
                       <Check className="w-4 h-4" />
-                      {language === 'zh' ? '保存' : 'Save'}
+                      {t('save')}
                     </>
                   )}
                 </button>

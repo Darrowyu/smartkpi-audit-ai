@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { groupsApi, Group } from '../api/groups.api';
 import { useAuth } from '../context/AuthContext';
 import { Language } from '../types';
@@ -11,6 +12,7 @@ interface Props {
 
 const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -45,7 +47,7 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
       setShowEditModal(false);
       onUpdate?.();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : (language === 'zh' ? '更新失败' : 'Update failed');
+      const msg = err instanceof Error ? err.message : t('updateFailed');
       alert(msg);
     } finally {
       setSaving(false);
@@ -53,11 +55,11 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8 text-slate-500">{language === 'zh' ? '加载中...' : 'Loading...'}</div>;
+    return <div className="text-center py-8 text-slate-500">{t('loading')}</div>;
   }
 
   if (!group) {
-    return <div className="text-center py-8 text-slate-500">{language === 'zh' ? '无法加载集团信息' : 'Failed to load group'}</div>;
+    return <div className="text-center py-8 text-slate-500">{t('failedToLoadGroup')}</div>;
   }
 
   return (
@@ -65,13 +67,13 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
           <Globe className="w-5 h-5 text-blue-600" />
-          {language === 'zh' ? '集团设置' : 'Group Settings'}
+          {t('groupSettings')}
         </h3>
         {isSuperAdmin && (
           <button onClick={() => setShowEditModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             <Edit className="w-4 h-4" />
-            {language === 'zh' ? '编辑' : 'Edit'}
+            {t('edit')}
           </button>
         )}
       </div>
@@ -81,19 +83,19 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '集团名称' : 'Group Name'}
+              {t('groupName')}
             </label>
             <p className="text-slate-900 font-medium text-lg">{group.name}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '集团ID' : 'Group ID'}
+              {t('groupId')}
             </label>
             <p className="text-slate-600 font-mono text-sm">{group.id}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '创建时间' : 'Created At'}
+              {t('createdAt')}
             </label>
             <p className="text-slate-900 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
@@ -102,15 +104,15 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '状态' : 'Status'}
+              {t('status')}
             </label>
             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${group.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {group.isActive ? (language === 'zh' ? '活跃' : 'Active') : (language === 'zh' ? '禁用' : 'Inactive')}
+              {group.isActive ? t('active') : t('inactive')}
             </span>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
-              {language === 'zh' ? '子公司数量' : 'Companies'}
+              {t('companies')}
             </label>
             <p className="text-slate-900 font-medium">{group._count?.companies || 0}</p>
           </div>
@@ -121,7 +123,7 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
       {!isSuperAdmin && (
         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
-            {language === 'zh' ? '只有超级管理员可以修改集团设置' : 'Only Super Admin can modify group settings'}
+            {t('onlySuperAdminCanModifyGroup')}
           </p>
         </div>
       )}
@@ -132,7 +134,7 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h3 className="text-xl font-bold text-slate-800">
-                {language === 'zh' ? '编辑集团信息' : 'Edit Group'}
+                {t('editGroup')}
               </h3>
               <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -141,7 +143,7 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {language === 'zh' ? '集团名称' : 'Group Name'} *
+                  {t('groupName')} *
                 </label>
                 <input type="text" value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -151,11 +153,11 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
               <div className="flex justify-end gap-3 pt-4">
                 <button type="button" onClick={() => setShowEditModal(false)}
                   className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">
-                  {language === 'zh' ? '取消' : 'Cancel'}
+                  {t('cancel')}
                 </button>
                 <button type="submit" disabled={saving}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-                  {saving ? '...' : <><Check className="w-4 h-4" />{language === 'zh' ? '保存' : 'Save'}</>}
+                  {saving ? '...' : <><Check className="w-4 h-4" />{t('save')}</>}
                 </button>
               </div>
             </form>

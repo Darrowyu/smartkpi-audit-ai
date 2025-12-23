@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UploadCloud, FileSpreadsheet, Loader2, AlertCircle, FileDown } from 'lucide-react';
 import { Language } from '../types';
-import { translations } from '../utils/i18n';
 import { downloadTemplate } from '../services/excelService';
 
 interface FileUploadProps {
@@ -9,10 +9,10 @@ interface FileUploadProps {
   isProcessing: boolean;
   error: string | null;
   language: Language;
-  t: typeof translations['en'];
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, error, language, t }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, error, language }) => {
+  const { t } = useTranslation();
   const [dragActive, setDragActive] = useState(false);
   const [period, setPeriod] = useState(() => {
     const now = new Date();
@@ -55,8 +55,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, err
           {isProcessing ? (
             <div className="flex flex-col items-center animate-pulse">
               <div className="p-4 bg-blue-100 rounded-full mb-2"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
-              <h3 className="text-lg font-semibold text-slate-700">{t.analyzing}</h3>
-              <p className="text-slate-500 text-sm max-w-xs">{t.analyzingDesc}</p>
+              <h3 className="text-lg font-semibold text-slate-700">{t('analyzing')}</h3>
+              <p className="text-slate-500 text-sm max-w-xs">{t('analyzingDesc')}</p>
             </div>
           ) : (
             <>
@@ -64,8 +64,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, err
                 <UploadCloud className={`w-8 h-8 ${dragActive ? 'text-blue-600' : 'text-slate-500'}`} />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-700">{dragActive ? t.dropFile : t.uploadTitle}</h3>
-                <p className="text-slate-500 text-sm mt-1">{t.dragDrop}</p>
+                <h3 className="text-lg font-semibold text-slate-700">{dragActive ? t('dropFile') : t('uploadTitle')}</h3>
+                <p className="text-slate-500 text-sm mt-1">{t('dragDrop')}</p>
               </div>
             </>
           )}
@@ -81,7 +81,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, err
 
       {/* 考核周期选择 */}
       <div className="mt-6 bg-white p-4 rounded-lg border border-slate-200">
-        <label className="block text-sm font-medium text-slate-700 mb-2">{language === 'zh' ? '考核周期' : 'Assessment Period'}</label>
+        <label className="block text-sm font-medium text-slate-700 mb-2">{t('assessmentPeriod')}</label>
         <div className="flex gap-2">
           <select value={period.split(' ')[0]} onChange={(e) => setPeriod(`${e.target.value} ${period.split(' ')[1]}`)}
             className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500">
@@ -98,9 +98,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, err
       </div>
 
       <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 bg-slate-50 p-4 rounded-lg border border-slate-200">
-        <div className="flex items-center gap-2"><FileSpreadsheet className="w-4 h-4 text-slate-400" /><span>{t.supportedFormats}</span></div>
+        <div className="flex items-center gap-2"><FileSpreadsheet className="w-4 h-4 text-slate-400" /><span>{t('supportedFormats')}</span></div>
         <button onClick={() => downloadTemplate(language)} className="flex items-center gap-2 text-blue-600 font-medium hover:text-blue-800 px-3 py-1.5 rounded-md">
-          <FileDown className="w-4 h-4" />{t.downloadTemplate}
+          <FileDown className="w-4 h-4" />{t('downloadTemplate')}
         </button>
       </div>
     </div>

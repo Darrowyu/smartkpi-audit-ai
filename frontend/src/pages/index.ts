@@ -1,0 +1,15 @@
+export { default as LandingPage } from './LandingPage';
+export { default as DashboardPage } from './DashboardPage';
+export { default as KPILibraryPage } from './KPILibraryPage';
+export { default as AssessmentPage } from './AssessmentPage';
+export { default as AssignmentPage } from './AssignmentPage';
+export { default as DataEntryPage } from './DataEntryPage';
+export { default as ReportsPage } from './ReportsPage';
+export { default as TeamManagementPage } from './TeamManagementPage';
+export { default as PermissionsPage } from './PermissionsPage';
+export { default as GroupDashboardPage } from './GroupDashboardPage';
+export { default as SettingsPage } from './SettingsPage';
+export { default as UploadPage } from './UploadPage';
+export { default as HistoryPage } from './HistoryPage';
+export { default as LoginPage } from './LoginPage';
+export { default as NotFoundPage } from './NotFoundPage';

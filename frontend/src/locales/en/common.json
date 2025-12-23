@@ -483,6 +483,23 @@
     "createUserDesc": "Add a new system user and assign initial role",
     "passwordKeepEmpty": "(leave empty to keep unchanged)"
   },
+  "landing": {
+    "welcome": "Welcome to SmartKPI",
+    "subtitle": "Intelligent enterprise KPI assessment platform powered by AI",
+    "getStarted": "Get Started",
+    "feature1Title": "KPI Library",
+    "feature1Desc": "Define and manage your core performance indicators",
+    "feature2Title": "Performance Dashboard",
+    "feature2Desc": "Real-time visualization of team performance",
+    "feature3Title": "Team Management",
+    "feature3Desc": "Manage users, roles and permissions",
+    "feature4Title": "Reports & Analytics",
+    "feature4Desc": "AI-powered insights and export to PDF"
+  },
+  "notFound": {
+    "message": "The page you are looking for does not exist",
+    "backHome": "Back to Home"
+  },
   "common": {
     "confirm": "Confirm",
     "loadFailed": "Load failed"

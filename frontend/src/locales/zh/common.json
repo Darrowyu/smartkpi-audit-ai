@@ -483,6 +483,23 @@
     "createUserDesc": "添加新的系统用户并分配初始角色",
     "passwordKeepEmpty": "(留空保持不变)"
   },
+  "landing": {
+    "welcome": "欢迎使用 SmartKPI",
+    "subtitle": "基于 AI 的智能企业绩效考核平台",
+    "getStarted": "开始使用",
+    "feature1Title": "KPI 指标库",
+    "feature1Desc": "定义和管理核心绩效指标",
+    "feature2Title": "绩效仪表盘",
+    "feature2Desc": "实时可视化团队绩效",
+    "feature3Title": "团队管理",
+    "feature3Desc": "管理用户、角色和权限",
+    "feature4Title": "报表与分析",
+    "feature4Desc": "AI 智能分析并导出 PDF 报告"
+  },
+  "notFound": {
+    "message": "您访问的页面不存在",
+    "backHome": "返回首页"
+  },
   "common": {
     "confirm": "确定",
     "loadFailed": "加载失败"

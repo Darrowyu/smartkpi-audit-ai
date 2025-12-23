@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx @nestjs/cli new:*)",
+      "Bash(npm install @prisma/client prisma @nestjs/jwt @nestjs/passport passport passport-jwt bcrypt @nestjs/config class-validator class-transformer @google/genai xlsx)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma init)",
+      "Bash(npx prisma:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Language } from '../../types';
-import { BarChart3, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, LayoutDashboard, BarChart3, ShieldCheck } from 'lucide-react';
+import logoImage from '../../assets/images/Makrite_KPI_logo.png';
 
 interface Props {
   language: Language;
@@ -14,6 +15,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [currentLang, setCurrentLang] = useState<Language>(language);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,174 +25,202 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
     try {
       await login(username, password);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error && 'response' in err 
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : undefined;
+      setError(errorMessage || (currentLang === 'zh' ? '登录失败' : 'Login failed'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      {/* 左侧品牌区域 */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-500 to-blue-700 relative overflow-hidden">
-        {/* 背景装饰图案 */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex w-full">
+      {/* Left Side - Brand Area */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#1E4B8E] relative overflow-hidden flex-col justify-between text-white p-12">
+        {/* Logo */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+            <img src={logoImage} alt="Makrite KPI" className="h-6 w-auto" />
+          </div>
+          <span className="text-xl font-semibold tracking-tight">Makrite KPI</span>
         </div>
 
-        <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
-          {/* Logo 和标题 */}
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="bg-white/20 backdrop-blur-sm p-2.5 rounded-lg shadow-lg">
-                <BarChart3 className="w-7 h-7 text-white" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight">
-                SmartKPI<span className="text-indigo-200">.AI</span>
-              </span>
-            </div>
+        {/* Main Content */}
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold leading-tight mb-6 tracking-tight">
+            <span className="text-white">{currentLang === 'zh' ? '让绩效' : 'Make KPI'}</span>
+            <br />
+            <span className="text-[#5B9BD5]">{currentLang === 'zh' ? '回归简单' : 'Simple Again'}</span>
+          </h1>
+          <p className="text-white/70 text-lg max-w-md leading-relaxed">
+            {currentLang === 'zh' 
+              ? '结合 AI 技术的下一代绩效管理系统，让数据驱动决策，提升组织效能。' 
+              : 'Next-generation performance management system powered by AI. Data-driven decisions for better organizational efficiency.'}
+          </p>
+        </div>
 
-            <h1 className="text-4xl font-bold mb-4">{currentLang === 'zh' ? '欢迎回来' : 'Welcome Back'}</h1>
-            <p className="text-blue-100 text-lg">
-              {currentLang === 'zh' ? 'AI 驱动的 KPI 绩效考核智能分析平台' : 'AI-Powered KPI Performance Analysis Platform'}
-            </p>
-          </div>
-
-          {/* 功能特性列表 */}
+        {/* Features */}
+        <div className="relative z-10 space-y-8">
           <div className="space-y-6">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-blue-200 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold mb-1">{currentLang === 'zh' ? 'AI 智能分析' : 'AI Smart Analysis'}</h3>
-                <p className="text-blue-100 text-sm">{currentLang === 'zh' ? '基于 AI 的自动化绩效评估' : 'Automated performance evaluation powered by AI'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-blue-200 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold mb-1">{currentLang === 'zh' ? '可视化报告' : 'Visual Reports'}</h3>
-                <p className="text-blue-100 text-sm">{currentLang === 'zh' ? '交互式图表和 PDF 导出功能' : 'Interactive charts with PDF export capabilities'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-blue-200 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold mb-1">{currentLang === 'zh' ? 'Excel 智能解析' : 'Smart Excel Parsing'}</h3>
-                <p className="text-blue-100 text-sm">{currentLang === 'zh' ? '灵活识别各种表格结构' : 'Flexible recognition of various table structures'}</p>
-              </div>
-            </div>
+            <FeatureItem 
+              icon={LayoutDashboard} 
+              title={currentLang === 'zh' ? '多维度仪表盘' : 'Multi-dimensional Dashboard'} 
+              desc={currentLang === 'zh' ? '实时监控核心指标，全景视图掌控全局' : 'Real-time monitoring of core metrics with panoramic views'} 
+            />
+            <FeatureItem 
+              icon={BarChart3} 
+              title={currentLang === 'zh' ? '智能数据分析' : 'Intelligent Analytics'} 
+              desc={currentLang === 'zh' ? 'AI 驱动的深度洞察与趋势预测' : 'AI-driven deep insights and trend forecasting'} 
+            />
+            <FeatureItem 
+              icon={ShieldCheck} 
+              title={currentLang === 'zh' ? '企业级安全' : 'Enterprise Security'} 
+              desc={currentLang === 'zh' ? '基于角色的权限控制与数据加密' : 'Role-based access control and data encryption'} 
+            />
+          </div>
+          
+          <div className="pt-8 border-t border-white/20 text-white/50 text-sm">
+            &copy; 2025 SmartKPI Audit AI. {currentLang === 'zh' ? '保留所有权利' : 'All rights reserved'}.
           </div>
         </div>
       </div>
 
-      {/* 右侧登录表单区域 */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          {/* 移动端 Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="bg-blue-600 p-2 rounded-lg shadow-lg">
-              <BarChart3 className="w-6 h-6 text-white" />
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-white">
+        <div className="w-full max-w-[400px]">
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex justify-center mb-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#1E4B8E] rounded-lg flex items-center justify-center">
+                <img src={logoImage} alt="Makrite KPI" className="h-6 w-auto" />
+              </div>
+              <span className="text-xl font-semibold text-slate-900">Makrite KPI</span>
             </div>
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">
-              SmartKPI<span className="text-blue-600">.AI</span>
-            </span>
           </div>
 
-          {/* 登录卡片 */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
-            {/* 标题和语言切换 */}
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                  {currentLang === 'zh' ? '登录' : 'Login'}
-                </h2>
-                <p className="text-slate-500 text-sm">
-                  {currentLang === 'zh' ? '输入您的凭据以访问您的账户' : 'Enter your credentials to access your account'}
-                </p>
-              </div>
-              <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
-                <button
-                  onClick={() => setCurrentLang('zh')}
-                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                    currentLang === 'zh' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  中文
-                </button>
-                <button
-                  onClick={() => setCurrentLang('en')}
-                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                    currentLang === 'en' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-900">
+              {currentLang === 'zh' ? '欢迎回来' : 'Welcome back'}
+            </h2>
+            <p className="text-slate-500 mt-2">
+              {currentLang === 'zh' ? '请输入您的凭证以访问工作台' : 'Please enter your credentials to access workspace'}
+            </p>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email/Username Field */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                {currentLang === 'zh' ? '工作邮箱' : 'Work Email'}
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-[#1E4B8E] focus:ring-2 focus:ring-[#1E4B8E]/20 transition-all outline-none"
+                placeholder="name@company.com"
+                required
+              />
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg mb-4 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-slate-700 text-sm font-medium mb-2">
-                  * {currentLang === 'zh' ? '用户名' : 'Username'}
+            {/* Password Field */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium text-slate-700">
+                  {currentLang === 'zh' ? '密码' : 'Password'}
                 </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder={currentLang === 'zh' ? '请输入用户名' : 'Please enter username'}
-                  required
-                  className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                />
+                <a href="#" className="text-sm text-slate-500 hover:text-[#1E4B8E] transition-colors">
+                  {currentLang === 'zh' ? '忘记密码?' : 'Forgot password?'}
+                </a>
               </div>
-
-              <div>
-                <label className="block text-slate-700 text-sm font-medium mb-2">
-                  * {currentLang === 'zh' ? '密码' : 'Password'}
-                </label>
+              <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={currentLang === 'zh' ? '请输入密码' : 'Please enter password'}
+                  className="w-full px-4 py-3 pr-11 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-[#1E4B8E] focus:ring-2 focus:ring-[#1E4B8E]/20 transition-all outline-none"
+                  placeholder="********"
                   required
-                  className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-blue-500/30"
-              >
-                {loading ? (currentLang === 'zh' ? '登录中...' : 'Logging in...') : (currentLang === 'zh' ? '登录' : 'Login')}
-              </button>
-            </form>
-
-            {/* 底部提示 */}
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-slate-500 text-sm">
-                {currentLang === 'zh' ? '演示账号' : 'Demo Account'}
-              </p>
-              <p className="text-slate-600 text-sm font-medium mt-1">
-                {currentLang === 'zh' ? '用户名: admin / 密码: admin123' : 'Username: admin / Password: admin123'}
-              </p>
             </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-[#1E4B8E] hover:bg-[#163a6e] text-white font-medium rounded-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                currentLang === 'zh' ? '立即登录' : 'Sign In'
+              )}
+            </button>
+          </form>
+
+          {/* Register Link */}
+          <div className="mt-6 text-center">
+            <span className="text-slate-500">
+              {currentLang === 'zh' ? '还没有账户?' : 'Don\'t have an account?'}
+            </span>
+            {' '}
+            <a href="#" className="text-[#1E4B8E] font-medium hover:text-[#163a6e] transition-colors">
+              {currentLang === 'zh' ? '免费注册' : 'Sign up free'}
+            </a>
           </div>
 
-          {/* 版权信息 */}
-          <p className="text-center text-slate-400 text-xs mt-8">
-            © 2025 SmartKPI.AI. {currentLang === 'zh' ? '保留所有权利' : 'All rights reserved'}.
-          </p>
+          {/* Demo Hint */}
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <div className="bg-slate-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  {currentLang === 'zh' ? '演示账户' : 'Demo Account'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <div className="text-slate-600">
+                  <span className="text-slate-400 mr-2">User:</span>
+                  <span className="font-mono font-medium">admin</span>
+                </div>
+                <div className="text-slate-600">
+                  <span className="text-slate-400 mr-2">Pass:</span>
+                  <span className="font-mono font-medium">admin123</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+const FeatureItem = ({ icon: Icon, title, desc }: { icon: React.ElementType, title: string, desc: string }) => (
+  <div className="flex gap-4 items-start group">
+    <div className="p-2 rounded-lg bg-white/10 text-[#5B9BD5] mt-1 group-hover:bg-white/20 group-hover:text-white transition-colors">
+      <Icon className="w-5 h-5" />
+    </div>
+    <div>
+      <h3 className="font-semibold text-white text-lg">{title}</h3>
+      <p className="text-white/60 text-sm leading-relaxed">{desc}</p>
+    </div>
+  </div>
+);

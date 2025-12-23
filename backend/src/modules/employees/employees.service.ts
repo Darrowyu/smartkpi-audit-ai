@@ -4,7 +4,7 @@ import { CreateEmployeeDto, UpdateEmployeeDto, BulkImportEmployeeDto } from './d
 
 @Injectable()
 export class EmployeesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateEmployeeDto, companyId: string) {
     const existing = await this.prisma.employee.findFirst({
@@ -14,7 +14,7 @@ export class EmployeesService {
 
     return this.prisma.employee.create({
       data: { ...dto, companyId },
-      include: { department: { select: { id: true, name: true, code: true } } },
+      include: { department: { select: { id: true, name: true } } },
     });
   }
 
@@ -39,7 +39,7 @@ export class EmployeesService {
         skip,
         take: limit,
         orderBy: { name: 'asc' },
-        include: { department: { select: { id: true, name: true, code: true } } },
+        include: { department: { select: { id: true, name: true } } },
       }),
       this.prisma.employee.count({ where }),
     ]);
@@ -61,7 +61,7 @@ export class EmployeesService {
     return this.prisma.employee.update({
       where: { id },
       data: dto,
-      include: { department: { select: { id: true, name: true, code: true } } },
+      include: { department: { select: { id: true, name: true } } },
     });
   }
 
@@ -75,12 +75,12 @@ export class EmployeesService {
   async bulkImport(employees: BulkImportEmployeeDto[], companyId: string) {
     const results = { created: 0, updated: 0, errors: [] as string[] };
 
-    // 获取部门映射
+    // 获取部门映射（使用 name 进行匹配）
     const departments = await this.prisma.department.findMany({
       where: { companyId, isActive: true },
-      select: { id: true, code: true },
+      select: { id: true, name: true },
     });
-    const deptMap = new Map(departments.map((d) => [d.code?.toUpperCase(), d.id]));
+    const deptMap = new Map(departments.map((d) => [d.name?.toUpperCase(), d.id]));
 
     for (const emp of employees) {
       try {

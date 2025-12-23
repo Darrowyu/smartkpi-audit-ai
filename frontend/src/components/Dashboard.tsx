@@ -38,7 +38,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, onReset, t }) => {
     setIsExporting(true);
     try {
       await exportKPIReport(data, language);
-    } catch (e) { console.error(e); alert("Export failed"); }
+    } catch (_e) { alert("Export failed"); }
     finally { setIsExporting(false); }
   };
 
@@ -131,7 +131,16 @@ const Dashboard: React.FC<DashboardProps> = ({ data, onReset, t }) => {
   );
 };
 
-const StatCard = ({ title, value, subValue, suffix, icon, color }: any) => (
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  subValue?: string;
+  suffix?: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, subValue, suffix, icon, color }) => (
   <div className={`p-5 rounded-xl border ${color} shadow-sm`}>
     <div className="flex justify-between items-start mb-2"><span className="text-slate-500 text-sm font-medium">{title}</span>{icon}</div>
     <div className="flex items-baseline gap-2"><h4 className="text-2xl font-bold text-slate-800">{value}<span className="text-lg text-slate-400 font-normal">{suffix}</span></h4>{subValue && <span className="text-sm font-medium text-slate-500">({subValue})</span>}</div>

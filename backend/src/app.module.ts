@@ -18,6 +18,7 @@ import { AssessmentModule } from './modules/assessment/assessment.module';
 import { CalculationModule } from './modules/calculation/calculation.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
     CalculationModule,
     ReportsModule,
     PermissionsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

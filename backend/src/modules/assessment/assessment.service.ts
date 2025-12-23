@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreatePeriodDto, UpdatePeriodDto, QueryPeriodDto, CreateSubmissionDto, UpdateSubmissionDto, DataEntryDto } from './dto';
 import { PeriodStatus, SubmissionStatus } from '@prisma/client';
 
 @Injectable()
 export class AssessmentService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private notificationsService: NotificationsService,
+    ) { }
 
     // ==================== Period 考核周期 ====================
 
@@ -70,13 +74,24 @@ export class AssessmentService {
             throw new BadRequestException('已锁定的周期不可修改');
         }
 
-        return this.prisma.assessmentPeriod.update({
+        const result = await this.prisma.assessmentPeriod.update({
             where: { id },
             data: {
                 ...dto,
                 lockDate: dto.lockDate ? new Date(dto.lockDate) : period.lockDate,
             },
         });
+
+        // 状态变更通知
+        if (dto.status && dto.status !== period.status) {
+            if (dto.status === PeriodStatus.ACTIVE) {
+                await this.notificationsService.notifyPeriodActivated(id, period.name, companyId);
+            } else if (dto.status === PeriodStatus.LOCKED) {
+                await this.notificationsService.notifyPeriodLocked(id, period.name, companyId);
+            }
+        }
+
+        return result;
     }
 
     /** 锁定考核周期 */
@@ -125,7 +140,7 @@ export class AssessmentService {
             throw new BadRequestException('请先录入数据再提交');
         }
 
-        return this.prisma.dataSubmission.update({
+        const result = await this.prisma.dataSubmission.update({
             where: { id: submissionId },
             data: {
                 status: SubmissionStatus.PENDING,
@@ -133,6 +148,16 @@ export class AssessmentService {
                 submittedById: userId,
             },
         });
+
+        // 获取提交者信息并发送通知
+        const submitter = await this.prisma.user.findUnique({ where: { id: userId } });
+        await this.notificationsService.notifySubmissionPending(
+            submissionId,
+            companyId,
+            submitter?.username || '用户',
+        );
+
+        return result;
     }
 
     /** 审批通过 */
@@ -143,7 +168,7 @@ export class AssessmentService {
 
         if (!submission) throw new NotFoundException('待审批提交不存在');
 
-        return this.prisma.dataSubmission.update({
+        const result = await this.prisma.dataSubmission.update({
             where: { id: submissionId },
             data: {
                 status: SubmissionStatus.APPROVED,
@@ -151,6 +176,17 @@ export class AssessmentService {
                 approvedById: approverUserId,
             },
         });
+
+        // 通知提交者
+        if (submission.submittedById) {
+            await this.notificationsService.notifySubmissionApproved(
+                submissionId,
+                submission.submittedById,
+                companyId,
+            );
+        }
+
+        return result;
     }
 
     /** 驳回提交 */
@@ -161,7 +197,7 @@ export class AssessmentService {
 
         if (!submission) throw new NotFoundException('待审批提交不存在');
 
-        return this.prisma.dataSubmission.update({
+        const result = await this.prisma.dataSubmission.update({
             where: { id: submissionId },
             data: {
                 status: SubmissionStatus.REJECTED,
@@ -169,6 +205,18 @@ export class AssessmentService {
                 approvedById: approverUserId,
             },
         });
+
+        // 通知提交者
+        if (submission.submittedById) {
+            await this.notificationsService.notifySubmissionRejected(
+                submissionId,
+                submission.submittedById,
+                companyId,
+                reason,
+            );
+        }
+
+        return result;
     }
 
     // ==================== Data Entry 数据录入 ====================

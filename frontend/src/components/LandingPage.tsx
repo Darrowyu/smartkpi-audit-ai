@@ -65,7 +65,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, t }) => {
   );
 };
 
-const FeatureCard = ({ icon, title, desc }: any) => (
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, desc }) => (
   <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
     <div className="bg-slate-50 w-16 h-16 rounded-xl flex items-center justify-center mb-6">{icon}</div>
     <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>
@@ -73,7 +79,14 @@ const FeatureCard = ({ icon, title, desc }: any) => (
   </div>
 );
 
-const Step = ({ num, title, desc, icon }: any) => (
+interface StepProps {
+  num: string;
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+}
+
+const Step: React.FC<StepProps> = ({ num, title, desc, icon }) => (
   <div className="relative flex flex-col items-center text-center">
     <div className="w-24 h-24 rounded-full bg-white border-4 border-slate-100 flex items-center justify-center shadow-sm z-10 mb-6">
       {icon}

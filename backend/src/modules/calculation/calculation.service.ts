@@ -2,8 +2,9 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { FormulaEngine, CalculationInput, CalculationResult } from './engines/formula.engine';
-import { RollupEngine, IndividualScore, DepartmentScore, RollupMethod } from './engines/rollup.engine';
+import { RollupEngine, IndividualScore, RollupMethod } from './engines/rollup.engine';
 import { FormulaType, PeriodStatus, SubmissionStatus, KPIStatusEnum } from '@prisma/client';
 
 export interface CalculationJobResult {
@@ -17,6 +18,7 @@ export interface CalculationJobResult {
 export class CalculationService {
     constructor(
         private prisma: PrismaService,
+        private notificationsService: NotificationsService,
         private formulaEngine: FormulaEngine,
         private rollupEngine: RollupEngine,
         @InjectQueue('kpi-calculation') private calculationQueue: Queue,
@@ -204,6 +206,14 @@ export class CalculationService {
                 },
             });
         }
+
+        // 发送计算完成通知
+        await this.notificationsService.notifyCalculationComplete(
+            periodId,
+            period.name,
+            companyId,
+            employeeScores.size,
+        );
 
         return {
             periodId,

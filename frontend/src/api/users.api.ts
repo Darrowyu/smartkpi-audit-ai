@@ -10,6 +10,7 @@ export interface User {
   role: UserRole;
   isActive: boolean;
   departmentId?: string;
+  department?: { id: string; name: string };
   phoneNumber?: string;
   language: string;
   lastLoginAt?: string;

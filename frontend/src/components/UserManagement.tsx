@@ -4,7 +4,7 @@ import { getDepartments, Department } from '../api/departments.api';
 import { companiesApi, Company } from '../api/companies.api';
 import { useAuth } from '../context/AuthContext';
 import { translations } from '../utils/i18n';
-import { Language } from '../types';
+import { Language, UserRole } from '../types';
 import { Users, Plus, Edit, Trash2, Search, Shield, UserCheck, X } from 'lucide-react';
 
 interface Props {
@@ -23,7 +23,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [formData, setFormData] = useState<CreateUserData & { departmentId?: string; companyId?: string }>({
-    username: '', email: '', password: '', firstName: '', lastName: '', role: 'USER', language: 'zh', departmentId: undefined, companyId: undefined
+    username: '', email: '', password: '', firstName: '', lastName: '', role: UserRole.USER, language: 'zh', departmentId: undefined, companyId: undefined
   });
 
   const isGroupAdmin = currentUser?.role === 'GROUP_ADMIN' || currentUser?.role === 'SUPER_ADMIN';
@@ -40,7 +40,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
     try {
       const res = await usersApi.getUsers(1, 50, search || undefined, roleFilter || undefined);
       setUsers(res.data);
-    } catch (e) { console.error(e); }
+    } catch (_e) { /* 加载失败静默处理 */ }
     finally { setLoading(false); }
   };
 
@@ -48,7 +48,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
     try {
       const res = await getDepartments({ limit: 100 });
       setDepartments(res.data);
-    } catch (e) { console.error(e); }
+    } catch (_e) { /* 加载失败静默处理 */ }
   };
 
   const loadCompanies = async () => {
@@ -57,7 +57,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
         const res = await companiesApi.getCompanies({ limit: 100 });
         setCompanies(res.data);
       }
-    } catch (e) { console.error(e); }
+    } catch (_e) { /* 加载失败静默处理 */ }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +72,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
       }
       setShowModal(false);
       setEditingUser(null);
-      setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: 'USER', language: 'zh' });
+      setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: UserRole.USER, language: 'zh' });
       loadUsers();
     } catch (e: any) {
       alert(e.response?.data?.message || 'Operation failed');
@@ -88,9 +88,9 @@ const UserManagement: React.FC<Props> = ({ language }) => {
       password: '',
       firstName: user.firstName || '',
       lastName: user.lastName || '',
-      role: user.role as any,
+      role: user.role,
       language: user.language,
-      departmentId: (user as any).departmentId || undefined
+      departmentId: user.departmentId || undefined
     });
     setShowModal(true);
   };
@@ -136,7 +136,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
           <Users className="w-6 h-6 text-blue-600" />
           {language === 'zh' ? '用户管理' : 'User Management'}
         </h2>
-        <button onClick={() => { setEditingUser(null); setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: 'USER', language: 'zh' }); setShowModal(true); }}
+        <button onClick={() => { setEditingUser(null); setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: UserRole.USER, language: 'zh' }); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
           <Plus className="w-4 h-4" />{language === 'zh' ? '添加用户' : 'Add User'}
         </button>
@@ -189,7 +189,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">{user.email || '-'}</td>
                     <td className="px-6 py-4 text-sm text-slate-500">
-                      {(user as any).department?.name || '-'}
+                      {user.department?.name || '-'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${roleColors[user.role]}`}>
@@ -294,7 +294,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '角色' : 'Role'}</label>
-                <select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+                <select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value as UserRole})}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
                   <option value="USER">{roleLabels.USER}</option>
                   <option value="MANAGER">{roleLabels.MANAGER}</option>

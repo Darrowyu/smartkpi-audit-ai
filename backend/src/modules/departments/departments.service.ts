@@ -4,16 +4,9 @@ import { CreateDepartmentDto, UpdateDepartmentDto } from './dto/department.dto';
 
 @Injectable()
 export class DepartmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateDepartmentDto, companyId: string) {
-    if (dto.code) { // 检查代码唯一性
-      const existing = await this.prisma.department.findFirst({
-        where: { companyId, code: dto.code },
-      });
-      if (existing) throw new ConflictException('Department code already exists');
-    }
-
     return this.prisma.department.create({
       data: { ...dto, companyId },
     });
@@ -25,10 +18,7 @@ export class DepartmentsService {
       companyId,
       isActive: true,
       ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { code: { contains: search, mode: 'insensitive' as const } },
-        ],
+        name: { contains: search, mode: 'insensitive' as const },
       }),
     };
 
@@ -57,12 +47,6 @@ export class DepartmentsService {
 
   async update(id: string, dto: UpdateDepartmentDto, companyId: string) {
     await this.findOne(id, companyId); // 验证存在性和租户
-    if (dto.code) { // 检查代码唯一性
-      const existing = await this.prisma.department.findFirst({
-        where: { companyId, code: dto.code, NOT: { id } },
-      });
-      if (existing) throw new ConflictException('Department code already exists');
-    }
     return this.prisma.department.update({ where: { id }, data: dto });
   }
 

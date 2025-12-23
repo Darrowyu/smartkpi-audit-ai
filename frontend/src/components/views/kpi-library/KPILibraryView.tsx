@@ -37,6 +37,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { kpiLibraryApi } from '@/api/kpi-library.api';
 import { KPIDefinition, FormulaType, AssessmentFrequency } from '@/types';
 
+// Form values type
+interface KPIFormValues {
+    code: string;
+    name: string;
+    description?: string;
+    formulaType: FormulaType;
+    customFormula?: string;
+    frequency: AssessmentFrequency;
+    defaultWeight: number;
+    scoreCap: number;
+    scoreFloor: number;
+    unit?: string;
+}
+
 // Zod Schema for Validation
 const kpiSchema = z.object({
     code: z.string().min(1, '请输入指标编码'),
@@ -55,13 +69,11 @@ const kpiSchema = z.object({
         AssessmentFrequency.QUARTERLY,
         AssessmentFrequency.YEARLY,
     ]),
-    defaultWeight: z.coerce.number().min(0).max(100),
-    scoreCap: z.coerce.number().min(0),
-    scoreFloor: z.coerce.number().min(0),
+    defaultWeight: z.number().min(0).max(100),
+    scoreCap: z.number().min(0),
+    scoreFloor: z.number().min(0),
     unit: z.string().optional(),
 });
-
-type KPIFormValues = z.infer<typeof kpiSchema>;
 
 export const KPILibraryView: React.FC = () => {
     const [kpis, setKpis] = useState<KPIDefinition[]>([]);

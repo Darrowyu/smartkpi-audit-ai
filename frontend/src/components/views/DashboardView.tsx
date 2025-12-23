@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, Users, Trophy, AlertTriangle, Download, Calculator, RefreshCw } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { ArrowUpRight, Users, Trophy, AlertTriangle, Download, Calculator, RefreshCw } from 'lucide-react';
 import { assessmentApi } from '@/api/assessment.api';
-import { reportsApi } from '@/api/reports.api';
+import { reportsApi, DepartmentRanking, TrendData } from '@/api/reports.api';
 import { calculationApi } from '@/api/calculation.api';
-import { AssessmentPeriod, PeriodStatus } from '@/types';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 
 interface OverviewData {
@@ -29,8 +28,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
   const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [overview, setOverview] = useState<OverviewData | null>(null);
-  const [deptRanking, setDeptRanking] = useState<any[]>([]);
-  const [trendData, setTrendData] = useState<any[]>([]);
+  const [deptRanking, setDeptRanking] = useState<DepartmentRanking[]>([]);
+  const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const { toast } = useToast();
 
@@ -48,13 +47,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
   const loadPeriods = async () => {
     try {
       const response = await assessmentApi.getPeriods();
-      const periodsData = response.data || response || []; // 兼容 { data, meta } 或直接数组
+      const periodsData = response.data || response || [];
       setPeriods(periodsData);
       if (periodsData.length > 0) {
         setSelectedPeriod(periodsData[0].id);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      // 静默处理加载失败
     }
   };
 
@@ -62,8 +61,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
     try {
       const data = await reportsApi.getTrend();
       setTrendData(data);
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      // 静默处理加载失败
     }
   };
 
@@ -75,8 +74,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
       ]);
       setOverview(ov);
       setDeptRanking(dept);
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      // 静默处理加载失败
     }
   };
 
@@ -91,8 +90,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
       toast({ variant: 'destructive', title: '导出失败', description: '请稍后重试' });
     }
   };
@@ -103,11 +101,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
     try {
       const result = await calculationApi.executeCalculation(selectedPeriod);
       toast({ title: '计算完成', description: `已计算 ${result.employeeCount} 名员工的绩效，耗时 ${result.totalTime}ms` });
-      await loadPeriodData(selectedPeriod); // 刷新数据
+      await loadPeriodData(selectedPeriod);
       await loadTrend();
-    } catch (e: any) {
-      console.error(e);
-      toast({ variant: 'destructive', title: '计算失败', description: e.response?.data?.message || '请确保有已审批的数据提交' });
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      toast({ variant: 'destructive', title: '计算失败', description: err.response?.data?.message || '请确保有已审批的数据提交' });
     } finally {
       setIsCalculating(false);
     }

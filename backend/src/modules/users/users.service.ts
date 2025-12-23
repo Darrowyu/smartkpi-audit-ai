@@ -50,7 +50,7 @@ export class UsersService {
           createdAt: true,
           lastLoginAt: true,
           departmentId: true,
-          department: { select: { id: true, name: true, code: true } },
+          department: { select: { id: true, name: true } },
         },
       }),
       this.prisma.user.count({ where }),
@@ -74,7 +74,7 @@ export class UsersService {
         createdAt: true,
         lastLoginAt: true,
         departmentId: true,
-        department: { select: { id: true, name: true, code: true } },
+        department: { select: { id: true, name: true } },
       },
     });
     if (!user) throw new NotFoundException('User not found');

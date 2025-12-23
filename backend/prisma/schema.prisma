@@ -112,6 +112,7 @@ model User {
   // Relations
   uploadedFiles UploadedFile[]
   kpiAnalyses   KPIAnalysis[]
+  notifications Notification[]
 
   @@index([companyId])
   @@index([departmentId])
@@ -583,5 +584,51 @@ model PermissionConfig {
 
   @@unique([companyId]) // 每个公司一条配置记录
   @@map("permission_configs")
+}
+
+// ============================================
+// NEW: Notification System (通知系统)
+// ============================================
+
+enum NotificationType {
+  SUBMISSION_PENDING    // 数据提交待审批
+  SUBMISSION_APPROVED   // 数据提交已通过
+  SUBMISSION_REJECTED   // 数据提交被驳回
+  CALCULATION_COMPLETE  // 绩效计算完成
+  PERIOD_ACTIVATED      // 考核周期已激活
+  PERIOD_LOCKED         // 考核周期已锁定
+  LOW_PERFORMANCE_ALERT // 低绩效预警
+  ASSIGNMENT_CREATED    // 新指标分配
+  SYSTEM_ANNOUNCEMENT   // 系统公告
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  
+  type        NotificationType
+  title       String           // 通知标题
+  content     String           @db.Text // 通知内容
+  
+  // 关联数据（可选，用于跳转）
+  relatedType String?          @map("related_type") // "period" | "submission" | "employee"
+  relatedId   String?          @map("related_id")
+  
+  // 接收者
+  userId      String           @map("user_id")
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  companyId   String           @map("company_id")
+  
+  // 状态
+  isRead      Boolean          @default(false) @map("is_read")
+  readAt      DateTime?        @map("read_at")
+  
+  createdAt   DateTime         @default(now())
+  
+  @@index([userId])
+  @@index([companyId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }
 

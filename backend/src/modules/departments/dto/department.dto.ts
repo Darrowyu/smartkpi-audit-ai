@@ -5,10 +5,6 @@ export class CreateDepartmentDto {
   @MaxLength(100)
   name: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(20)
-  code?: string; // 部门代码如 SALES, ENG
 
   @IsOptional()
   @IsString()
@@ -22,10 +18,6 @@ export class UpdateDepartmentDto {
   @MaxLength(100)
   name?: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(20)
-  code?: string;
 
   @IsOptional()
   @IsString()
@@ -44,5 +36,5 @@ export class DepartmentQueryDto {
 
   @IsOptional()
   @IsString()
-  search?: string; // 搜索名称或代码
+  search?: string; // 搜索名称
 }

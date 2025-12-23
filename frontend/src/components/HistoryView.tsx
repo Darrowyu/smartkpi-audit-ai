@@ -22,7 +22,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectResult, t, language }
     try {
       const res = await kpiAnalysisApi.getAnalyses(1, 20);
       setHistory(res.data);
-    } catch (e) { console.error(e); }
+    } catch (_e) { /* 加载失败静默处理 */ }
     finally { setLoading(false); }
   };
 
@@ -30,7 +30,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectResult, t, language }
     try {
       const analysis = await kpiAnalysisApi.getAnalysis(id);
       if (analysis.rawResult) onSelectResult(analysis.rawResult);
-    } catch (e) { console.error(e); }
+    } catch (_e) { /* 加载失败静默处理 */ }
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
@@ -39,7 +39,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectResult, t, language }
     try {
       await kpiAnalysisApi.deleteAnalysis(id);
       setHistory(prev => prev.filter(item => item.id !== id));
-    } catch (e) { console.error(e); }
+    } catch (_e) { /* 删除失败静默处理 */ }
   };
 
   const formatDate = (dateStr: string) => new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(dateStr));

@@ -4,161 +4,174 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SmartKPI Audit AI is a React-based web application that automates KPI (Key Performance Indicator) analysis for employee performance reviews. It processes Excel files containing KPI data, uses Google's Gemini AI to analyze and score performance, and generates interactive dashboards with visual insights.
+SmartKPI Audit AI is a full-stack enterprise KPI performance management platform. It features a React frontend with a NestJS backend, using PostgreSQL for data persistence and Google Gemini AI for intelligent analysis.
+
+## Project Structure
+
+```
+smartkpi-audit-ai/
+├── frontend/          # React + TypeScript + Vite + TailwindCSS
+├── backend/           # NestJS + Prisma + PostgreSQL
+├── package.json       # Root workspace scripts
+└── CLAUDE.md          # This file
+```
 
 ## Development Commands
 
 ### Setup
 ```bash
-npm install
+npm run install:all   # Install all dependencies (root + frontend + backend)
 ```
-
-Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key before running.
 
 ### Run Development Server
 ```bash
-npm run dev
-```
-Starts the Vite dev server on port 3000 (configured in [vite.config.ts](vite.config.ts#L9)).
-
-### Build for Production
-```bash
-npm run build
+npm run dev           # Start both frontend (5173) and backend (3000) concurrently
+npm run dev:frontend  # Frontend only
+npm run dev:backend   # Backend only
 ```
 
-### Preview Production Build
+### Build
 ```bash
-npm run preview
+npm run build         # Build both frontend and backend
+```
+
+### Database
+```bash
+cd backend
+npx prisma migrate dev   # Run migrations
+npx prisma db seed       # Seed initial data
+npx prisma studio        # Open Prisma Studio
 ```
 
 ## Architecture Overview
 
-### Application Flow
+### Multi-Tenant Architecture
 
-1. **Excel Upload** ([FileUpload.tsx](components/FileUpload.tsx))
-   - User uploads .xlsx/.xls file
-   - File is parsed client-side using `xlsx` library ([excelService.ts](services/excelService.ts))
-   - Excel data is converted to CSV-like text representation
+The system uses a hierarchical multi-tenant model:
+- **Group** (集团) - Top-level organization
+- **Company** (公司) - Subsidiary within a group  
+- **Department** (部门) - Team within a company
+- **Employee** (员工) - Individual team member
 
-2. **AI Analysis** ([geminiService.ts](services/geminiService.ts))
-   - Parsed data sent to Google Gemini API (`gemini-2.5-flash` model)
-   - AI performs intelligent parsing (handles flexible table structures)
-   - Calculates weighted KPI scores and assigns performance statuses
-   - Generates natural language insights in English or Chinese
-   - Uses structured JSON schema for type-safe responses
+### User Roles
+- `SUPER_ADMIN` - Platform-wide access
+- `GROUP_ADMIN` - Cross-company access within a group
+- `MANAGER` - Department-level access
+- `USER` - Personal data only
 
-3. **Results Display** ([Dashboard.tsx](components/Dashboard.tsx))
-   - Interactive dashboard with charts (using Recharts)
-   - Detailed employee performance tables
-   - PDF export functionality (html2canvas + jsPDF)
+### Backend Modules (NestJS)
 
-4. **Data Persistence** ([storage.ts](utils/storage.ts))
-   - Analysis results saved to browser localStorage
-   - History limited to 50 most recent analyses
-   - No server-side storage
+Located in `backend/src/modules/`:
+- `auth` - JWT authentication
+- `users` - User management
+- `groups` - Group (corporation) management
+- `companies` - Company management
+- `departments` - Department management
+- `employees` - Employee management
+- `files` - File upload handling
+- `kpi-analysis` - AI-powered KPI analysis (Gemini)
+- `kpi-library` - KPI definition templates
+- `assessment` - Assessment period management
+- `calculation` - Score calculation engine
+- `reports` - Report generation
+- `permissions` - Role-based access control
+- `queue` - Background job processing (Bull)
 
-### View Management
+### Frontend Structure (React)
 
-The app uses a view-based routing system managed in [App.tsx](App.tsx) with the following views:
+Located in `frontend/src/`:
+- `components/` - UI components
+  - `views/` - Main page views
+  - `ui/` - Shadcn/Radix UI components
+  - `auth/` - Authentication components
+  - `layout/` - Layout components (Sidebar)
+- `api/` - API client functions
+- `context/` - React context (AuthContext)
+- `utils/` - Utility functions
+- `types.ts` - TypeScript type definitions
 
-- `landing` - Marketing homepage with feature descriptions
-- `upload` - Dedicated Excel file upload screen
-- `dashboard` - Analysis results and visualizations
-- `history` - Previous analysis results from localStorage
-- `settings` - Language preferences and app info
+### Available Views
+`landing`, `dashboard`, `kpi-management`, `team-management`, `reports`, `history`, `settings`, `upload`, `organization`, `company`, `kpi-library`, `assessment`, `data-entry`, `permissions`, `assignment`, `group-dashboard`
 
-Navigation between views is handled through `currentView` state in App.tsx, not React Router.
+## Tech Stack
 
-### Internationalization (i18n)
+### Frontend
+- React 18 + TypeScript
+- Vite (build tool)
+- TailwindCSS + Shadcn UI (Radix)
+- Recharts (charts)
+- React Hook Form + Zod (forms)
+- Axios (HTTP client)
 
-Bilingual support (English/Chinese) is implemented in [utils/i18n.ts](utils/i18n.ts):
-- Single `translations` object with `en` and `zh` keys
-- Language state managed globally in App.tsx
-- AI-generated content (summaries, comments) adapts to selected language
-- Status enums (`Excellent`, `Good`, `Average`, `Poor`) remain in English internally
+### Backend
+- NestJS 11
+- Prisma 7 (ORM)
+- PostgreSQL (database)
+- Bull (job queue, Redis-backed)
+- @google/genai (Gemini AI)
+- Passport + JWT (authentication)
 
-### Type System
+## Environment Variables
 
-Core types are defined in [types.ts](types.ts):
-- `KPIAnalysisResult` - Complete analysis output structure
-- `EmployeeKPI` - Individual employee performance data
-- `KPIMetric` - Single metric with score and AI commentary
-- `KPIStatus` - Enum for performance ratings
-- `Language` - Type-safe language selection (`'en' | 'zh'`)
-- `View` - Valid application views
+### Backend (`backend/.env`)
+```env
+DATABASE_URL="postgresql://..."
+JWT_SECRET="your-secret-key"    # CHANGE IN PRODUCTION
+JWT_EXPIRATION="15m"
+GEMINI_API_KEY="your-api-key"
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+```
 
-### Environment Variables
+### Frontend (`frontend/.env`)
+```env
+VITE_API_URL=http://localhost:3000/api
+```
 
-Configured in [vite.config.ts](vite.config.ts#L13-L16):
-- `GEMINI_API_KEY` from `.env.local` is exposed as `process.env.API_KEY`
-- Both `process.env.API_KEY` and `process.env.GEMINI_API_KEY` are defined for flexibility
+## Key Patterns
 
-## Key Technical Patterns
+### API Structure
+All API endpoints are prefixed with `/api` and follow RESTful conventions:
+- `GET /api/users` - List users
+- `POST /api/users` - Create user
+- `GET /api/users/:id` - Get user
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
 
-### AI Integration Strategy
+### Authentication Flow
+1. User logs in via `/api/auth/login`
+2. Server returns JWT token
+3. Frontend stores token in localStorage
+4. Token is sent in `Authorization: Bearer <token>` header
+5. Backend validates token via `JwtAuthGuard`
 
-The Gemini API call uses:
-- **Structured output with JSON schema** - Ensures type-safe, predictable responses
-- **Low temperature (0.2)** - For consistent numerical calculations
-- **Flexible parsing logic** - AI infers column meanings when headers vary
-- **Weighted scoring calculation** - Handles missing scores with intelligent defaults
+### KPI Calculation Flow
+1. Define KPIs in KPI Library
+2. Create Assessment Period
+3. Assign KPIs to departments/employees
+4. Submit actual values (manual or Excel import)
+5. Calculate scores (triggered manually or via queue)
+6. View reports and rankings
 
-### Component Structure
+## Important Notes
 
-Components are organized by responsibility:
-- **Header** - Navigation and language switcher
-- **FileUpload** - Drag-and-drop Excel upload with template download
-- **Dashboard** - Main results view with charts and export
-- **KPITable** - Sortable employee performance table
-- **HistoryView** - Saved analyses from localStorage
-- **SettingsView** - App configuration and privacy info
-- **LandingPage** - Marketing content and feature highlights
+1. **Security**: Change `JWT_SECRET` in production
+2. **Database**: Run `prisma migrate dev` after schema changes
+3. **Types**: Frontend types in `frontend/src/types.ts`, backend enums from `@prisma/client`
+4. **Styling**: Use Tailwind classes, follow existing patterns
+5. **Error Handling**: Use toast notifications for user feedback
 
-### State Management
+## Common Tasks
 
-No external state library - all state managed via React hooks in App.tsx:
-- File upload processing state
-- Current view navigation
-- Analysis results
-- Error handling
-- Language preference
+### Adding a New API Endpoint
+1. Create DTO in `backend/src/modules/<module>/dto/`
+2. Add service method in `<module>.service.ts`
+3. Add controller route in `<module>.controller.ts`
+4. Create frontend API function in `frontend/src/api/`
 
-### Styling
-
-Uses utility-first CSS (Tailwind-like classes) with:
-- Custom color scheme (indigo primary, slate neutrals)
-- Responsive breakpoints (sm, md, lg)
-- Animation utilities (`animate-in`, `fade-in`, `slide-in-from-bottom-4`)
-- Status-based color mapping for KPI ratings
-
-## Important Implementation Notes
-
-1. **Excel Template Generation** - The [downloadTemplate](services/excelService.ts#L40-L127) function creates localized example files with proper structure
-
-2. **PDF Export** - Uses html2canvas to capture dashboard visuals with multi-page support for long reports. Elements with class `no-export` are excluded from PDF.
-
-3. **Data Privacy** - All processing happens client-side or via direct Gemini API calls. No backend server stores user files.
-
-4. **Performance Status Logic** - Based on total score:
-   - Excellent: >90
-   - Good: >75
-   - Average: >60
-   - Poor: ≤60
-
-5. **Metric Score Calculation** - When individual scores are missing, AI uses formula: `(Actual / Target) * 100`, capped intelligently based on context.
-
-## Common Modifications
-
-### Adding New Language
-1. Add new language key to `Language` type in [types.ts](types.ts#L8)
-2. Add translations object in [utils/i18n.ts](utils/i18n.ts)
-3. Update language selector in SettingsView
-
-### Modifying AI Prompt
-Edit the prompt in [geminiService.ts](services/geminiService.ts#L61-L78) and adjust the schema if response structure changes.
-
-### Changing Scoring Thresholds
-Update status assignment logic in the AI prompt instructions and update the Performance Status Logic section above.
-
-### Adding New Chart Types
-Import from Recharts in Dashboard.tsx and add to the charts section around line 179.
+### Adding a New View
+1. Create component in `frontend/src/components/views/`
+2. Export from `frontend/src/components/views/index.ts`
+3. Add view type to `View` in `frontend/src/types.ts`
+4. Add route in `frontend/src/App.tsx`
+5. Add menu item in `frontend/src/components/layout/Sidebar.tsx`

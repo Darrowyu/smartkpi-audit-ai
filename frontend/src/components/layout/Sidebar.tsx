@@ -3,6 +3,8 @@ import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut,
 import { View, Language } from '../../types';
 import { SimpleAvatar as Avatar } from '../ui/avatar';
 import { useAuth } from '../../context/AuthContext';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
+import logoImage from '../../assets/images/Makrite_KPI_logo.png';
 
 interface SidebarProps {
   currentView: View;
@@ -62,14 +64,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, l
   return (
     <div className="w-64 bg-slate-900 text-white flex flex-col h-screen sticky top-0">
       {/* Logo */}
-      <div className="p-6 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="bg-indigo-600 p-2 rounded-lg">
-            <Target className="w-5 h-5" />
-          </div>
-          <h1 className="text-xl font-bold">
-            SmartKPI<span className="text-indigo-400">.AI</span>
-          </h1>
+      <div className="p-4 border-b border-slate-800">
+        <div className="flex items-center justify-center">
+          <img src={logoImage} alt="Makrite KPI" className="h-12 w-auto" />
         </div>
       </div>
 
@@ -81,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, l
             <div className="text-sm font-medium truncate">{user?.username || 'User'}</div>
             <div className="text-xs text-slate-400 uppercase">{user?.role || 'USER'}</div>
           </div>
+          <NotificationDropdown />
         </div>
       </div>
 

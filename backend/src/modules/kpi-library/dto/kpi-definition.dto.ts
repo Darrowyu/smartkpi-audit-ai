@@ -1,4 +1,5 @@
 import { IsString, IsOptional, IsEnum, IsNumber, IsBoolean, Min, Max, IsObject } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { FormulaType, AssessmentFrequency } from '@prisma/client';
 
 export class CreateKPIDefinitionDto {
@@ -121,14 +122,17 @@ export class QueryKPIDefinitionDto {
     frequency?: AssessmentFrequency;
 
     @IsOptional()
+    @Transform(({ value }) => value === 'true' || value === true) // 字符串转布尔
     @IsBoolean()
     isActive?: boolean;
 
     @IsOptional()
+    @Type(() => Number) // 字符串转数字
     @IsNumber()
     page?: number;
 
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     limit?: number;
 }

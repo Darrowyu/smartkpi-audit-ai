@@ -16,7 +16,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
   const [stats, setStats] = useState<CompanyStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', domain: '' });
+  const [editForm, setEditForm] = useState({ name: '', code: '', domain: '' });
   const [saving, setSaving] = useState(false);
 
   const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
@@ -33,7 +33,7 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
       ]);
       setCompany(companyData);
       setStats(statsData);
-      setEditForm({ name: companyData.name, domain: companyData.domain || '' });
+      setEditForm({ name: companyData.name, code: companyData.code || '', domain: companyData.domain || '' });
     } catch (e) {
       console.error(e);
     } finally {
@@ -47,12 +47,14 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
     try {
       const updated = await companiesApi.updateCompany({
         name: editForm.name,
+        code: editForm.code || undefined,
         domain: editForm.domain || undefined,
       });
       setCompany(updated);
       setShowEditModal(false);
-    } catch (e: any) {
-      alert(e.response?.data?.message || (language === 'zh' ? '更新失败' : 'Update failed'));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : (language === 'zh' ? '更新失败' : 'Update failed');
+      alert(msg);
     } finally {
       setSaving(false);
     }
@@ -103,6 +105,12 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
               {language === 'zh' ? '公司名称' : 'Company Name'}
             </label>
             <p className="text-slate-900 font-medium">{company.name}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-500 mb-1">
+              {language === 'zh' ? '公司代码' : 'Company Code'}
+            </label>
+            <p className="text-slate-900 font-medium">{(company as { code?: string }).code || '-'}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-500 mb-1">
@@ -173,17 +181,32 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {language === 'zh' ? '公司代码' : 'Company Code'}
+                </label>
+                <input
+                  type="text"
+                  value={editForm.code}
+                  onChange={(e) => setEditForm({ ...editForm, code: e.target.value })}
+                  placeholder="DG001"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  {language === 'zh' ? '公司内部编码，如 DG001、SH002' : 'Internal company code, e.g., DG001'}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   {language === 'zh' ? '域名标识' : 'Domain'}
                 </label>
                 <input
                   type="text"
                   value={editForm.domain}
                   onChange={(e) => setEditForm({ ...editForm, domain: e.target.value })}
-                  placeholder="example"
+                  placeholder="dongguan"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  {language === 'zh' ? '用于区分不同公司的唯一标识' : 'Unique identifier for the company'}
+                  {language === 'zh' ? '用于多租户域名识别，如 dongguan.makrite.com' : 'For multi-tenant domain, e.g., dongguan.makrite.com'}
                 </p>
               </div>
               <div className="flex justify-end gap-3 pt-4">

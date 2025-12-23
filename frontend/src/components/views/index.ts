@@ -6,3 +6,7 @@ export * from './kpi-library/KPILibraryView';
 export * from './assessment/AssessmentPeriodView';
 export * from './data-entry/DataEntryView';
 export * from './permissions/PermissionsView';
+export * from './assignment/AssignmentView';
+export * from './reports/PerformanceRadarChart';
+export * from './reports/PerformanceTrendChart';
+export * from './group/GroupDashboardView';

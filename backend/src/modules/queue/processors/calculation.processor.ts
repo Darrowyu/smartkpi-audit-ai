@@ -1,6 +1,7 @@
 import { Processor, Process, OnQueueCompleted, OnQueueFailed } from '@nestjs/bull';
 import type { Job } from 'bull';
 import { Logger } from '@nestjs/common';
+import { CalculationService } from '../../calculation/calculation.service';
 
 export interface CalculationJobData {
     periodId: string;
@@ -13,29 +14,20 @@ export interface CalculationJobData {
 export class CalculationProcessor {
     private readonly logger = new Logger(CalculationProcessor.name);
 
+    constructor(private calculationService: CalculationService) { }
+
     @Process()
     async handleCalculation(job: Job<CalculationJobData>) {
-        this.logger.log(`Processing KPI calculation job ${job.id}`);
+        const { periodId, companyId, userId } = job.data;
+        this.logger.log(`Processing KPI calculation job ${job.id} for period ${periodId}`);
 
         try {
-            await job.progress(10); // 加载指标配置
-
-            // TODO: 获取考核周期内的所有数据
-            await job.progress(20);
-
-            // TODO: 逐个员工计算KPI得分
-            await job.progress(50);
-
-            // TODO: 汇总部门得分
-            await job.progress(70);
-
-            // TODO: 汇总工厂/公司得分
-            await job.progress(90);
-
-            // TODO: 保存计算结果
+            await job.progress(10); // 开始计算
+            const result = await this.calculationService.executeCalculation(periodId, companyId, userId); // 执行完整计算
             await job.progress(100);
 
-            return { success: true, calculatedCount: 0 };
+            this.logger.log(`Calculation complete: ${result.employeeCount} employees, ${result.departmentCount} departments in ${result.totalTime}ms`);
+            return result;
         } catch (error) {
             this.logger.error(`Calculation job ${job.id} failed:`, error);
             throw error;
@@ -44,7 +36,7 @@ export class CalculationProcessor {
 
     @OnQueueCompleted()
     onCompleted(job: Job) {
-        this.logger.log(`Calculation job ${job.id} completed`);
+        this.logger.log(`Calculation job ${job.id} completed: ${JSON.stringify(job.returnvalue)}`);
     }
 
     @OnQueueFailed()
@@ -52,3 +44,4 @@ export class CalculationProcessor {
         this.logger.error(`Calculation job ${job.id} failed: ${error.message}`);
     }
 }
+

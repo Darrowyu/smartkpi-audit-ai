@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -27,25 +27,25 @@ export class GroupsController {
 
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.GROUP_ADMIN)
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
   @Get(':id/stats')
   @Roles(UserRole.SUPER_ADMIN, UserRole.GROUP_ADMIN)
-  getStats(@Param('id', ParseUUIDPipe) id: string) {
+  getStats(@Param('id') id: string) {
     return this.service.getStats(id);
   }
 
   @Put(':id')
   @Roles(UserRole.SUPER_ADMIN)
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateGroupDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateGroupDto) {
     return this.service.update(id, dto);
   }
 
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
 }

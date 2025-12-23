@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, Users, Trophy, AlertTriangle, Download } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Users, Trophy, AlertTriangle, Download, Calculator, RefreshCw } from 'lucide-react';
 import { assessmentApi } from '@/api/assessment.api';
 import { reportsApi } from '@/api/reports.api';
+import { calculationApi } from '@/api/calculation.api';
 import { AssessmentPeriod, PeriodStatus } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
 
 interface OverviewData {
   periodName: string;
@@ -29,6 +31,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [deptRanking, setDeptRanking] = useState<any[]>([]);
   const [trendData, setTrendData] = useState<any[]>([]);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadPeriods();
@@ -89,6 +93,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
       window.URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
+      toast({ variant: 'destructive', title: '导出失败', description: '请稍后重试' });
+    }
+  };
+
+  const handleCalculate = async () => {
+    if (!selectedPeriod) return;
+    setIsCalculating(true);
+    try {
+      const result = await calculationApi.executeCalculation(selectedPeriod);
+      toast({ title: '计算完成', description: `已计算 ${result.employeeCount} 名员工的绩效，耗时 ${result.totalTime}ms` });
+      await loadPeriodData(selectedPeriod); // 刷新数据
+      await loadTrend();
+    } catch (e: any) {
+      console.error(e);
+      toast({ variant: 'destructive', title: '计算失败', description: e.response?.data?.message || '请确保有已审批的数据提交' });
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (selectedPeriod) {
+      await loadPeriodData(selectedPeriod);
+      await loadTrend();
+      toast({ title: '已刷新', description: '数据已更新' });
     }
   };
 
@@ -110,6 +139,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ language }) => {
               ))}
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="mr-2 h-4 w-4" /> 刷新
+          </Button>
+          <Button variant="outline" onClick={handleCalculate} disabled={isCalculating}>
+            <Calculator className="mr-2 h-4 w-4" /> {isCalculating ? '计算中...' : '重新计算'}
+          </Button>
           <Button variant="outline" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" /> 导出报表
           </Button>

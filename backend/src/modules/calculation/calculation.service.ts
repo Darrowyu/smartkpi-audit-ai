@@ -24,11 +24,7 @@ export class CalculationService {
 
     /** 触发异步计算任务 */
     async triggerCalculation(periodId: string, companyId: string, userId: string) {
-        const period = await this.prisma.assessmentPeriod.findFirst({
-            where: { id: periodId, companyId },
-        });
-
-        if (!period) throw new NotFoundException('考核周期不存在');
+        const period = await this.validateCalculationAllowed(periodId, companyId); // 验证是否允许计算
 
         const approvedSubmissions = await this.prisma.dataSubmission.count({
             where: { periodId, companyId, status: SubmissionStatus.APPROVED },
@@ -38,18 +34,46 @@ export class CalculationService {
             throw new BadRequestException('没有已审批的数据提交，无法计算');
         }
 
-        const job = await this.calculationQueue.add({ // 添加到队列
-            periodId,
-            companyId,
-            userId,
-        });
+        const job = await this.calculationQueue.add({ periodId, companyId, userId }); // 添加到队列
 
         return { jobId: job.id, message: '计算任务已加入队列' };
+    }
+
+    /** 验证是否允许执行计算（计算冻结逻辑） */
+    private async validateCalculationAllowed(periodId: string, companyId: string) {
+        const period = await this.prisma.assessmentPeriod.findFirst({
+            where: { id: periodId, companyId },
+        });
+
+        if (!period) throw new NotFoundException('考核周期不存在');
+
+        if (period.lockDate && new Date() > period.lockDate) { // 检查是否已过锁定日期
+            throw new BadRequestException(`考核周期已于 ${period.lockDate.toLocaleDateString('zh-CN')} 锁定，无法重新计算`);
+        }
+
+        return period;
+    }
+
+    /** 获取员工在考核期第一天的归属部门（归属锁定逻辑） */
+    private async getLockedDepartment(employeeId: string, periodStartDate: Date, companyId: string) {
+        const employee = await this.prisma.employee.findUnique({
+            where: { id: employeeId },
+            include: { department: true },
+        });
+
+        if (!employee) return { deptId: null, deptName: null };
+
+        return { // 当前实现：使用员工当前部门作为归属部门（后续可扩展为历史记录查询）
+            deptId: employee.departmentId,
+            deptName: employee.department?.name || null,
+        };
     }
 
     /** 执行同步计算（用于小规模数据或测试） */
     async executeCalculation(periodId: string, companyId: string, userId: string): Promise<CalculationJobResult> {
         const startTime = Date.now();
+
+        const period = await this.validateCalculationAllowed(periodId, companyId); // 验证计算冻结
 
         const entries = await this.prisma.kPIDataEntry.findMany({ // 获取所有已审批的数据
             where: {
@@ -123,6 +147,8 @@ export class CalculationService {
             const totalScore = this.formulaEngine.calculateTotalScore(data.scores);
             const status = this.formulaEngine.determineStatus(totalScore) as KPIStatusEnum;
 
+            const lockedDept = await this.getLockedDepartment(employeeId, period.startDate, companyId); // 获取归属锁定部门
+
             await this.prisma.employeePerformance.upsert({
                 where: { periodId_employeeId: { periodId, employeeId } },
                 create: {
@@ -132,11 +158,15 @@ export class CalculationService {
                     departmentId: data.departmentId,
                     totalScore,
                     status,
+                    lockedDeptId: lockedDept.deptId, // 归属锁定
+                    lockedDeptName: lockedDept.deptName,
                     calculatedById: userId,
                 },
                 update: {
                     totalScore,
                     status,
+                    lockedDeptId: lockedDept.deptId,
+                    lockedDeptName: lockedDept.deptName,
                     calculatedAt: new Date(),
                     calculatedById: userId,
                 },
@@ -147,7 +177,7 @@ export class CalculationService {
             individualScores.push({
                 employeeId,
                 employeeName: employee?.name || 'Unknown',
-                departmentId: data.departmentId || '',
+                departmentId: lockedDept.deptId || data.departmentId || '', // 使用归属锁定部门
                 totalScore,
             });
         }

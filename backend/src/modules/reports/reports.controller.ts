@@ -19,13 +19,13 @@ export class ReportsController {
     }
 
     /** 获取部门排名 */
-    @Get('department-ranking/:periodId')
+    @Get('departments/:periodId')
     async getDepartmentRanking(@Param('periodId') periodId: string, @Request() req: any) {
         return this.reportsService.getDepartmentRanking(periodId, req.user.companyId);
     }
 
     /** 获取员工排名 */
-    @Get('employee-ranking/:periodId')
+    @Get('employees/:periodId')
     async getEmployeeRanking(
         @Param('periodId') periodId: string,
         @Query('page') page: string,
@@ -33,6 +33,16 @@ export class ReportsController {
         @Request() req: any,
     ) {
         return this.reportsService.getEmployeeRanking(periodId, req.user.companyId, +page || 1, +limit || 20);
+    }
+
+    /** 获取员工详情（含雷达图数据） */
+    @Get('employee/:periodId/:employeeId')
+    async getEmployeeDetail(
+        @Param('periodId') periodId: string,
+        @Param('employeeId') employeeId: string,
+        @Request() req: any,
+    ) {
+        return this.reportsService.getEmployeeDetail(periodId, employeeId, req.user.companyId);
     }
 
     /** 获取绩效趋势 */

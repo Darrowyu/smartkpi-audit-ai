@@ -86,6 +86,7 @@ export class AuthService {
             id: true,
             name: true,
             domain: true,
+            groupId: true, // 返回集团ID
           },
         },
       },
@@ -95,7 +96,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return user;
+    return { ...user, groupId: user.company?.groupId }; // 将groupId提升到顶层
   }
 
   /** 生成JWT访问令牌 */

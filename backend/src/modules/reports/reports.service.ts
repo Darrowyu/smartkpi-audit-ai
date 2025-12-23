@@ -202,4 +202,45 @@ export class ReportsService {
 
         return results.sort((a, b) => b.avgScore - a.avgScore); // 按平均分排名
     }
+
+    /** 获取员工详情（含雷达图数据） */
+    async getEmployeeDetail(periodId: string, employeeId: string, companyId: string) {
+        const performance = await this.prisma.employeePerformance.findFirst({
+            where: { periodId, employeeId, companyId },
+        });
+
+        if (!performance) return null;
+
+        const employee = await this.prisma.employee.findUnique({
+            where: { id: employeeId },
+            include: { department: true },
+        });
+
+        const entries = await this.prisma.kPIDataEntry.findMany({ // 获取该员工的所有指标得分
+            where: {
+                employeeId,
+                submission: { periodId, companyId },
+            },
+            include: {
+                assignment: { include: { kpiDefinition: true } },
+            },
+        });
+
+        const metrics = entries.map(e => ({ // 构建雷达图数据
+            name: e.assignment.kpiDefinition.name,
+            score: e.cappedScore || 0,
+            weight: e.assignment.weight,
+            target: e.assignment.targetValue,
+            actual: e.actualValue,
+        }));
+
+        return {
+            employeeId: employee?.employeeId || '',
+            employeeName: employee?.name || 'Unknown',
+            departmentName: employee?.department?.name || 'Unknown',
+            totalScore: Math.round(performance.totalScore * 100) / 100,
+            status: performance.status,
+            metrics,
+        };
+    }
 }

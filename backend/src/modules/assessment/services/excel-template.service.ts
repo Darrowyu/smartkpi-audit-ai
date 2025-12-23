@@ -12,7 +12,7 @@ export interface TemplateColumn {
 export class ExcelTemplateService {
     constructor(private prisma: PrismaService) { }
 
-    /** 生成 KPI 填报模板 */
+    /** 生成 KPI 填报模板（带单元格保护） */
     async generateTemplate(periodId: string, companyId: string): Promise<Buffer> {
         const [period, assignments, employees] = await Promise.all([ // 获取周期和指标分配
             this.prisma.assessmentPeriod.findFirst({ where: { id: periodId, companyId } }),
@@ -54,6 +54,8 @@ export class ExcelTemplateService {
             ...kpiColumns.map(() => ({ wch: 25 })),
         ];
 
+        this.applySheetProtection(ws, headers.length, data.length, 3); // 应用单元格保护（前3列锁定）
+
         const wb = XLSX.utils.book_new(); // 创建工作簿
         XLSX.utils.book_append_sheet(wb, ws, `${period.name}填报模板`);
 
@@ -61,6 +63,29 @@ export class ExcelTemplateService {
         XLSX.utils.book_append_sheet(wb, instructionWs, '填报说明');
 
         return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    }
+
+    /** 应用工作表保护（锁定表头和员工信息列） */
+    private applySheetProtection(ws: XLSX.WorkSheet, colCount: number, rowCount: number, lockedCols: number) {
+        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+        for (let R = range.s.r; R <= range.e.r; R++) { // 遍历所有单元格设置保护属性
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
+
+                const isHeaderRow = R === 0; // 表头行锁定
+                const isLockedCol = C < lockedCols; // 前N列（员工信息）锁定
+
+                ws[cellRef].s = {
+                    protection: { locked: isHeaderRow || isLockedCol },
+                    fill: isHeaderRow ? { fgColor: { rgb: 'CCCCCC' } } : // 表头灰色背景
+                        isLockedCol ? { fgColor: { rgb: 'F0F0F0' } } : undefined, // 锁定列浅灰背景
+                };
+            }
+        }
+
+        ws['!protect'] = { password: 'kpi2024' }; // 启用工作表保护（xlsx库仅支持password属性）
     }
 
     /** 解析上传的 Excel 数据 */

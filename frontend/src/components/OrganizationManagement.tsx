@@ -3,18 +3,19 @@ import { useAuth } from '../context/AuthContext';
 import { groupsApi, GroupStats } from '../api/groups.api';
 import { companiesApi, CompanyStats } from '../api/companies.api';
 import { Language } from '../types';
-import { Building2, Users, Briefcase, LayoutGrid, ChevronRight } from 'lucide-react';
+import { Building2, Users, Briefcase, LayoutGrid, ChevronRight, Settings } from 'lucide-react';
 import OrganizationOverview from './OrganizationOverview';
 import CompanyList from './CompanyList';
 import DepartmentManagement from './DepartmentManagement';
 import UserManagement from './UserManagement';
+import GroupSettings from './GroupSettings';
 import { translations } from '../utils/i18n';
 
 interface Props {
   language: Language;
 }
 
-type SidebarView = 'overview' | 'companies' | 'departments' | 'users';
+type SidebarView = 'overview' | 'group-settings' | 'companies' | 'departments' | 'users';
 
 const OrganizationManagement: React.FC<Props> = ({ language }) => {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
   const [groupName, setGroupName] = useState('Makrite');
 
   const isGroupAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const groupId = user?.groupId || (user as { company?: { groupId?: string } })?.company?.groupId;
 
   useEffect(() => {
     loadStats();
@@ -31,18 +33,16 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
 
   const loadStats = async () => {
     try {
-      if (isGroupAdmin && user?.groupId) {
-        // GROUP_ADMIN: 加载集团统计
+      if (isGroupAdmin && groupId) {
         const [group, gStats, cStats] = await Promise.all([
-          groupsApi.getGroup(user.groupId),
-          groupsApi.getGroupStats(user.groupId),
+          groupsApi.getGroup(groupId),
+          groupsApi.getGroupStats(groupId),
           companiesApi.getStats(),
         ]);
         setGroupName(group.name);
         setGroupStats(gStats);
         setCompanyStats(cStats);
       } else {
-        // ADMIN: 只加载公司统计
         const [company, cStats] = await Promise.all([
           companiesApi.getCompany(),
           companiesApi.getStats(),
@@ -57,6 +57,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
 
   const sidebarItems = [
     { id: 'overview' as SidebarView, icon: LayoutGrid, label: language === 'zh' ? '概览' : 'Overview', visible: true },
+    { id: 'group-settings' as SidebarView, icon: Settings, label: language === 'zh' ? '集团设置' : 'Group Settings', visible: isGroupAdmin },
     { id: 'companies' as SidebarView, icon: Building2, label: language === 'zh' ? '子公司' : 'Companies', visible: isGroupAdmin },
     { id: 'departments' as SidebarView, icon: Briefcase, label: language === 'zh' ? '部门' : 'Departments', visible: isGroupAdmin },
     { id: 'users' as SidebarView, icon: Users, label: language === 'zh' ? '用户' : 'Users', visible: isGroupAdmin },
@@ -163,6 +164,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
         {/* 右侧内容区域 */}
         <div className="flex-1 bg-white rounded-lg border border-slate-200 p-6">
           {currentView === 'overview' && <OrganizationOverview language={language} />}
+          {currentView === 'group-settings' && <GroupSettings language={language} onUpdate={loadStats} />}
           {currentView === 'companies' && <CompanyList language={language} />}
           {currentView === 'departments' && <DepartmentManagement language={language} />}
           {currentView === 'users' && <UserManagement language={language} t={translations[language]} />}

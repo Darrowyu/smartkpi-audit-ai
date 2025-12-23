@@ -15,6 +15,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
   const [search, setSearch] = useState('');
   const [formData, setFormData] = useState<CreateCompanyData>({
     name: '',
+    code: '',
     domain: '',
     settings: {},
   });
@@ -44,7 +45,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
       }
       setShowModal(false);
       setEditingCompany(null);
-      setFormData({ name: '', domain: '', settings: {} });
+      setFormData({ name: '', code: '', domain: '', settings: {} });
       loadCompanies();
     } catch (e: any) {
       alert(e.response?.data?.message || 'Operation failed');
@@ -55,6 +56,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
     setEditingCompany(company);
     setFormData({
       name: company.name,
+      code: company.code || '',
       domain: company.domain || '',
       settings: company.settings || {},
     });
@@ -82,7 +84,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
         <button
           onClick={() => {
             setEditingCompany(null);
-            setFormData({ name: '', domain: '', settings: {} });
+            setFormData({ name: '', code: '', domain: '', settings: {} });
             setShowModal(true);
           }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -115,6 +117,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '公司名称' : 'Name'}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '公司代码' : 'Code'}</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '域名' : 'Domain'}</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '用户数' : 'Users'}</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{language === 'zh' ? '部门数' : 'Departments'}</th>
@@ -125,6 +128,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
               {companies.map(company => (
                 <tr key={company.id} className="hover:bg-slate-50">
                   <td className="px-6 py-4 font-medium text-slate-900">{company.name}</td>
+                  <td className="px-6 py-4 text-sm text-slate-600 font-mono">{company.code || '-'}</td>
                   <td className="px-6 py-4 text-sm text-slate-500">{company.domain || '-'}</td>
                   <td className="px-6 py-4 text-sm text-slate-500">{company._count?.users || 0}</td>
                   <td className="px-6 py-4 text-sm text-slate-500">{company._count?.departments || 0}</td>
@@ -166,14 +170,27 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '公司代码' : 'Company Code'} *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  required
+                  placeholder="DG001"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <p className="text-xs text-slate-500 mt-1">{language === 'zh' ? '公司唯一编码，如 DG001、SH002' : 'Unique code, e.g., DG001'}</p>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{language === 'zh' ? '域名' : 'Domain'}</label>
                 <input
                   type="text"
                   value={formData.domain}
                   onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                  placeholder="usa.makrite.com"
+                  placeholder="dongguan.makrite.com"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
+                <p className="text-xs text-slate-500 mt-1">{language === 'zh' ? '可选，用于多租户域名识别' : 'Optional, for multi-tenant domain'}</p>
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <button

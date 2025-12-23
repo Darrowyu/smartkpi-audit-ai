@@ -20,7 +20,9 @@ export type View =
   | 'kpi-library'
   | 'assessment'
   | 'data-entry'
-  | 'permissions';
+  | 'permissions'
+  | 'assignment'
+  | 'group-dashboard';
 
 // 用户角色
 export enum UserRole {

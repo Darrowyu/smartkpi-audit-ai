@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, Check, X, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, Check, X, Save, RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/table';
 
 import { UserRole } from '@/types';
+import { permissionsApi } from '@/api/permissions.api';
 
 // 权限定义
 interface Permission {
@@ -42,7 +43,6 @@ const modules = [
     { id: 'settings', name: '系统设置', icon: '⚙️' },
 ];
 
-// 权限列表
 const permissions: Permission[] = [
     // KPI 指标库
     { id: 'kpi:view', name: '查看指标', description: '查看 KPI 指标库', module: 'kpi-library' },
@@ -75,37 +75,35 @@ const permissions: Permission[] = [
     { id: 'settings:edit', name: '修改设置', description: '修改系统设置', module: 'settings' },
 ];
 
-// 默认角色权限
-const defaultRolePermissions: RolePermissions = {
-    [UserRole.SUPER_ADMIN]: permissions.map(p => p.id), // 超级管理员拥有所有权限
-    [UserRole.GROUP_ADMIN]: [
-        'kpi:view', 'kpi:create', 'kpi:edit', 'kpi:delete',
-        'period:view', 'period:create', 'period:lock',
-        'data:view', 'data:submit', 'data:approve',
-        'report:view', 'report:export',
-        'user:view', 'user:create', 'user:edit',
-        'settings:view',
-    ],
-    [UserRole.MANAGER]: [
-        'kpi:view',
-        'period:view',
-        'data:view', 'data:submit', 'data:approve',
-        'report:view', 'report:export',
-        'user:view',
-    ],
-    [UserRole.USER]: [
-        'kpi:view',
-        'period:view',
-        'data:view', 'data:submit',
-        'report:view',
-    ],
-};
-
 export const PermissionsView: React.FC = () => {
-    const [rolePermissions, setRolePermissions] = useState<RolePermissions>(defaultRolePermissions);
+    const [allPermissions, setAllPermissions] = useState<Permission[]>(permissions);
+    const [rolePermissions, setRolePermissions] = useState<RolePermissions>({});
     const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.MANAGER);
     const [hasChanges, setHasChanges] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        try {
+            setIsLoading(true);
+            const [perms, roles] = await Promise.all([
+                permissionsApi.getAllPermissions(),
+                permissionsApi.getRolePermissions()
+            ]);
+            setAllPermissions(perms);
+            setRolePermissions(roles);
+        } catch (error) {
+            console.error('Failed to load permissions:', error);
+            // 这里不阻塞，使用默认的 permissions 列表
+            setAllPermissions(permissions);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const togglePermission = (permissionId: string) => {
         setRolePermissions(prev => {
@@ -123,15 +121,36 @@ export const PermissionsView: React.FC = () => {
     };
 
     const handleSave = async () => {
-        // 这里应该调用后端 API 保存权限配置
-        // 目前仅做前端演示
-        toast({ title: '权限配置已保存', description: `${selectedRole} 角色的权限已更新` });
-        setHasChanges(false);
+        try {
+            await permissionsApi.saveRolePermissions(rolePermissions);
+            toast({ title: '权限配置已保存', description: '系统权限规则已更新' });
+            setHasChanges(false);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: '保存失败', description: '请稍后重试' });
+        }
+    };
+
+    const handleReset = async () => {
+        if (!confirm('确定要重置为系统默认权限吗？这将覆盖所有自定义配置。')) return;
+        try {
+            await permissionsApi.resetToDefault();
+            toast({ title: '已重置', description: '权限配置已恢复为默认值' });
+            await loadData();
+            setHasChanges(false);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: '重置失败', description: '请稍后重试' });
+        }
     };
 
     const getPermissionsByModule = (moduleId: string) => {
-        return permissions.filter(p => p.module === moduleId);
+        return allPermissions.filter(p => p.module === moduleId);
     };
+
+    if (isLoading) {
+        return <div>加载权限配置中...</div>;
+    }
 
     return (
         <div className="space-y-6">
@@ -140,9 +159,14 @@ export const PermissionsView: React.FC = () => {
                     <h2 className="text-3xl font-bold tracking-tight">权限管理</h2>
                     <p className="text-muted-foreground">配置不同角色的系统访问权限</p>
                 </div>
-                <Button onClick={handleSave} disabled={!hasChanges}>
-                    <Save className="mr-2 h-4 w-4" /> 保存更改
-                </Button>
+                <div className="flex space-x-2">
+                    <Button variant="outline" onClick={handleReset} disabled={isLoading}>
+                        <RotateCcw className="mr-2 h-4 w-4" /> 重置默认
+                    </Button>
+                    <Button onClick={handleSave} disabled={!hasChanges || isLoading}>
+                        <Save className="mr-2 h-4 w-4" /> 保存更改
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-4">
@@ -211,7 +235,7 @@ export const PermissionsView: React.FC = () => {
                                                         <Switch
                                                             checked={hasPermission(perm.id)}
                                                             onCheckedChange={() => togglePermission(perm.id)}
-                                                            disabled={selectedRole === UserRole.SUPER_ADMIN} // 超管权限不可修改
+                                                            disabled={selectedRole === UserRole.SUPER_ADMIN || isLoading}
                                                         />
                                                     </TableCell>
                                                 </TableRow>
@@ -227,3 +251,4 @@ export const PermissionsView: React.FC = () => {
         </div>
     );
 };
+

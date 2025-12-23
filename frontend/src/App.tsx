@@ -7,7 +7,7 @@ import { LoginPage } from './components/auth/LoginPage';
 import OrganizationManagement from './components/OrganizationManagement';
 import CompanySettings from './components/CompanySettings';
 import { SidebarLayout } from './components/layout/SidebarLayout';
-import { DashboardView, KPIManagementView, TeamManagementView, ReportsView, KPILibraryView, AssessmentPeriodView, DataEntryView, PermissionsView } from './components/views';
+import { DashboardView, KPIManagementView, TeamManagementView, ReportsView, KPILibraryView, AssessmentPeriodView, DataEntryView, PermissionsView, AssignmentView, GroupDashboardView } from './components/views';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { filesApi } from './api/files.api';
 import { kpiAnalysisApi } from './api/kpi-analysis.api';
@@ -88,6 +88,12 @@ const AppContent: React.FC = () => {
 
     // NEW: 权限管理页面
     if (currentView === 'permissions') return <PermissionsView />;
+
+    // NEW: 指标分配页面
+    if (currentView === 'assignment') return <AssignmentView />;
+
+    // NEW: 集团管理中心
+    if (currentView === 'group-dashboard') return <GroupDashboardView />;
 
     // 历史记录页面
     if (currentView === 'history') return <HistoryView onSelectResult={handleHistorySelect} t={t} language={language} />;

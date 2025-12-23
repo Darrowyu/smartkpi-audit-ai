@@ -3,8 +3,9 @@ import { apiClient } from './client';
 export interface Company {
   id: string;
   name: string;
-  domain?: string;
-  settings?: Record<string, any>;
+  code?: string; // 公司代码
+  domain?: string; // 域名标识
+  settings?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -27,14 +28,16 @@ export interface CompanyStats {
 
 export interface CreateCompanyData {
   name: string;
-  domain?: string;
-  settings?: Record<string, any>;
+  code?: string; // 公司代码
+  domain?: string; // 域名标识
+  settings?: Record<string, unknown>;
 }
 
 export interface UpdateCompanyData {
   name?: string;
-  domain?: string;
-  settings?: Record<string, any>;
+  code?: string; // 公司代码
+  domain?: string; // 域名标识
+  settings?: Record<string, unknown>;
   isActive?: boolean;
 }
 

@@ -4,7 +4,7 @@
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, CardBody } from './card';
 export { Badge, badgeVariants } from './badge';
 export type { BadgeVariant } from './badge';
-export { Avatar, AvatarRoot, AvatarImage, AvatarFallback } from './avatar';
+export { Avatar, AvatarImage, AvatarFallback, SimpleAvatar } from './avatar';
 export { StatCard } from './StatCard';
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './table';
 export { Button, buttonVariants } from './button';

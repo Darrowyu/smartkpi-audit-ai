@@ -60,7 +60,8 @@ model Group {
 model Company {
   id        String   @id @default(uuid())
   name      String   // e.g., "Makrite USA", "Makrite China"
-  domain    String?  @unique // Optional: e.g., "usa.makrite.com"
+  code      String?  // 公司代码，如 "DG001"
+  domain    String?  @unique // 域名标识，如 "dongguan.makrite.com"
   settings  Json?    // Company-specific settings (language, branding, etc.)
 
   groupId   String   @map("group_id")
@@ -77,6 +78,7 @@ model Company {
   uploadedFiles  UploadedFile[]
   kpiAnalyses    KPIAnalysis[]
 
+  @@unique([groupId, code]) // 同一集团内公司代码唯一
   @@index([groupId])
   @@index([domain])
   @@map("companies")
@@ -124,7 +126,6 @@ model User {
 model Department {
   id          String   @id @default(uuid())
   name        String
-  code        String?  // e.g., "SALES", "ENG"
   description String?
 
   companyId   String   @map("company_id")
@@ -138,7 +139,6 @@ model Department {
   users       User[]     // Users in this department
   employees   Employee[] // Employees in this department
 
-  @@unique([companyId, code]) // Unique department code per company
   @@index([companyId])
   @@map("departments")
 }
@@ -561,3 +561,27 @@ model DepartmentPerformance {
   @@index([companyId])
   @@map("department_performances")
 }
+
+// ============================================
+// NEW: Permission Configuration (权限配置)
+// ============================================
+
+model PermissionConfig {
+  id          String   @id @default(uuid())
+  
+  companyId   String   @map("company_id")
+  
+  // 角色权限映射 JSON 结构:
+  // { "MANAGER": ["kpi:view", "period:view", ...], "USER": [...] }
+  rolePermissions Json  @map("role_permissions")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  createdById String   @map("created_by_id")
+  updatedById String?  @map("updated_by_id")
+
+  @@unique([companyId]) // 每个公司一条配置记录
+  @@map("permission_configs")
+}
+

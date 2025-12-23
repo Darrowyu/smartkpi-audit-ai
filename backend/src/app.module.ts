@@ -17,6 +17,7 @@ import { KPILibraryModule } from './modules/kpi-library/kpi-library.module';
 import { AssessmentModule } from './modules/assessment/assessment.module';
 import { CalculationModule } from './modules/calculation/calculation.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ReportsModule } from './modules/reports/reports.module';
     AssessmentModule,
     CalculationModule,
     ReportsModule,
+    PermissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

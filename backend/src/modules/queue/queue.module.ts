@@ -3,6 +3,9 @@ import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ExcelImportProcessor } from './processors/excel-import.processor';
 import { CalculationProcessor } from './processors/calculation.processor';
+import { PrismaModule } from '../../prisma/prisma.module';
+import { AssessmentModule } from '../assessment/assessment.module';
+import { CalculationModule } from '../calculation/calculation.module';
 
 @Module({
   imports: [
@@ -21,8 +24,12 @@ import { CalculationProcessor } from './processors/calculation.processor';
       { name: 'excel-import' },  // Excel导入队列
       { name: 'kpi-calculation' }, // KPI计算队列
     ),
+    PrismaModule,
+    AssessmentModule,
+    CalculationModule,
   ],
   providers: [ExcelImportProcessor, CalculationProcessor],
   exports: [BullModule],
 })
-export class QueueModule {}
+export class QueueModule { }
+

@@ -43,7 +43,6 @@ async function main() {
     create: {
       id: 'sales-dept-id',
       name: '销售部',
-      code: 'SALES',
       description: 'Sales Department',
       companyId: company.id,
     },
@@ -56,12 +55,30 @@ async function main() {
     create: {
       id: 'tech-dept-id',
       name: '技术部',
-      code: 'TECH',
       description: 'Technology Department',
       companyId: company.id,
     },
   });
   console.log(`✅ Department created: ${techDept.name}`);
+
+  // 创建超级管理员 (密码: super123)
+  const superPassword = await bcrypt.hash('super123', 10);
+  const superAdmin = await prisma.user.upsert({
+    where: { username: 'superadmin' },
+    update: {},
+    create: {
+      username: 'superadmin',
+      email: 'superadmin@makrite.com',
+      passwordHash: superPassword,
+      firstName: 'Super',
+      lastName: 'Admin',
+      role: UserRole.SUPER_ADMIN,
+      language: 'zh',
+      companyId: company.id,
+      departmentId: null,
+    },
+  });
+  console.log(`✅ Super Admin created: ${superAdmin.username}`);
 
   // 创建集团管理员 (密码: admin123)
   const adminPassword = await bcrypt.hash('admin123', 10);
@@ -104,8 +121,9 @@ async function main() {
   console.log('🎉 Seed completed!');
   console.log('');
   console.log('📋 Default Credentials:');
-  console.log('   Group Admin - Username: admin    Password: admin123');
-  console.log('   Manager     - Username: manager  Password: manager123');
+  console.log('   Super Admin - Username: superadmin  Password: super123');
+  console.log('   Group Admin - Username: admin       Password: admin123');
+  console.log('   Manager     - Username: manager     Password: manager123');
 }
 
 main()

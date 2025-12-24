@@ -27,6 +27,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         username: true,
         companyId: true,
         role: true,
+        departmentId: true,
+        linkedEmployeeId: true,
         isActive: true,
       },
     });
@@ -39,8 +41,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userId: user.id,
       username: user.username,
       companyId: user.companyId,
-      groupId: payload.groupId, // 从JWT获取集团ID
+      groupId: payload.groupId,
       role: user.role,
+      departmentId: user.departmentId,
+      linkedEmployeeId: user.linkedEmployeeId,
     };
   }
 }

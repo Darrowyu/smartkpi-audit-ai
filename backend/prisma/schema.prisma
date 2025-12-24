@@ -113,6 +113,10 @@ model User {
   lastLoginAt  DateTime? @map("last_login_at")
   isActive     Boolean  @default(true)
 
+  // Employee link for data isolation
+  linkedEmployeeId String?   @unique @map("linked_employee_id")
+  linkedEmployee   Employee? @relation(fields: [linkedEmployeeId], references: [id], onDelete: SetNull)
+
   // Relations
   uploadedFiles UploadedFile[]
   kpiAnalyses   KPIAnalysis[]
@@ -174,6 +178,7 @@ model Employee {
 
   // Relations
   kpiRecords   KPIEmployeeRecord[]
+  linkedUser   User?  // Linked user account for data isolation
 
   @@unique([companyId, employeeId]) // Unique employee ID per company
   @@index([companyId])

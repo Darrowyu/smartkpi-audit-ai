@@ -15,6 +15,7 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { UserRole } from '@prisma/client';
+import { PermissionsService } from '../permissions/permissions.service';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,8 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+    private permissionsService: PermissionsService,
+  ) { }
 
   /** 用户名登录 */
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
@@ -83,6 +85,8 @@ export class AuthService {
         lastName: true,
         role: true,
         companyId: true,
+        departmentId: true,
+        linkedEmployeeId: true,
         language: true,
         createdAt: true,
         lastLoginAt: true,
@@ -91,7 +95,7 @@ export class AuthService {
             id: true,
             name: true,
             domain: true,
-            groupId: true, // 返回集团ID
+            groupId: true,
           },
         },
       },
@@ -101,7 +105,13 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return { ...user, groupId: user.company?.groupId }; // 将groupId提升到顶层
+    const permissions = await this.permissionsService.getUserPermissions(user.companyId, user.role as UserRole); // 获取用户权限列表
+
+    return {
+      ...user,
+      groupId: user.company?.groupId,
+      permissions,
+    };
   }
 
   /** 忘记密码 - 生成重置令牌 */
@@ -134,7 +144,7 @@ export class AuthService {
 
     console.log(`[Password Reset] User: ${user.email}, Reset URL: ${resetUrl}`); // 开发阶段日志
 
-    return { 
+    return {
       message: 'If email exists, reset link has been sent',
       resetUrl, // 开发阶段返回URL，生产环境移除此字段
     };

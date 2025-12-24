@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ArrowUpRight, Users, Trophy, AlertTriangle, Download, Calculator, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, Users, Trophy, AlertTriangle, Download, Calculator, RefreshCw, User } from 'lucide-react';
 import { assessmentApi } from '@/api/assessment.api';
 import { reportsApi, DepartmentRanking, TrendData } from '@/api/reports.api';
 import { calculationApi } from '@/api/calculation.api';
 import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
+import { useIsManager } from '@/hooks/usePermission';
+import { useAuth } from '@/context/AuthContext';
 
 interface OverviewData {
   periodName: string;
@@ -34,6 +36,8 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const { toast } = useToast();
+  const isManager = useIsManager(); // 检查是否为经理或更高角色
+  const { user } = useAuth();
 
   useEffect(() => {
     loadPeriods();
@@ -125,8 +129,12 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboardView.title')}</h2>
-          <p className="text-muted-foreground">{t('dashboardView.subtitle')}</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {isManager ? t('dashboardView.title') : t('dashboardView.myPerformance', '我的绩效')}
+          </h2>
+          <p className="text-muted-foreground">
+            {isManager ? t('dashboardView.subtitle') : t('dashboardView.myPerformanceDesc', '查看您的个人绩效数据')}
+          </p>
         </div>
         <div className="flex items-center space-x-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
@@ -142,12 +150,16 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
           <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="mr-2 h-4 w-4" /> {t('dashboardView.refresh')}
           </Button>
-          <Button variant="outline" onClick={handleCalculate} disabled={isCalculating}>
-            <Calculator className="mr-2 h-4 w-4" /> {isCalculating ? t('dashboardView.calculating') : t('dashboardView.recalculate')}
-          </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" /> {t('dashboardView.exportReport')}
-          </Button>
+          {isManager && ( // 仅经理及以上角色显示计算和导出按钮
+            <>
+              <Button variant="outline" onClick={handleCalculate} disabled={isCalculating}>
+                <Calculator className="mr-2 h-4 w-4" /> {isCalculating ? t('dashboardView.calculating') : t('dashboardView.recalculate')}
+              </Button>
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" /> {t('dashboardView.exportReport')}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

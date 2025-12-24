@@ -78,8 +78,17 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* 隐藏浏览器原生的密码显示/隐藏按钮 */
+  input::-ms-reveal,
+  input::-ms-clear,
+  input::-webkit-credentials-auto-fill-button,
+  input::-webkit-password-toggle-button {
+    display: none !important;
   }
 }
 
@@ -88,21 +97,27 @@
   .bg-brand-primary {
     background-color: var(--brand-primary);
   }
+
   .bg-brand-secondary {
     background-color: var(--brand-secondary);
   }
+
   .bg-brand-dark {
     background-color: var(--brand-dark);
   }
+
   .text-brand-primary {
     color: var(--brand-primary);
   }
+
   .text-brand-secondary {
     color: var(--brand-secondary);
   }
+
   .border-brand-primary {
     border-color: var(--brand-primary);
   }
+
   .ring-brand-primary {
     --tw-ring-color: var(--brand-primary);
   }

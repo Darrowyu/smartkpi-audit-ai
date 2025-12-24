@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { KPIStatusEnum } from '@prisma/client';
+import { KPIStatusEnum, UserRole } from '@prisma/client';
+
+/** 用户上下文信息用于数据隔离 */
+export interface UserContext {
+    userId: string;
+    role: UserRole;
+    companyId: string;
+    departmentId?: string | null;
+    linkedEmployeeId?: string | null;
+}
 
 export interface PerformanceOverview {
     periodName: string;
@@ -39,11 +48,21 @@ export interface TrendData {
 export class ReportsService {
     constructor(private prisma: PrismaService) { }
 
-    /** 获取考核周期绩效概览 */
-    async getPeriodOverview(periodId: string, companyId: string): Promise<PerformanceOverview> {
+    /** 获取考核周期绩效概览（角色感知） */
+    async getPeriodOverview(periodId: string, companyId: string, userContext?: UserContext): Promise<PerformanceOverview> {
+        let whereClause: any = { periodId, companyId };
+
+        if (userContext) { // 根据角色过滤数据
+            if (userContext.role === UserRole.USER && userContext.linkedEmployeeId) {
+                whereClause = { ...whereClause, employeeId: userContext.linkedEmployeeId };
+            } else if (userContext.role === UserRole.MANAGER && userContext.departmentId) {
+                whereClause = { ...whereClause, departmentId: userContext.departmentId };
+            }
+        }
+
         const [period, performances] = await Promise.all([
             this.prisma.assessmentPeriod.findFirst({ where: { id: periodId, companyId } }),
-            this.prisma.employeePerformance.findMany({ where: { periodId, companyId } }),
+            this.prisma.employeePerformance.findMany({ where: whereClause }),
         ]);
 
         if (!period || performances.length === 0) {
@@ -87,18 +106,32 @@ export class ReportsService {
         }));
     }
 
-    /** 获取员工排名（支持分页） */
-    async getEmployeeRanking(periodId: string, companyId: string, page = 1, limit = 20): Promise<{ data: EmployeeRanking[]; total: number }> {
+    /** 获取员工排名（支持分页，角色感知数据过滤） */
+    async getEmployeeRanking(periodId: string, companyId: string, page = 1, limit = 20, userContext?: UserContext): Promise<{ data: EmployeeRanking[]; total: number; isFiltered?: boolean }> {
         const skip = (page - 1) * limit;
+
+        let whereClause: any = { periodId, companyId };
+        let isFiltered = false;
+
+        if (userContext) {
+            if (userContext.role === UserRole.USER && userContext.linkedEmployeeId) { // USER角色：仅返回自己的绩效
+                whereClause = { ...whereClause, employeeId: userContext.linkedEmployeeId };
+                isFiltered = true;
+            } else if (userContext.role === UserRole.MANAGER && userContext.departmentId) { // MANAGER角色：返回部门内员工
+                whereClause = { ...whereClause, departmentId: userContext.departmentId };
+                isFiltered = true;
+            }
+            // GROUP_ADMIN 和 SUPER_ADMIN 查看全公司数据，不过滤
+        }
 
         const [performances, total] = await Promise.all([
             this.prisma.employeePerformance.findMany({
-                where: { periodId, companyId },
+                where: whereClause,
                 orderBy: { totalScore: 'desc' },
                 skip,
                 take: limit,
             }),
-            this.prisma.employeePerformance.count({ where: { periodId, companyId } }),
+            this.prisma.employeePerformance.count({ where: whereClause }),
         ]);
 
         const employeeIds = performances.map(p => p.employeeId);
@@ -121,7 +154,7 @@ export class ReportsService {
             };
         });
 
-        return { data, total };
+        return { data, total, isFiltered };
     }
 
     /** 获取绩效趋势（多周期对比） */

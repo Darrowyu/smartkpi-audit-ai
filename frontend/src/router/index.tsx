@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 // Lazy loaded pages for code splitting
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
@@ -52,9 +53,9 @@ export const router = createBrowserRouter([
             { path: 'assignment', element: <SuspenseWrapper><AssignmentPage /></SuspenseWrapper> },
             { path: 'data-entry', element: <SuspenseWrapper><DataEntryPage /></SuspenseWrapper> },
             { path: 'reports', element: <SuspenseWrapper><ReportsPage /></SuspenseWrapper> },
-            { path: 'team', element: <SuspenseWrapper><TeamManagementPage /></SuspenseWrapper> },
-            { path: 'permissions', element: <SuspenseWrapper><PermissionsPage /></SuspenseWrapper> },
-            { path: 'group-dashboard', element: <SuspenseWrapper><GroupDashboardPage /></SuspenseWrapper> },
+            { path: 'team', element: <ProtectedRoute permission="user:view" adminOnly><SuspenseWrapper><TeamManagementPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'permissions', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><PermissionsPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'group-dashboard', element: <ProtectedRoute adminOnly><SuspenseWrapper><GroupDashboardPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'settings', element: <SuspenseWrapper><SettingsPage /></SuspenseWrapper> },
             { path: 'upload', element: <SuspenseWrapper><UploadPage /></SuspenseWrapper> },
             { path: 'history', element: <SuspenseWrapper><HistoryPage /></SuspenseWrapper> },
@@ -63,3 +64,4 @@ export const router = createBrowserRouter([
         ],
     },
 ]);
+

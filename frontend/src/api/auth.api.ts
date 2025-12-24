@@ -14,6 +14,9 @@ export interface AuthUser {
   role: string;
   companyId: string;
   groupId?: string;
+  departmentId?: string | null; // 部门ID
+  linkedEmployeeId?: string | null; // 关联员工ID用于数据隔离
+  permissions?: string[]; // 用户权限列表
   company?: { id: string; name: string };
   department?: { id: string; name: string };
   language: string;

@@ -12,10 +12,17 @@ export class ReportsController {
         private readonly exportService: ExportService,
     ) { }
 
-    /** 获取周期绩效概览 */
+    /** 获取周期绩效概览（角色感知） */
     @Get('overview/:periodId')
     async getPeriodOverview(@Param('periodId') periodId: string, @Request() req: any) {
-        return this.reportsService.getPeriodOverview(periodId, req.user.companyId);
+        const userContext = {
+            userId: req.user.userId,
+            role: req.user.role,
+            companyId: req.user.companyId,
+            departmentId: req.user.departmentId,
+            linkedEmployeeId: req.user.linkedEmployeeId,
+        };
+        return this.reportsService.getPeriodOverview(periodId, req.user.companyId, userContext);
     }
 
     /** 获取部门排名 */
@@ -24,7 +31,7 @@ export class ReportsController {
         return this.reportsService.getDepartmentRanking(periodId, req.user.companyId);
     }
 
-    /** 获取员工排名 */
+    /** 获取员工排名（角色感知：USER 仅返回自己，MANAGER 返回部门） */
     @Get('employees/:periodId')
     async getEmployeeRanking(
         @Param('periodId') periodId: string,
@@ -32,7 +39,14 @@ export class ReportsController {
         @Query('limit') limit: string,
         @Request() req: any,
     ) {
-        return this.reportsService.getEmployeeRanking(periodId, req.user.companyId, +page || 1, +limit || 20);
+        const userContext = {
+            userId: req.user.sub,
+            role: req.user.role,
+            companyId: req.user.companyId,
+            departmentId: req.user.departmentId,
+            linkedEmployeeId: req.user.linkedEmployeeId,
+        };
+        return this.reportsService.getEmployeeRanking(periodId, req.user.companyId, +page || 1, +limit || 20, userContext);
     }
 
     /** 获取员工详情（含雷达图数据） */

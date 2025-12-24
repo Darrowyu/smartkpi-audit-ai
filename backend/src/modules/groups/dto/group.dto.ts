@@ -36,4 +36,3 @@ export class GroupQueryDto {
   @IsString()
   search?: string; // 搜索集团名称
 }
-

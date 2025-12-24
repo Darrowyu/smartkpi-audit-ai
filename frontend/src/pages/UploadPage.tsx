@@ -19,8 +19,8 @@ const UploadPage: React.FC = () => {
         setError(null);
         try {
             const uploadedFile = await filesApi.upload(file);
-            await kpiAnalysisApi.analyze(uploadedFile.id, language, period);
-            navigate('/dashboard');
+            const analysis = await kpiAnalysisApi.analyze(uploadedFile.id, language, period);
+            navigate(`/analysis/${analysis.id}`); // 跳转到分析详情页
         } catch (err: any) {
             setError(err.response?.data?.message || err.message || 'Upload failed');
         } finally {

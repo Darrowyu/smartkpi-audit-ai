@@ -14,13 +14,15 @@ import { StorageService } from './storage.service';
       },
       fileFilter: (req, file, callback) => {
         const allowedMimes = [
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+          'application/vnd.ms-excel', // .xls
+          'text/csv', // .csv
+          'application/csv', // .csv (部分浏览器)
         ];
         if (allowedMimes.includes(file.mimetype)) {
           callback(null, true);
         } else {
-          callback(new Error('Only Excel files are allowed'), false);
+          callback(new Error('Only Excel or CSV files are allowed'), false);
         }
       },
     }),
@@ -29,4 +31,4 @@ import { StorageService } from './storage.service';
   providers: [FilesService, StorageService],
   exports: [FilesService, StorageService],
 })
-export class FilesModule {}
+export class FilesModule { }

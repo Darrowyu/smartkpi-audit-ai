@@ -5,7 +5,6 @@ export class CreateDepartmentDto {
   @MaxLength(100)
   name: string;
 
-
   @IsOptional()
   @IsString()
   @MaxLength(500)
@@ -17,7 +16,6 @@ export class UpdateDepartmentDto {
   @IsString()
   @MaxLength(100)
   name?: string;
-
 
   @IsOptional()
   @IsString()

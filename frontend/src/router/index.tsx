@@ -22,6 +22,7 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
+const AnalysisDetailPage = lazy(() => import('@/pages/AnalysisDetailPage'));
 
 const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Suspense fallback={<LoadingSpinner fullScreen />}>
@@ -47,18 +48,19 @@ export const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
             { index: true, element: <SuspenseWrapper><LandingPage /></SuspenseWrapper> },
-            { path: 'dashboard', element: <SuspenseWrapper><DashboardPage /></SuspenseWrapper> },
-            { path: 'kpi-library', element: <SuspenseWrapper><KPILibraryPage /></SuspenseWrapper> },
-            { path: 'assessment', element: <SuspenseWrapper><AssessmentPage /></SuspenseWrapper> },
-            { path: 'assignment', element: <SuspenseWrapper><AssignmentPage /></SuspenseWrapper> },
-            { path: 'data-entry', element: <SuspenseWrapper><DataEntryPage /></SuspenseWrapper> },
-            { path: 'reports', element: <SuspenseWrapper><ReportsPage /></SuspenseWrapper> },
+            { path: 'dashboard', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><DashboardPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'kpi-library', element: <ProtectedRoute permission="kpi:view"><SuspenseWrapper><KPILibraryPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'assessment', element: <ProtectedRoute permission="period:view"><SuspenseWrapper><AssessmentPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'assignment', element: <ProtectedRoute permission="period:view" adminOnly><SuspenseWrapper><AssignmentPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'data-entry', element: <ProtectedRoute permission="data:view"><SuspenseWrapper><DataEntryPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'reports', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><ReportsPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'team', element: <ProtectedRoute permission="user:view" adminOnly><SuspenseWrapper><TeamManagementPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'permissions', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><PermissionsPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'group-dashboard', element: <ProtectedRoute adminOnly><SuspenseWrapper><GroupDashboardPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'settings', element: <SuspenseWrapper><SettingsPage /></SuspenseWrapper> },
-            { path: 'upload', element: <SuspenseWrapper><UploadPage /></SuspenseWrapper> },
-            { path: 'history', element: <SuspenseWrapper><HistoryPage /></SuspenseWrapper> },
+            { path: 'upload', element: <ProtectedRoute permission="data:submit"><SuspenseWrapper><UploadPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'history', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><HistoryPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'analysis/:id', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><AnalysisDetailPage /></SuspenseWrapper></ProtectedRoute> },
             { path: '404', element: <SuspenseWrapper><NotFoundPage /></SuspenseWrapper> },
             { path: '*', element: <Navigate to="/404" replace /> },
         ],

@@ -14,13 +14,15 @@ export class FilesService {
   private readonly allowedMimeTypes = [
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
     'application/vnd.ms-excel', // .xls
+    'text/csv', // .csv
+    'application/csv', // .csv (部分浏览器)
   ];
   private readonly maxFileSize = 10 * 1024 * 1024; // 10MB
 
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
-  ) {}
+  ) { }
 
   /** 上传并处理Excel文件 */
   async uploadFile(
@@ -31,11 +33,14 @@ export class FilesService {
   ) {
     this.validateFile(file); // 验证文件
 
-    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8'); // 解码中文文件名(Multer使用Latin1编码)
+    const originalName = Buffer.from(file.originalname, 'latin1').toString(
+      'utf8',
+    ); // 解码中文文件名(Multer使用Latin1编码)
 
     const fileId = crypto.randomUUID(); // 生成文件ID
 
-    const storagePath = await this.storageService.saveFile( // 保存文件到存储
+    const storagePath = await this.storageService.saveFile(
+      // 保存文件到存储
       companyId,
       fileId,
       file.buffer,
@@ -48,13 +53,14 @@ export class FilesService {
     let errorMessage: string | null = null;
 
     try {
-      const parseResult = this.parseExcel(file.buffer);
+      const parseResult = this.parseFile(file.buffer, file.mimetype);
       parsedData = parseResult.csvData;
       rowCount = parseResult.rowCount;
       status = FileProcessStatus.COMPLETED;
     } catch (error) {
       status = FileProcessStatus.FAILED;
-      errorMessage = error instanceof Error ? error.message : 'Failed to parse Excel file';
+      errorMessage =
+        error instanceof Error ? error.message : 'Failed to parse Excel file';
     }
 
     const uploadedFile = await this.prisma.uploadedFile.create({
@@ -78,7 +84,12 @@ export class FilesService {
   }
 
   /** 获取文件列表（分页，租户隔离） */
-  async getFiles(companyId: string, page = 1, limit = 10, status?: FileProcessStatus) {
+  async getFiles(
+    companyId: string,
+    page = 1,
+    limit = 10,
+    status?: FileProcessStatus,
+  ) {
     const skip = (page - 1) * limit;
 
     const where = {
@@ -142,7 +153,10 @@ export class FilesService {
   }
 
   /** 获取文件内容（用于下载） */
-  async getFileContent(fileId: string, companyId: string): Promise<{ buffer: Buffer; file: any }> {
+  async getFileContent(
+    fileId: string,
+    companyId: string,
+  ): Promise<{ buffer: Buffer; file: any }> {
     const file = await this.getFileById(fileId, companyId);
     const buffer = await this.storageService.readFile(file.storagePath);
     return { buffer, file };
@@ -160,7 +174,8 @@ export class FilesService {
 
     await this.storageService.deleteFile(file.storagePath); // 从存储删除
 
-    await this.prisma.uploadedFile.delete({ // 从数据库删除（级联删除相关分析）
+    await this.prisma.uploadedFile.delete({
+      // 从数据库删除（级联删除相关分析）
       where: { id: fileId },
     });
 
@@ -174,12 +189,24 @@ export class FilesService {
     }
 
     if (!this.allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Only Excel files (.xlsx, .xls) are allowed');
+      throw new BadRequestException(
+        'Only Excel or CSV files (.xlsx, .xls, .csv) are allowed',
+      );
     }
 
     if (file.size > this.maxFileSize) {
       throw new BadRequestException('File size exceeds 10MB limit');
     }
+  }
+
+  /** 解析文件为CSV格式 */
+  private parseFile(buffer: Buffer, mimeType: string): { csvData: string; rowCount: number } {
+    if (mimeType === 'text/csv' || mimeType === 'application/csv') {
+      const csvData = buffer.toString('utf-8'); // CSV直接转为字符串
+      const rows = csvData.split('\n').filter((row) => row.trim());
+      return { csvData, rowCount: Math.max(0, rows.length - 1) };
+    }
+    return this.parseExcel(buffer); // Excel文件走原有逻辑
   }
 
   /** 解析Excel文件为CSV格式 */
@@ -189,8 +216,8 @@ export class FilesService {
     const worksheet = workbook.Sheets[sheetName];
 
     const csvData = XLSX.utils.sheet_to_csv(worksheet); // 转换为CSV
-    
-    const rows = csvData.split('\n').filter(row => row.trim()); // 计算行数（不含表头）
+
+    const rows = csvData.split('\n').filter((row) => row.trim()); // 计算行数（不含表头）
     const rowCount = Math.max(0, rows.length - 1);
 
     return { csvData, rowCount };

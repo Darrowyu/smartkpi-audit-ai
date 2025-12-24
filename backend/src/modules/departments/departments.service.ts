@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDepartmentDto, UpdateDepartmentDto } from './dto/department.dto';
 
 @Injectable()
 export class DepartmentsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateDepartmentDto, companyId: string) {
     return this.prisma.department.create({
@@ -33,7 +37,10 @@ export class DepartmentsService {
       this.prisma.department.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string, companyId: string) {
@@ -52,7 +59,10 @@ export class DepartmentsService {
 
   async remove(id: string, companyId: string) {
     await this.findOne(id, companyId);
-    await this.prisma.department.update({ where: { id }, data: { isActive: false } }); // 软删除
+    await this.prisma.department.update({
+      where: { id },
+      data: { isActive: false },
+    }); // 软删除
     return { message: 'Department deleted' };
   }
 }

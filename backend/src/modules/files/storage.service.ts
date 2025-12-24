@@ -20,7 +20,12 @@ export class StorageService {
   }
 
   /** 保存文件到本地文件系统，按公司组织：uploads/{companyId}/{fileId}.xlsx */
-  async saveFile(companyId: string, fileId: string, buffer: Buffer, originalName: string): Promise<string> {
+  async saveFile(
+    companyId: string,
+    fileId: string,
+    buffer: Buffer,
+    originalName: string,
+  ): Promise<string> {
     try {
       const companyDir = path.join(this.uploadDir, companyId); // 创建公司专属目录
       if (!fs.existsSync(companyDir)) {

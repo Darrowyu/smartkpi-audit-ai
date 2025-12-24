@@ -72,7 +72,7 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
   const userSchema = z.object({
     username: z.string().min(2, t('teamView.usernameMinLength')),
     email: z.string().email(t('teamView.emailInvalid')),
-    password: z.string().min(6, t('teamView.passwordMinLength')).optional(),
+    password: z.string().min(6, t('teamView.passwordMinLength')).optional().or(z.literal('')), // 允许空字符串
     firstName: z.string().optional(),
     lastName: z.string().optional(),
     role: z.enum([

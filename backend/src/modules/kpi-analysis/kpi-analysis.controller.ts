@@ -28,7 +28,13 @@ export class KpiAnalysisController {
     @CurrentUser('userId') userId: string,
   ) {
     const language = (analyzeDto.language as 'en' | 'zh') || 'en';
-    return this.kpiAnalysisService.analyzeFile(fileId, companyId, userId, language, analyzeDto.period);
+    return this.kpiAnalysisService.analyzeFile(
+      fileId,
+      companyId,
+      userId,
+      language,
+      analyzeDto.period,
+    );
   }
 
   @Get() // GET /api/kpi-analysis - 获取分析历史（分页）
@@ -38,7 +44,12 @@ export class KpiAnalysisController {
   ) {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '10', 10);
-    return this.kpiAnalysisService.getAnalyses(companyId, page, limit, query.period);
+    return this.kpiAnalysisService.getAnalyses(
+      companyId,
+      page,
+      limit,
+      query.period,
+    );
   }
 
   @Get(':id') // GET /api/kpi-analysis/:id - 获取单个分析详情

@@ -1,36 +1,32 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { KPIAnalysisResult } from '../types';
 import { kpiAnalysisApi, AnalysisListItem } from '../api/kpi-analysis.api';
 import { Calendar, FileText, Trash2, ArrowRight, Clock, Loader2 } from 'lucide-react';
 
 interface HistoryViewProps {
-  onSelectResult: (result: KPIAnalysisResult) => void;
+  onSelectResult?: (result: unknown) => void; // 保留但改为可选
   language: 'en' | 'zh';
 }
 
-const HistoryView: React.FC<HistoryViewProps> = ({ onSelectResult, language }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({ language }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [history, setHistory] = useState<AnalysisListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadHistory();
-  }, []);
+  useEffect(() => { loadHistory(); }, []);
 
   const loadHistory = async () => {
     try {
       const res = await kpiAnalysisApi.getAnalyses(1, 20);
       setHistory(res.data);
-    } catch (_e) { /* 加载失败静默处理 */ }
+    } catch { /* 静默处理 */ }
     finally { setLoading(false); }
   };
 
-  const handleSelect = async (id: string) => {
-    try {
-      const analysis = await kpiAnalysisApi.getAnalysis(id);
-      if (analysis.rawResult) onSelectResult(analysis.rawResult);
-    } catch (_e) { /* 加载失败静默处理 */ }
+  const handleSelect = (id: string) => { // 修改：直接导航到详情页
+    navigate(`/analysis/${id}`);
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
@@ -39,7 +35,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectResult, language }) =
     try {
       await kpiAnalysisApi.deleteAnalysis(id);
       setHistory(prev => prev.filter(item => item.id !== id));
-    } catch (_e) { /* 删除失败静默处理 */ }
+    } catch { /* 静默处理 */ }
   };
 
   const formatDate = (dateStr: string) => new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(dateStr));

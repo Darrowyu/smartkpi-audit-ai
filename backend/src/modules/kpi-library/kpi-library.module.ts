@@ -5,9 +5,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { FormulaEngine } from '../calculation/engines/formula.engine';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [KPILibraryController],
-    providers: [KPILibraryService, FormulaEngine],
-    exports: [KPILibraryService],
+  imports: [PrismaModule],
+  controllers: [KPILibraryController],
+  providers: [KPILibraryService, FormulaEngine],
+  exports: [KPILibraryService],
 })
-export class KPILibraryModule { }
+export class KPILibraryModule {}

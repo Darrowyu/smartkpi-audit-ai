@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { RequestUser } from '../interfaces/request-with-user.interface';
 import { UserRole } from '@prisma/client';
 
@@ -9,8 +14,11 @@ export class TenantGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: RequestUser = request.user;
 
-    if (!user || !user.companyId) { // 确保用户已认证且有companyId
-      throw new ForbiddenException('Tenant context not found. User must be authenticated.');
+    if (!user || !user.companyId) {
+      // 确保用户已认证且有companyId
+      throw new ForbiddenException(
+        'Tenant context not found. User must be authenticated.',
+      );
     }
 
     request.companyId = user.companyId; // 将companyId注入请求，便于服务层访问

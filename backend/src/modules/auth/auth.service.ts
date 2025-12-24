@@ -3,10 +3,12 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -19,16 +21,20 @@ import { PermissionsService } from '../permissions/permissions.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private permissionsService: PermissionsService,
+    private mailService: MailService,
   ) { }
 
   /** 用户名登录 */
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findUnique({ // 按用户名查找用户
+    const user = await this.prisma.user.findUnique({
+      // 按用户名查找用户
       where: { username: loginDto.username },
       select: {
         id: true,
@@ -53,12 +59,16 @@ export class AuthService {
       throw new UnauthorizedException('User account is inactive');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash); // 验证密码
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.passwordHash,
+    ); // 验证密码
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    await this.prisma.user.update({ // 更新最后登录时间
+    await this.prisma.user.update({
+      // 更新最后登录时间
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
@@ -105,7 +115,10 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    const permissions = await this.permissionsService.getUserPermissions(user.companyId, user.role as UserRole); // 获取用户权限列表
+    const permissions = await this.permissionsService.getUserPermissions(
+      user.companyId,
+      user.role,
+    ); // 获取用户权限列表
 
     return {
       ...user,
@@ -115,9 +128,11 @@ export class AuthService {
   }
 
   /** 忘记密码 - 生成重置令牌 */
-  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string; resetUrl?: string }> {
+  async forgotPassword(
+    dto: ForgotPasswordDto,
+  ): Promise<{ message: string; resetUrl?: string }> {
     const user = await this.prisma.user.findFirst({
-      where: { email: dto.email, isActive: true },
+      where: { username: dto.username, email: dto.email, isActive: true }, // 同时匹配用户名和邮箱
     });
 
     if (!user) {
@@ -125,7 +140,10 @@ export class AuthService {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex'); // 生成随机token
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex'); // 哈希存储
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex'); // 哈希存储
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24小时有效期
 
     await this.prisma.user.update({
@@ -136,23 +154,40 @@ export class AuthService {
       },
     });
 
-    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+    const frontendUrl =
+      this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    // TODO: 集成邮件服务后，这里发送邮件
-    // await this.emailService.sendPasswordResetEmail(user.email, resetUrl);
+    const mailSent = await this.mailService.sendPasswordReset(
+      user.email!,
+      resetUrl,
+      user.username,
+    ); // 发送重置邮件
 
-    console.log(`[Password Reset] User: ${user.email}, Reset URL: ${resetUrl}`); // 开发阶段日志
+    if (!mailSent) {
+      this.logger.warn(
+        `[Password Reset] Mail service disabled. User: ${user.email}, URL: ${resetUrl}`,
+      );
+    }
 
-    return {
+    const response: { message: string; resetUrl?: string } = {
       message: 'If email exists, reset link has been sent',
-      resetUrl, // 开发阶段返回URL，生产环境移除此字段
     };
+
+    if (this.configService.get('NODE_ENV') !== 'production') {
+      // 仅开发环境返回URL
+      response.resetUrl = resetUrl;
+    }
+
+    return response;
   }
 
   /** 重置密码 */
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
-    const hashedToken = crypto.createHash('sha256').update(dto.token).digest('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(dto.token)
+      .digest('hex');
 
     const user = await this.prisma.user.findFirst({
       where: {

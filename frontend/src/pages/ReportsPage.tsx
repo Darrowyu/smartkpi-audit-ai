@@ -5,14 +5,7 @@ import { Language } from '@/types';
 
 const ReportsPage: React.FC = () => {
     const { i18n } = useTranslation();
-    return (
-        <ReportsView
-            language={(i18n.language as Language) || 'zh'}
-            onFileSelect={() => { }}
-            isProcessing={false}
-            error={null}
-        />
-    );
+    return <ReportsView language={(i18n.language as Language) || 'zh'} />;
 };
 
 export default ReportsPage;

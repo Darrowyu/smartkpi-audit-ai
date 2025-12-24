@@ -27,16 +27,23 @@ export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post('upload') // POST /api/files/upload - 上传Excel文件
-  @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    }),
+  )
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body() uploadDto: UploadFileDto,
     @CurrentUser('companyId') companyId: string,
     @CurrentUser('userId') userId: string,
   ) {
-    return this.filesService.uploadFile(file, companyId, userId, uploadDto.description);
+    return this.filesService.uploadFile(
+      file,
+      companyId,
+      userId,
+      uploadDto.description,
+    );
   }
 
   @Get() // GET /api/files - 获取文件列表（分页）
@@ -65,14 +72,17 @@ export class FilesController {
     @CurrentUser('companyId') companyId: string,
     @Res() res: Response,
   ) {
-    const { buffer, file } = await this.filesService.getFileContent(id, companyId);
-    
+    const { buffer, file } = await this.filesService.getFileContent(
+      id,
+      companyId,
+    );
+
     res.set({
       'Content-Type': file.mimeType,
       'Content-Disposition': `attachment; filename="${encodeURIComponent(file.originalName)}"`,
       'Content-Length': buffer.length,
     });
-    
+
     res.send(buffer);
   }
 

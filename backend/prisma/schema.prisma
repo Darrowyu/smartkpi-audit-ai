@@ -179,11 +179,41 @@ model Employee {
   // Relations
   kpiRecords   KPIEmployeeRecord[]
   linkedUser   User?  // Linked user account for data isolation
+  departmentHistory EmployeeDepartmentHistory[]
 
   @@unique([companyId, employeeId]) // Unique employee ID per company
   @@index([companyId])
   @@index([departmentId])
   @@map("employees")
+}
+
+// ============================================
+// Employee Department History (员工部门调动历史)
+// ============================================
+
+model EmployeeDepartmentHistory {
+  id           String   @id @default(uuid())
+
+  employeeId   String   @map("employee_id")
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  departmentId String   @map("department_id")
+  departmentName String @map("department_name") // 快照，防止部门改名后丢失
+
+  companyId    String   @map("company_id")
+
+  effectiveDate DateTime @map("effective_date") // 生效日期
+  endDate      DateTime? @map("end_date") // 结束日期，null表示当前部门
+
+  reason       String?  // 调动原因
+
+  createdAt    DateTime @default(now())
+  createdById  String?  @map("created_by_id")
+
+  @@index([employeeId])
+  @@index([companyId])
+  @@index([effectiveDate])
+  @@map("employee_department_history")
 }
 
 // ============================================

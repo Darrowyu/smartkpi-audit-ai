@@ -24,7 +24,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useGlobalPipes( // 全局验证管道
+  app.useGlobalPipes(
+    // 全局验证管道
     new ValidationPipe({
       whitelist: true, // 剥离无装饰器的属性
       forbidNonWhitelisted: true, // 存在非白名单属性时抛出错误

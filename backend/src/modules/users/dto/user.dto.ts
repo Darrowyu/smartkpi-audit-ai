@@ -1,4 +1,13 @@
-import { IsString, IsOptional, IsEmail, IsEnum, IsUUID, MaxLength, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsUUID,
+  IsBoolean,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class CreateUserDto {
@@ -40,8 +49,17 @@ export class CreateUserDto {
 
 export class UpdateUserDto {
   @IsOptional()
+  @IsString()
+  username?: string; // 前端可能发送但后端忽略
+
+  @IsOptional()
   @IsEmail()
-  email?: string; // 允许修改邮箱
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string; // 修改密码
 
   @IsOptional()
   @IsString()
@@ -62,11 +80,12 @@ export class UpdateUserDto {
   language?: string;
 
   @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 
   @IsOptional()
   @IsUUID()
-  departmentId?: string | null; // 部门ID（可选，null 表示移除部门）
+  departmentId?: string | null;
 }
 
 export class UserQueryDto {
@@ -85,4 +104,34 @@ export class UserQueryDto {
   @IsOptional()
   @IsString()
   role?: string;
+}
+
+export class UpdateProfileDto {
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  @MinLength(1)
+  currentPassword: string;
+
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
 }

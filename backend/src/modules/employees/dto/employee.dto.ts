@@ -1,4 +1,12 @@
-import { IsString, IsOptional, IsEmail, IsUUID, MaxLength, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsUUID,
+  MaxLength,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateEmployeeDto {

@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { MailModule } from './modules/mail/mail.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { FilesModule } from './modules/files/files.module';
 import { KpiAnalysisModule } from './modules/kpi-analysis/kpi-analysis.module';
@@ -24,6 +25,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     PrismaModule,
+    MailModule,
     AuthModule,
     FilesModule,
     KpiAnalysisModule,
@@ -44,4 +46,4 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

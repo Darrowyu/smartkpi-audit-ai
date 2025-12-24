@@ -1,10 +1,18 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateEmployeeDto, UpdateEmployeeDto, BulkImportEmployeeDto } from './dto/employee.dto';
+import {
+  CreateEmployeeDto,
+  UpdateEmployeeDto,
+  BulkImportEmployeeDto,
+} from './dto/employee.dto';
 
 @Injectable()
 export class EmployeesService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateEmployeeDto, companyId: string) {
     const existing = await this.prisma.employee.findFirst({
@@ -18,7 +26,13 @@ export class EmployeesService {
     });
   }
 
-  async findAll(companyId: string, page = 1, limit = 20, search?: string, departmentId?: string) {
+  async findAll(
+    companyId: string,
+    page = 1,
+    limit = 20,
+    search?: string,
+    departmentId?: string,
+  ) {
     const skip = (page - 1) * limit;
     const where = {
       companyId,
@@ -44,13 +58,19 @@ export class EmployeesService {
       this.prisma.employee.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string, companyId: string) {
     const emp = await this.prisma.employee.findFirst({
       where: { id, companyId },
-      include: { department: true, kpiRecords: { take: 5, orderBy: { createdAt: 'desc' } } },
+      include: {
+        department: true,
+        kpiRecords: { take: 5, orderBy: { createdAt: 'desc' } },
+      },
     });
     if (!emp) throw new NotFoundException('Employee not found');
     return emp;
@@ -67,7 +87,10 @@ export class EmployeesService {
 
   async remove(id: string, companyId: string) {
     await this.findOne(id, companyId);
-    await this.prisma.employee.update({ where: { id }, data: { isActive: false } });
+    await this.prisma.employee.update({
+      where: { id },
+      data: { isActive: false },
+    });
     return { message: 'Employee deleted' };
   }
 
@@ -80,11 +103,15 @@ export class EmployeesService {
       where: { companyId, isActive: true },
       select: { id: true, name: true },
     });
-    const deptMap = new Map(departments.map((d) => [d.name?.toUpperCase(), d.id]));
+    const deptMap = new Map(
+      departments.map((d) => [d.name?.toUpperCase(), d.id]),
+    );
 
     for (const emp of employees) {
       try {
-        const departmentId = emp.departmentCode ? deptMap.get(emp.departmentCode.toUpperCase()) : undefined;
+        const departmentId = emp.departmentCode
+          ? deptMap.get(emp.departmentCode.toUpperCase())
+          : undefined;
 
         const existing = await this.prisma.employee.findFirst({
           where: { companyId, employeeId: emp.employeeId },
@@ -93,17 +120,32 @@ export class EmployeesService {
         if (existing) {
           await this.prisma.employee.update({
             where: { id: existing.id },
-            data: { name: emp.name, email: emp.email, role: emp.role, departmentId, isActive: true },
+            data: {
+              name: emp.name,
+              email: emp.email,
+              role: emp.role,
+              departmentId,
+              isActive: true,
+            },
           });
           results.updated++;
         } else {
           await this.prisma.employee.create({
-            data: { employeeId: emp.employeeId, name: emp.name, email: emp.email, role: emp.role, departmentId, companyId },
+            data: {
+              employeeId: emp.employeeId,
+              name: emp.name,
+              email: emp.email,
+              role: emp.role,
+              departmentId,
+              companyId,
+            },
           });
           results.created++;
         }
       } catch (e) {
-        results.errors.push(`${emp.employeeId}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        results.errors.push(
+          `${emp.employeeId}: ${e instanceof Error ? e.message : 'Unknown error'}`,
+        );
       }
     }
 

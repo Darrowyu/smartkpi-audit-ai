@@ -1,7 +1,21 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { NotificationsService } from './notifications.service';
-import { QueryNotificationDto, BulkNotificationDto } from './dto/notification.dto';
+import {
+  QueryNotificationDto,
+  BulkNotificationDto,
+} from './dto/notification.dto';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)

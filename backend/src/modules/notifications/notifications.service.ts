@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
-import { CreateNotificationDto, QueryNotificationDto, BulkNotificationDto, NotificationTypeEnum } from './dto/notification.dto';
+import {
+  CreateNotificationDto,
+  QueryNotificationDto,
+  BulkNotificationDto,
+  NotificationTypeEnum,
+} from './dto/notification.dto';
 
 export interface NotificationPayload {
   type: NotificationTypeEnum;
@@ -32,7 +37,7 @@ export class NotificationsService {
 
   /** 批量发送通知 */
   async sendBulk(dto: BulkNotificationDto, companyId: string) {
-    const notifications = dto.userIds.map(userId => ({
+    const notifications = dto.userIds.map((userId) => ({
       type: dto.type,
       title: dto.title,
       content: dto.content,
@@ -57,13 +62,17 @@ export class NotificationsService {
     });
 
     return this.sendBulk(
-      { ...payload, userIds: users.map(u => u.id) },
+      { ...payload, userIds: users.map((u) => u.id) },
       companyId,
     );
   }
 
   /** 发送给特定角色的用户 */
-  async sendToRole(payload: NotificationPayload, companyId: string, roles: UserRole[]) {
+  async sendToRole(
+    payload: NotificationPayload,
+    companyId: string,
+    roles: UserRole[],
+  ) {
     const users = await this.prisma.user.findMany({
       where: { companyId, isActive: true, role: { in: roles } },
       select: { id: true },
@@ -72,13 +81,17 @@ export class NotificationsService {
     if (users.length === 0) return { sent: 0 };
 
     return this.sendBulk(
-      { ...payload, userIds: users.map(u => u.id) },
+      { ...payload, userIds: users.map((u) => u.id) },
       companyId,
     );
   }
 
   /** 发送给部门用户 */
-  async sendToDepartment(payload: NotificationPayload, companyId: string, departmentId: string) {
+  async sendToDepartment(
+    payload: NotificationPayload,
+    companyId: string,
+    departmentId: string,
+  ) {
     const users = await this.prisma.user.findMany({
       where: { companyId, departmentId, isActive: true },
       select: { id: true },
@@ -87,7 +100,7 @@ export class NotificationsService {
     if (users.length === 0) return { sent: 0 };
 
     return this.sendBulk(
-      { ...payload, userIds: users.map(u => u.id) },
+      { ...payload, userIds: users.map((u) => u.id) },
       companyId,
     );
   }
@@ -166,7 +179,11 @@ export class NotificationsService {
   // ==================== 业务场景通知方法 ====================
 
   /** 通知：数据提交待审批 */
-  async notifySubmissionPending(submissionId: string, companyId: string, submitterName: string) {
+  async notifySubmissionPending(
+    submissionId: string,
+    companyId: string,
+    submitterName: string,
+  ) {
     return this.sendToRole(
       {
         type: NotificationTypeEnum.SUBMISSION_PENDING,
@@ -181,7 +198,11 @@ export class NotificationsService {
   }
 
   /** 通知：数据提交已通过 */
-  async notifySubmissionApproved(submissionId: string, userId: string, companyId: string) {
+  async notifySubmissionApproved(
+    submissionId: string,
+    userId: string,
+    companyId: string,
+  ) {
     return this.send(
       {
         type: NotificationTypeEnum.SUBMISSION_APPROVED,
@@ -196,7 +217,12 @@ export class NotificationsService {
   }
 
   /** 通知：数据提交被驳回 */
-  async notifySubmissionRejected(submissionId: string, userId: string, companyId: string, reason: string) {
+  async notifySubmissionRejected(
+    submissionId: string,
+    userId: string,
+    companyId: string,
+    reason: string,
+  ) {
     return this.send(
       {
         type: NotificationTypeEnum.SUBMISSION_REJECTED,
@@ -211,7 +237,12 @@ export class NotificationsService {
   }
 
   /** 通知：绩效计算完成 */
-  async notifyCalculationComplete(periodId: string, periodName: string, companyId: string, employeeCount: number) {
+  async notifyCalculationComplete(
+    periodId: string,
+    periodName: string,
+    companyId: string,
+    employeeCount: number,
+  ) {
     return this.sendToRole(
       {
         type: NotificationTypeEnum.CALCULATION_COMPLETE,
@@ -226,7 +257,11 @@ export class NotificationsService {
   }
 
   /** 通知：考核周期已激活 */
-  async notifyPeriodActivated(periodId: string, periodName: string, companyId: string) {
+  async notifyPeriodActivated(
+    periodId: string,
+    periodName: string,
+    companyId: string,
+  ) {
     return this.sendToCompany(
       {
         type: NotificationTypeEnum.PERIOD_ACTIVATED,
@@ -240,7 +275,11 @@ export class NotificationsService {
   }
 
   /** 通知：考核周期已锁定 */
-  async notifyPeriodLocked(periodId: string, periodName: string, companyId: string) {
+  async notifyPeriodLocked(
+    periodId: string,
+    periodName: string,
+    companyId: string,
+  ) {
     return this.sendToCompany(
       {
         type: NotificationTypeEnum.PERIOD_LOCKED,
@@ -254,7 +293,13 @@ export class NotificationsService {
   }
 
   /** 通知：低绩效预警 */
-  async notifyLowPerformance(employeeId: string, employeeName: string, score: number, userId: string, companyId: string) {
+  async notifyLowPerformance(
+    employeeId: string,
+    employeeName: string,
+    score: number,
+    userId: string,
+    companyId: string,
+  ) {
     return this.send(
       {
         type: NotificationTypeEnum.LOW_PERFORMANCE_ALERT,
@@ -269,7 +314,12 @@ export class NotificationsService {
   }
 
   /** 通知：新指标分配 */
-  async notifyAssignmentCreated(periodName: string, kpiName: string, userId: string, companyId: string) {
+  async notifyAssignmentCreated(
+    periodName: string,
+    kpiName: string,
+    userId: string,
+    companyId: string,
+  ) {
     return this.send(
       {
         type: NotificationTypeEnum.ASSIGNMENT_CREATED,

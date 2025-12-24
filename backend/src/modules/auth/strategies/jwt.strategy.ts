@@ -20,7 +20,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<RequestUser> {
-    const user = await this.prisma.user.findUnique({ // 验证用户是否存在且活跃
+    const user = await this.prisma.user.findUnique({
+      // 验证用户是否存在且活跃
       where: { id: payload.sub },
       select: {
         id: true,
@@ -37,7 +38,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    return { // 返回将附加到request.user的用户对象
+    return {
+      // 返回将附加到request.user的用户对象
       userId: user.id,
       username: user.username,
       companyId: user.companyId,

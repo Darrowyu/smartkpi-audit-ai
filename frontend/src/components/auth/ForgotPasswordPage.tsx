@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Mail, ArrowLeft, Languages, CheckCircle } from 'lucide-react';
+import { Mail, ArrowLeft, Languages, CheckCircle, User } from 'lucide-react';
 import { Language } from '../../types';
 import logoImage from '../../assets/images/Makrite_KPI_logo.png';
 import { authApi } from '../../api/auth.api';
@@ -12,6 +12,7 @@ interface Props {
 
 export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
   const { t, i18n } = useTranslation();
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
     setLoading(true);
 
     try {
-      await authApi.forgotPassword(email);
+      await authApi.forgotPassword(username, email);
       setSuccess(true);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error && 'response' in err
@@ -105,6 +106,23 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    {t('username')}
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-[#1E4B8E] focus:ring-2 focus:ring-[#1E4B8E]/20 transition-all outline-none"
+                      placeholder={t('forgotPasswordPage.usernamePlaceholder', '请输入用户名')}
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">
                     {t('email')}

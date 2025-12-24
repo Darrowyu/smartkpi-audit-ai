@@ -23,6 +23,11 @@ export const assessmentApi = {
         return response.data;
     },
 
+    deletePeriod: async (id: string) => {
+        const response = await apiClient.delete(`/assessment/periods/${id}`);
+        return response.data;
+    },
+
     // 模板下载
     downloadTemplate: async (periodId: string) => {
         const response = await apiClient.get(`/assessment/template/${periodId}`, {

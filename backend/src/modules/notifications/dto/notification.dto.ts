@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsEnum, IsBoolean, IsUUID, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsUUID,
+  IsArray,
+} from 'class-validator';
 
 export enum NotificationTypeEnum {
   SUBMISSION_PENDING = 'SUBMISSION_PENDING',

@@ -57,6 +57,18 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+export interface UpdateProfileData {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  language?: string;
+}
+
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export const usersApi = {
   findAll: async (params?: UserQueryParams): Promise<PaginatedResponse<User>> => {
     const res = await apiClient.get('/users', { params });
@@ -99,5 +111,15 @@ export const usersApi = {
 
   deleteUser: async (id: string): Promise<void> => { // 兼容别名
     await apiClient.delete(`/users/${id}`);
+  },
+
+  updateProfile: async (data: UpdateProfileData): Promise<User> => {
+    const res = await apiClient.patch('/users/me/profile', data);
+    return res.data;
+  },
+
+  changePassword: async (data: ChangePasswordData): Promise<{ message: string }> => {
+    const res = await apiClient.post('/users/me/password', data);
+    return res.data;
   },
 };

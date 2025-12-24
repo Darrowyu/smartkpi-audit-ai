@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGroupDto, UpdateGroupDto } from './dto/group.dto';
 
@@ -39,7 +43,10 @@ export class GroupsService {
       this.prisma.group.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string) {
@@ -71,7 +78,10 @@ export class GroupsService {
 
   async remove(id: string) {
     await this.findOne(id);
-    await this.prisma.group.update({ where: { id }, data: { isActive: false } }); // 软删除
+    await this.prisma.group.update({
+      where: { id },
+      data: { isActive: false },
+    }); // 软删除
     return { message: 'Group deleted' };
   }
 
@@ -86,7 +96,10 @@ export class GroupsService {
         where: { company: { groupId }, isActive: true },
       }),
     ]);
-    return { totalCompanies: companies, totalUsers: users, totalDepartments: departments };
+    return {
+      totalCompanies: companies,
+      totalUsers: users,
+      totalDepartments: departments,
+    };
   }
 }
-

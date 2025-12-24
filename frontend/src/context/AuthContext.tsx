@@ -34,8 +34,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (username: string, password: string) => {
-    const res = await authApi.login({ username, password });
-    setUser(res.user);
+    await authApi.login({ username, password });
+    await refreshUser(); // 登录后获取完整用户信息（含permissions）
   };
 
   const logout = () => {

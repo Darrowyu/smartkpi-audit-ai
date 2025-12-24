@@ -7,12 +7,12 @@ import { RollupEngine } from './engines/rollup.engine';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
-    imports: [
-        PrismaModule,
-        BullModule.registerQueue({ name: 'kpi-calculation' }),
-    ],
-    controllers: [CalculationController],
-    providers: [CalculationService, FormulaEngine, RollupEngine],
-    exports: [CalculationService, FormulaEngine, RollupEngine],
+  imports: [
+    PrismaModule,
+    BullModule.registerQueue({ name: 'kpi-calculation' }),
+  ],
+  controllers: [CalculationController],
+  providers: [CalculationService, FormulaEngine, RollupEngine],
+  exports: [CalculationService, FormulaEngine, RollupEngine],
 })
-export class CalculationModule { }
+export class CalculationModule {}

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateCompanyDto, CreateCompanyDto } from './dto/company.dto';
 
@@ -12,7 +17,15 @@ export class CompaniesService {
       where: { id: companyId },
       include: {
         group: { select: { id: true, name: true } },
-        _count: { select: { users: true, departments: true, employees: true, uploadedFiles: true, kpiAnalyses: true } },
+        _count: {
+          select: {
+            users: true,
+            departments: true,
+            employees: true,
+            uploadedFiles: true,
+            kpiAnalyses: true,
+          },
+        },
       },
     });
     if (!company) throw new NotFoundException('Company not found');
@@ -84,13 +97,18 @@ export class CompaniesService {
         take: limit,
         orderBy: { name: 'asc' },
         include: {
-          _count: { select: { users: true, departments: true, employees: true } },
+          _count: {
+            select: { users: true, departments: true, employees: true },
+          },
         },
       }),
       this.prisma.company.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   // 获取指定子公司详情（验证groupId）
@@ -99,10 +117,19 @@ export class CompaniesService {
       where: { id, groupId },
       include: {
         group: { select: { id: true, name: true } },
-        _count: { select: { users: true, departments: true, employees: true, uploadedFiles: true, kpiAnalyses: true } },
+        _count: {
+          select: {
+            users: true,
+            departments: true,
+            employees: true,
+            uploadedFiles: true,
+            kpiAnalyses: true,
+          },
+        },
       },
     });
-    if (!company) throw new NotFoundException('Company not found or access denied');
+    if (!company)
+      throw new NotFoundException('Company not found or access denied');
     return company;
   }
 

@@ -20,6 +20,7 @@ export interface AuthUser {
   company?: { id: string; name: string };
   department?: { id: string; name: string };
   language: string;
+  lastLoginAt?: string; // 最后登录时间
 }
 
 export interface AuthResponse {
@@ -43,8 +44,8 @@ export const authApi = {
     removeToken();
   },
 
-  async forgotPassword(email: string): Promise<{ message: string }> {
-    const res = await apiClient.post('/auth/forgot-password', { email });
+  async forgotPassword(username: string, email: string): Promise<{ message: string }> {
+    const res = await apiClient.post('/auth/forgot-password', { username, email });
     return res.data;
   },
 

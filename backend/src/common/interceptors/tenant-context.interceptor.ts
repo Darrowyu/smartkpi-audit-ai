@@ -1,4 +1,9 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { RequestUser } from '../interfaces/request-with-user.interface';
 
@@ -9,7 +14,8 @@ export class TenantContextInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const user: RequestUser = request.user;
 
-    if (user && user.companyId) { // 将认证用户的companyId注入请求
+    if (user && user.companyId) {
+      // 将认证用户的companyId注入请求
       request.companyId = user.companyId;
       request.tenantId = user.companyId; // 别名
     }

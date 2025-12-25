@@ -10,8 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { kpiAnalysisApi, KPIAnalysis } from '@/api/kpi-analysis.api';
 import { useToast } from '@/components/ui/use-toast';
-import { pdf } from '@react-pdf/renderer';
-import { AnalysisPDFDocument } from './AnalysisPDFDocument';
 
 interface Metric {
     name: string;
@@ -77,6 +75,10 @@ export const AnalysisDetailView: React.FC = memo(() => {
         if (!analysis) return;
         setExporting(true);
         try {
+            const [{ pdf }, { AnalysisPDFDocument }] = await Promise.all([
+                import('@react-pdf/renderer'),
+                import('./AnalysisPDFDocument')
+            ]); // 动态导入PDF库
             const pdfBlob = await pdf(
                 <AnalysisPDFDocument
                     fileName={analysis.file.originalName}

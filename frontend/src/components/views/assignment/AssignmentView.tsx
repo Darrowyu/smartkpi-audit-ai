@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
-    Plus, Trash2, Pencil, ChevronDown, ChevronRight, Users
+    Plus, Trash2, Pencil, ChevronDown, ChevronRight, Users, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,82 +11,48 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { assignmentApi, KPIAssignmentDto, CreateAssignmentDto } from '@/api/assignment.api';
+import { assessmentApi } from '@/api/assessment.api';
+import { kpiLibraryApi } from '@/api/kpi-library.api';
+import { AssessmentPeriod, PeriodStatus, KPIDefinition } from '@/types';
 
 // 分类配置
 const CATEGORY_CONFIG: Record<string, { label: string; fullLabel: string; color: string; description: string }> = {
     FIN: { label: '业绩', fullLabel: '业绩指标', color: 'bg-blue-500', description: '销售和营收相关指标' },
     OPS: { label: '运营', fullLabel: '运营指标', color: 'bg-green-500', description: '日常运营效率相关指标' },
     RND: { label: '创新', fullLabel: '创新指标', color: 'bg-cyan-500', description: '创新和改进相关指标' },
-    TEAM: { label: '协作', fullLabel: '团队协作', color: 'bg-amber-500', description: '团队合作和沟通相关指标' },
+    CUS: { label: '客户', fullLabel: '客户指标', color: 'bg-purple-500', description: '客户服务和满意度相关指标' },
+    MKT: { label: '市场', fullLabel: '市场指标', color: 'bg-orange-500', description: '市场推广和品牌相关指标' },
+    HR: { label: '人力', fullLabel: '人力资源', color: 'bg-pink-500', description: '人才管理和培训相关指标' },
 };
 
-// 模拟数据类型
-interface MockAssignment {
+interface AssignmentItem {
     id: string;
     name: string;
     description: string;
     category: string;
     department: string;
     weight: number;
-    employeeCount: number;
+    targetValue: number;
+    kpiDefinitionId: string;
 }
 
-interface MockCategoryGroup {
+interface CategoryGroup {
     category: string;
     config: typeof CATEGORY_CONFIG[string];
     totalWeight: number;
-    totalEmployees: number;
-    assignments: MockAssignment[];
+    assignments: AssignmentItem[];
 }
 
-// 模拟数据
-const MOCK_DATA: MockCategoryGroup[] = [
-    {
-        category: 'FIN',
-        config: CATEGORY_CONFIG.FIN,
-        totalWeight: 40,
-        totalEmployees: 25,
-        assignments: [
-            { id: '1', name: '销售额达成率', description: '完成年度销售目标的百分比', category: 'FIN', department: '销售部', weight: 20, employeeCount: 15 },
-            { id: '2', name: '新客户获取', description: '本季度新增客户数量', category: 'FIN', department: '销售部', weight: 10, employeeCount: 10 },
-            { id: '3', name: '客户续约率', description: '老客户续约比例', category: 'FIN', department: '客户成功部', weight: 10, employeeCount: 8 },
-        ],
-    },
-    {
-        category: 'OPS',
-        config: CATEGORY_CONFIG.OPS,
-        totalWeight: 30,
-        totalEmployees: 30,
-        assignments: [
-            { id: '4', name: '项目交付及时率', description: '按时完成项目的比例', category: 'OPS', department: '研发部', weight: 15, employeeCount: 20 },
-            { id: '5', name: '客户满意度', description: '客户满意度评分', category: 'OPS', department: '客服部', weight: 15, employeeCount: 10 },
-        ],
-    },
-    {
-        category: 'RND',
-        config: CATEGORY_CONFIG.RND,
-        totalWeight: 20,
-        totalEmployees: 18,
-        assignments: [
-            { id: '6', name: '流程优化建议', description: '提出并实施的流程优化数量', category: 'RND', department: '全员', weight: 10, employeeCount: 18 },
-            { id: '7', name: '技术创新', description: '新技术应用和创新项目', category: 'RND', department: '研发部', weight: 10, employeeCount: 12 },
-        ],
-    },
-    {
-        category: 'TEAM',
-        config: CATEGORY_CONFIG.TEAM,
-        totalWeight: 10,
-        totalEmployees: 50,
-        assignments: [
-            { id: '8', name: '团队协作', description: '团队合作和沟通相关指标', category: 'TEAM', department: '全员', weight: 10, employeeCount: 50 },
-        ],
-    },
-];
+const getCategoryFromCode = (code: string): string => {
+    const prefix = code.split('-')[0]?.toUpperCase() || '';
+    return CATEGORY_CONFIG[prefix] ? prefix : 'FIN';
+};
 
 // 指标行组件
 interface AssignmentRowProps {
-    assignment: MockAssignment;
-    onEdit: (assignment: MockAssignment) => void;
+    assignment: AssignmentItem;
+    onEdit: (assignment: AssignmentItem) => void;
     onDelete: (id: string) => void;
 }
 
@@ -117,9 +83,8 @@ const AssignmentRow: React.FC<AssignmentRowProps> = ({ assignment, onEdit, onDel
                 <Progress value={assignment.weight * 2} className="h-1.5" />
             </div>
 
-            <div className="w-16 flex items-center gap-1 text-slate-500 mr-4">
-                <Users className="h-4 w-4" />
-                <span className="text-sm">{assignment.employeeCount}</span>
+            <div className="w-20 text-right mr-4">
+                <span className="text-sm text-slate-500">目标: {assignment.targetValue}</span>
             </div>
 
             <div className="flex items-center gap-1">
@@ -136,11 +101,11 @@ const AssignmentRow: React.FC<AssignmentRowProps> = ({ assignment, onEdit, onDel
 
 // 分类分组组件
 interface CategoryGroupProps {
-    group: MockCategoryGroup;
+    group: CategoryGroup;
     expanded: boolean;
     onToggle: () => void;
-    onEditAssignment: (assignment: MockAssignment) => void;
-    onEditGroup: (group: MockCategoryGroup) => void;
+    onEditAssignment: (assignment: AssignmentItem) => void;
+    onEditGroup: (group: CategoryGroup) => void;
     onDeleteAssignment: (id: string) => void;
     onDeleteGroup: (category: string) => void;
     onAdd: (category: string) => void;
@@ -179,9 +144,8 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
                     <Progress value={group.totalWeight} className="h-2" />
                 </div>
 
-                <div className="w-16 flex items-center gap-1 text-slate-500 mr-4">
-                    <Users className="h-4 w-4" />
-                    <span className="text-sm">{group.totalEmployees}</span>
+                <div className="w-20 text-right mr-4">
+                    <span className="text-sm text-slate-500">{group.assignments.length} 项指标</span>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -220,12 +184,16 @@ type EditType = 'none' | 'group' | 'assignment' | 'addChild';
 export const AssignmentView: React.FC = () => {
     const { toast } = useToast();
 
-    const [data, setData] = useState<MockCategoryGroup[]>(MOCK_DATA);
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['FIN', 'OPS', 'RND', 'TEAM']));
+    const [data, setData] = useState<CategoryGroup[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
+    const [selectedPeriod, setSelectedPeriod] = useState<string>('');
+    const [kpiDefinitions, setKpiDefinitions] = useState<KPIDefinition[]>([]);
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['FIN', 'OPS', 'RND', 'CUS', 'MKT', 'HR']));
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editType, setEditType] = useState<EditType>('none');
-    const [editingAssignment, setEditingAssignment] = useState<MockAssignment | null>(null);
-    const [editingGroup, setEditingGroup] = useState<MockCategoryGroup | null>(null);
+    const [editingAssignment, setEditingAssignment] = useState<AssignmentItem | null>(null);
+    const [editingGroup, setEditingGroup] = useState<CategoryGroup | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
 
     const [form, setForm] = useState({
@@ -233,7 +201,71 @@ export const AssignmentView: React.FC = () => {
         description: '',
         department: '',
         weight: '10',
+        targetValue: '100',
+        kpiDefinitionId: '',
     });
+
+    // 加载数据
+    const loadPeriods = useCallback(async () => {
+        try {
+            const response = await assessmentApi.getPeriods();
+            const allPeriods = response.data || [];
+            const activePeriods = allPeriods.filter((p: AssessmentPeriod) =>
+                p.status === PeriodStatus.ACTIVE || p.status === PeriodStatus.DRAFT
+            );
+            setPeriods(activePeriods);
+            if (activePeriods.length > 0) setSelectedPeriod(activePeriods[0].id);
+        } catch {
+            toast({ variant: 'destructive', title: '加载周期失败' });
+        }
+    }, [toast]);
+
+    const loadKpiDefinitions = useCallback(async () => {
+        try {
+            const res = await kpiLibraryApi.findAll({});
+            setKpiDefinitions(res.data || res || []);
+        } catch { /* silent */ }
+    }, []);
+
+    const loadAssignments = useCallback(async () => {
+        if (!selectedPeriod) return;
+        setLoading(true);
+        try {
+            const assignments = await assignmentApi.findByPeriod(selectedPeriod);
+            const grouped: Record<string, AssignmentItem[]> = {};
+            
+            assignments.forEach((a: KPIAssignmentDto) => {
+                const category = getCategoryFromCode(a.kpiDefinition.code);
+                if (!grouped[category]) grouped[category] = [];
+                grouped[category].push({
+                    id: a.id,
+                    name: a.kpiDefinition.name,
+                    description: a.kpiDefinition.description || '',
+                    category,
+                    department: '全员',
+                    weight: a.weight,
+                    targetValue: a.targetValue,
+                    kpiDefinitionId: a.kpiDefinitionId,
+                });
+            });
+
+            const categoryGroups: CategoryGroup[] = Object.entries(grouped).map(([cat, items]) => ({
+                category: cat,
+                config: CATEGORY_CONFIG[cat] || CATEGORY_CONFIG.FIN,
+                totalWeight: items.reduce((sum, i) => sum + i.weight, 0),
+                assignments: items,
+            }));
+
+            setData(categoryGroups);
+        } catch {
+            toast({ variant: 'destructive', title: '加载分配失败' });
+        } finally {
+            setLoading(false);
+        }
+    }, [selectedPeriod, toast]);
+
+    useEffect(() => { loadPeriods(); loadKpiDefinitions(); }, [loadPeriods, loadKpiDefinitions]);
+    useEffect(() => { if (selectedPeriod) loadAssignments(); }, [selectedPeriod, loadAssignments]);
 
     const totalWeight = useMemo(() => {
         return data.reduce((sum, group) => sum + group.totalWeight, 0);
@@ -259,7 +291,7 @@ export const AssignmentView: React.FC = () => {
         setEditingAssignment(null);
         setEditingGroup(null);
         setSelectedCategory('FIN');
-        setForm({ name: '', description: '', department: '', weight: '10' });
+        setForm({ name: '', description: '', department: '', weight: '10', targetValue: '100', kpiDefinitionId: '' });
         setIsDialogOpen(true);
     };
 
@@ -269,12 +301,12 @@ export const AssignmentView: React.FC = () => {
         setEditingAssignment(null);
         setEditingGroup(null);
         setSelectedCategory(category);
-        setForm({ name: '', description: '', department: '', weight: '10' });
+        setForm({ name: '', description: '', department: '', weight: '10', targetValue: '100', kpiDefinitionId: '' });
         setIsDialogOpen(true);
     };
 
-    // 编辑分组
-    const handleEditGroup = (group: MockCategoryGroup) => {
+    // 编辑分组（现在只读展示，不允许编辑）
+    const handleEditGroup = (group: CategoryGroup) => {
         setEditType('group');
         setEditingGroup(group);
         setEditingAssignment(null);
@@ -284,12 +316,14 @@ export const AssignmentView: React.FC = () => {
             description: group.config.description,
             department: '',
             weight: String(group.totalWeight),
+            targetValue: '100',
+            kpiDefinitionId: '',
         });
         setIsDialogOpen(true);
     };
 
     // 编辑子指标
-    const handleEditAssignment = (assignment: MockAssignment) => {
+    const handleEditAssignment = (assignment: AssignmentItem) => {
         setEditType('assignment');
         setEditingAssignment(assignment);
         setEditingGroup(null);
@@ -299,97 +333,67 @@ export const AssignmentView: React.FC = () => {
             description: assignment.description,
             department: assignment.department,
             weight: String(assignment.weight),
+            targetValue: String(assignment.targetValue),
+            kpiDefinitionId: assignment.kpiDefinitionId,
         });
         setIsDialogOpen(true);
     };
 
     // 删除子指标
-    const handleDeleteAssignment = (id: string) => {
+    const handleDeleteAssignment = async (id: string) => {
         if (!confirm('确定要删除此指标吗？')) return;
-        setData(prev => prev.map(group => ({
-            ...group,
-            assignments: group.assignments.filter(a => a.id !== id),
-            totalWeight: group.assignments.filter(a => a.id !== id).reduce((sum, a) => sum + a.weight, 0),
-            totalEmployees: group.assignments.filter(a => a.id !== id).reduce((sum, a) => sum + a.employeeCount, 0),
-        })).filter(group => group.assignments.length > 0));
-        toast({ title: '删除成功' });
+        try {
+            await assignmentApi.remove(id);
+            toast({ title: '删除成功' });
+            loadAssignments();
+        } catch {
+            toast({ variant: 'destructive', title: '删除失败' });
+        }
     };
 
     // 删除分组
-    const handleDeleteGroup = (category: string) => {
+    const handleDeleteGroup = async (category: string) => {
         if (!confirm('确定要删除此分组及其所有指标吗？')) return;
-        setData(prev => prev.filter(g => g.category !== category));
-        toast({ title: '删除成功' });
+        const group = data.find(g => g.category === category);
+        if (!group) return;
+        try {
+            await Promise.all(group.assignments.map(a => assignmentApi.remove(a.id)));
+            toast({ title: '删除成功' });
+            loadAssignments();
+        } catch {
+            toast({ variant: 'destructive', title: '删除失败' });
+        }
     };
 
     // 提交表单
-    const handleSubmit = () => {
-        if (!form.name || !form.weight) {
-            toast({ variant: 'destructive', title: '请填写必填项' });
+    const handleSubmit = async () => {
+        if (!form.kpiDefinitionId || !form.weight || !selectedPeriod) {
+            toast({ variant: 'destructive', title: '请选择KPI指标和填写权重' });
             return;
         }
 
-        if (editType === 'group' && editingGroup) {
-            // 更新分组
-            setData(prev => prev.map(group =>
-                group.category === editingGroup.category
-                    ? {
-                        ...group,
-                        config: {
-                            ...group.config,
-                            fullLabel: form.name,
-                            description: form.description,
-                        },
-                    }
-                    : group
-            ));
-            toast({ title: '更新成功' });
-        } else if (editType === 'assignment' && editingAssignment) {
-            // 更新子指标
-            setData(prev => prev.map(group => ({
-                ...group,
-                assignments: group.assignments.map(a =>
-                    a.id === editingAssignment.id
-                        ? { ...a, name: form.name, description: form.description, department: form.department, weight: parseInt(form.weight) }
-                        : a
-                ),
-                totalWeight: group.assignments.reduce((sum, a) =>
-                    sum + (a.id === editingAssignment.id ? parseInt(form.weight) : a.weight), 0
-                ),
-            })));
-            toast({ title: '更新成功' });
-        } else {
-            // 新建子指标
-            const newAssignment: MockAssignment = {
-                id: `new_${Date.now()}`,
-                name: form.name,
-                description: form.description,
-                category: selectedCategory || 'FIN',
-                department: form.department || '全员',
-                weight: parseInt(form.weight),
-                employeeCount: Math.floor(Math.random() * 20) + 5,
-            };
-
-            setData(prev => {
-                const existingGroup = prev.find(g => g.category === (selectedCategory || 'FIN'));
-                if (existingGroup) {
-                    return prev.map(group =>
-                        group.category === (selectedCategory || 'FIN')
-                            ? {
-                                ...group,
-                                assignments: [...group.assignments, newAssignment],
-                                totalWeight: group.totalWeight + newAssignment.weight,
-                                totalEmployees: group.totalEmployees + newAssignment.employeeCount,
-                            }
-                            : group
-                    );
-                }
-                return prev;
-            });
-            toast({ title: '创建成功' });
+        try {
+            if (editType === 'assignment' && editingAssignment) {
+                await assignmentApi.update(editingAssignment.id, {
+                    targetValue: parseFloat(form.targetValue) || 100,
+                    weight: parseInt(form.weight),
+                });
+                toast({ title: '更新成功' });
+            } else {
+                const createData: CreateAssignmentDto = {
+                    kpiDefinitionId: form.kpiDefinitionId,
+                    periodId: selectedPeriod,
+                    targetValue: parseFloat(form.targetValue) || 100,
+                    weight: parseInt(form.weight),
+                };
+                await assignmentApi.create(createData);
+                toast({ title: '创建成功' });
+            }
+            setIsDialogOpen(false);
+            loadAssignments();
+        } catch {
+            toast({ variant: 'destructive', title: '操作失败' });
         }
-
-        setIsDialogOpen(false);
     };
 
     // 获取对话框标题
@@ -407,9 +411,21 @@ export const AssignmentView: React.FC = () => {
                     <h1 className="text-2xl font-bold text-slate-900">指标分配</h1>
                     <p className="text-slate-500">设置KPI指标体系，分配权重和考核对象</p>
                 </div>
-                <Button onClick={handleOpenCreate}>
-                    <Plus className="mr-2 h-4 w-4" /> 新建指标
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="选择考核周期" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {periods.map(p => (
+                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button onClick={handleOpenCreate} disabled={!selectedPeriod}>
+                        <Plus className="mr-2 h-4 w-4" /> 新建指标
+                    </Button>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -429,21 +445,31 @@ export const AssignmentView: React.FC = () => {
                 />
             </div>
 
-            <div className="space-y-4">
-                {data.map(group => (
-                    <CategoryGroup
-                        key={group.category}
-                        group={group}
-                        expanded={expandedCategories.has(group.category)}
-                        onToggle={() => toggleCategory(group.category)}
-                        onEditAssignment={handleEditAssignment}
-                        onEditGroup={handleEditGroup}
-                        onDeleteAssignment={handleDeleteAssignment}
-                        onDeleteGroup={handleDeleteGroup}
-                        onAdd={handleAddChild}
-                    />
-                ))}
-            </div>
+            {loading ? (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                </div>
+            ) : data.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">
+                    {selectedPeriod ? '暂无分配的指标，请点击"新建指标"添加' : '请先选择考核周期'}
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {data.map(group => (
+                        <CategoryGroup
+                            key={group.category}
+                            group={group}
+                            expanded={expandedCategories.has(group.category)}
+                            onToggle={() => toggleCategory(group.category)}
+                            onEditAssignment={handleEditAssignment}
+                            onEditGroup={handleEditGroup}
+                            onDeleteAssignment={handleDeleteAssignment}
+                            onDeleteGroup={handleDeleteGroup}
+                            onAdd={handleAddChild}
+                        />
+                    ))}
+                </div>
+            )}
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-md">
@@ -453,28 +479,37 @@ export const AssignmentView: React.FC = () => {
 
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label>指标名称</Label>
-                            <Input
-                                placeholder="例如：销售额达成率"
-                                value={form.name}
-                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                className="border-[#1E4B8E] focus:ring-[#1E4B8E]"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>指标描述</Label>
-                            <textarea
-                                placeholder="描述该指标的考核内容和标准"
-                                value={form.description}
-                                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                                className="w-full min-h-[80px] px-3 py-2 text-sm border border-slate-200 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-[#1E4B8E] focus:border-transparent"
-                            />
+                            <Label>选择KPI指标 <span className="text-red-500">*</span></Label>
+                            <Select 
+                                value={form.kpiDefinitionId} 
+                                onValueChange={v => setForm(f => ({ ...f, kpiDefinitionId: v }))}
+                                disabled={!!editingAssignment}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="选择要分配的KPI指标" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {kpiDefinitions.map(kpi => (
+                                        <SelectItem key={kpi.id} value={kpi.id}>
+                                            {kpi.code} - {kpi.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>权重 (%)</Label>
+                                <Label>目标值 <span className="text-red-500">*</span></Label>
+                                <Input
+                                    type="number"
+                                    placeholder="100"
+                                    value={form.targetValue}
+                                    onChange={e => setForm(f => ({ ...f, targetValue: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>权重 (%) <span className="text-red-500">*</span></Label>
                                 <Input
                                     type="number"
                                     placeholder="10"
@@ -482,40 +517,7 @@ export const AssignmentView: React.FC = () => {
                                     onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label>类别</Label>
-                                <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={editType === 'group' || editType === 'addChild'}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="选择类别" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
-                                            <SelectItem key={key} value={key}>
-                                                {config.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
                         </div>
-
-                        {editType !== 'group' && (
-                            <div className="space-y-2">
-                                <Label>所属部门</Label>
-                                <Select value={form.department} onValueChange={v => setForm(f => ({ ...f, department: v }))}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="选择部门" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="全员">全员</SelectItem>
-                                        <SelectItem value="销售部">销售部</SelectItem>
-                                        <SelectItem value="研发部">研发部</SelectItem>
-                                        <SelectItem value="客服部">客服部</SelectItem>
-                                        <SelectItem value="客户成功部">客户成功部</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
                     </div>
 
                     <DialogFooter>

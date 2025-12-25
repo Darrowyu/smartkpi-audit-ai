@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
     Plus, Lock, Unlock, Calendar, Clock, CheckCircle2, AlertCircle,
     Play, Pause, BarChart3, Users, Target, ArrowRight, MoreHorizontal,
-    CalendarDays, TrendingUp, FileText
+    CalendarDays, TrendingUp, FileText, Archive
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -59,6 +59,12 @@ const STATUS_CONFIG: Record<PeriodStatus, { label: string; color: string; bgColo
         color: 'text-amber-600',
         bgColor: 'bg-amber-100',
         icon: Lock,
+    },
+    [PeriodStatus.ARCHIVED]: {
+        label: '已归档',
+        color: 'text-slate-500',
+        bgColor: 'bg-slate-100',
+        icon: Archive,
     },
 };
 
@@ -286,12 +292,17 @@ export const AssessmentPeriodView: React.FC = () => {
         }
     };
 
-    // 排序：进行中 > 草稿 > 已锁定
+    // 排序：进行中 > 草稿 > 已锁定 > 已归档
     const sortedPeriods = useMemo(() => {
-        const statusOrder = { [PeriodStatus.ACTIVE]: 0, [PeriodStatus.DRAFT]: 1, [PeriodStatus.LOCKED]: 2 };
+        const statusOrder: Record<PeriodStatus, number> = { 
+            [PeriodStatus.ACTIVE]: 0, 
+            [PeriodStatus.DRAFT]: 1, 
+            [PeriodStatus.LOCKED]: 2,
+            [PeriodStatus.ARCHIVED]: 3,
+        };
         return [...periods].sort((a, b) => {
-            const orderA = statusOrder[a.status] ?? 3;
-            const orderB = statusOrder[b.status] ?? 3;
+            const orderA = statusOrder[a.status] ?? 4;
+            const orderB = statusOrder[b.status] ?? 4;
             if (orderA !== orderB) return orderA - orderB;
             return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
         });

@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardBody } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Plus, MoreHorizontal } from 'lucide-react';
-import { Language, KPIStatus } from '@/types';
+import { Search, Filter, Plus, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Language, KPIStatus, KPIDefinition } from '@/types';
+import { kpiLibraryApi } from '@/api/kpi-library.api';
+import { useToast } from '@/components/ui/use-toast';
 
 interface KPIManagementViewProps {
   language: Language;
 }
 
-// 模拟KPI数据
-const mockKPIs = [
-  { id: '1', name: 'Total Revenue', category: 'Financial', current: '1,250,000 USD', target: '1,000,000 USD', status: 'Excellent' as KPIStatus, owner: 'Sarah Chen' },
-  { id: '2', name: 'Customer Churn Rate', category: 'Sales', current: '2.5 %', target: '5 %', status: 'Good' as KPIStatus, owner: 'Sarah Chen' },
-  { id: '3', name: 'Employee Satisfaction', category: 'HR', current: '7.8 Score', target: '8.5 Score', status: 'Average' as KPIStatus, owner: 'Admin User' },
-  { id: '4', name: 'Code Coverage', category: 'Engineering', current: '92 %', target: '90 %', status: 'Excellent' as KPIStatus, owner: 'Mike Ross' },
-  { id: '5', name: 'Server Uptime', category: 'IT', current: '99.8 %', target: '99.9 %', status: 'Average' as KPIStatus, owner: 'Mike Ross' },
-];
+interface KPIDisplayItem {
+  id: string;
+  name: string;
+  category: string;
+  current: string;
+  target: string;
+  status: KPIStatus;
+  owner: string;
+}
 
 const statusVariantMap: Record<KPIStatus, 'success' | 'info' | 'warning' | 'danger'> = {
   [KPIStatus.EXCELLENT]: 'success',
@@ -28,13 +31,50 @@ const statusVariantMap: Record<KPIStatus, 'success' | 'info' | 'warning' | 'dang
   [KPIStatus.POOR]: 'danger',
 };
 
+const getCategoryFromCode = (code: string): string => {
+  const prefix = code.split('-')[0]?.toUpperCase() || '';
+  const categoryMap: Record<string, string> = {
+    FIN: 'Financial', CUS: 'Sales', OPS: 'Operations',
+    MKT: 'Marketing', HR: 'HR', RND: 'Engineering',
+  };
+  return categoryMap[prefix] || 'Other';
+};
+
 export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }) => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+  const [kpis, setKpis] = useState<KPIDisplayItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredKPIs = mockKPIs.filter(kpi =>
-    kpi.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const loadKPIs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await kpiLibraryApi.findAll({ search: searchQuery });
+      const data = res.data || res || [];
+      const mapped: KPIDisplayItem[] = data.map((kpi: KPIDefinition) => ({
+        id: kpi.id,
+        name: kpi.name,
+        category: getCategoryFromCode(kpi.code),
+        current: '-',
+        target: `${kpi.defaultWeight || 0} %`,
+        status: kpi.isActive ? KPIStatus.GOOD : KPIStatus.AVERAGE,
+        owner: '-',
+      }));
+      setKpis(mapped);
+    } catch {
+      toast({ variant: 'destructive', title: t('common.loadFailed') });
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, toast, t]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => loadKPIs(), 300);
+    return () => clearTimeout(timer);
+  }, [loadKPIs]);
+
+  const filteredKPIs = kpis;
 
   const getStatusLabel = (status: KPIStatus): string => {
     const statusMap: Record<KPIStatus, string> = {
@@ -78,6 +118,11 @@ export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }
 
       {/* KPI Table */}
       <Card>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+          </div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -124,6 +169,7 @@ export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }
             ))}
           </TableBody>
         </Table>
+        )}
       </Card>
     </div>
   );

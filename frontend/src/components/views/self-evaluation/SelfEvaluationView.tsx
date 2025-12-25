@@ -49,9 +49,8 @@ export const SelfEvaluationView: React.FC = memo(() => {
 
   useEffect(() => {
     if (selectedPeriod) {
-      loadAssignments();
+      loadAssignments().then(() => loadDraft());
       checkSubmissionStatus();
-      loadDraft();
     }
   }, [selectedPeriod]);
 
@@ -109,13 +108,17 @@ export const SelfEvaluationView: React.FC = memo(() => {
   };
 
   const loadDraft = () => {
-    const draft = localStorage.getItem(`${DRAFT_KEY}_${selectedPeriod}`);
-    if (draft) {
-      const data = JSON.parse(draft);
-      setEntries(prev => prev.map(e => {
-        const saved = data.entries?.find((s: SelfEvalEntry) => s.assignmentId === e.assignmentId);
-        return saved ? { ...e, actualValue: saved.actualValue, remark: saved.remark } : e;
-      }));
+    try {
+      const draft = localStorage.getItem(`${DRAFT_KEY}_${selectedPeriod}`);
+      if (draft) {
+        const data = JSON.parse(draft);
+        setEntries(prev => prev.map(e => {
+          const saved = data.entries?.find((s: SelfEvalEntry) => s.assignmentId === e.assignmentId);
+          return saved ? { ...e, actualValue: saved.actualValue, remark: saved.remark } : e;
+        }));
+      }
+    } catch {
+      localStorage.removeItem(`${DRAFT_KEY}_${selectedPeriod}`);
     }
   };
 

@@ -119,11 +119,11 @@ interface KPICardProps {
 const KPICard: React.FC<KPICardProps> = ({ kpi, onEdit, onDelete }) => {
     const category = getCategoryFromCode(kpi.code);
     const categoryInfo = CATEGORY_MAP[category] || { label: '其他', color: 'bg-slate-100 text-slate-700' };
-    const progress = kpi.progress ?? Math.floor(Math.random() * 40 + 60); // 模拟进度
-    const currentValue = kpi.currentValue ?? (progress * (kpi.targetValue ?? 100) / 100).toFixed(1);
+    const defaultWeight = kpi.defaultWeight || 0;
+    const progress = kpi.progress ?? defaultWeight;
+    const currentValue = kpi.currentValue ?? '-';
     const targetValue = kpi.targetValue ?? 100;
-    const trend = kpi.trend ?? (Math.random() > 0.3 ? 'up' : 'down');
-    const trendPercent = kpi.trendPercent ?? Math.floor(Math.random() * 20 + 5);
+    const trend = kpi.trend ?? (kpi.isActive ? 'up' : 'down');
 
     return (
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">

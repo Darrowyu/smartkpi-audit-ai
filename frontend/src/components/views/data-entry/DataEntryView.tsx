@@ -338,14 +338,19 @@ export const DataEntryView: React.FC = () => {
     }, [toast, t]);
 
     const checkDraft = useCallback(() => {
-        const draft = localStorage.getItem(DRAFT_KEY);
-        if (draft) {
-            const data: DraftData = JSON.parse(draft);
-            if (data.periodId === selectedPeriod) {
-                setHasDraft(true);
-            } else {
-                setHasDraft(false);
+        try {
+            const draft = localStorage.getItem(DRAFT_KEY);
+            if (draft) {
+                const data: DraftData = JSON.parse(draft);
+                if (data.periodId === selectedPeriod) {
+                    setHasDraft(true);
+                } else {
+                    setHasDraft(false);
+                }
             }
+        } catch {
+            localStorage.removeItem(DRAFT_KEY);
+            setHasDraft(false);
         }
     }, [selectedPeriod]);
 
@@ -374,13 +379,18 @@ export const DataEntryView: React.FC = () => {
 
     // 草稿操作
     const loadDraft = useCallback(() => {
-        const draft = localStorage.getItem(DRAFT_KEY);
-        if (draft) {
-            const data: DraftData = JSON.parse(draft);
-            if (data.periodId === selectedPeriod) {
-                setManualEntries(data.entries);
-                toast({ title: '草稿已加载', description: `共 ${data.entries.length} 条记录，保存于 ${data.savedAt}` });
+        try {
+            const draft = localStorage.getItem(DRAFT_KEY);
+            if (draft) {
+                const data: DraftData = JSON.parse(draft);
+                if (data.periodId === selectedPeriod) {
+                    setManualEntries(data.entries);
+                    toast({ title: '草稿已加载', description: `共 ${data.entries.length} 条记录，保存于 ${data.savedAt}` });
+                }
             }
+        } catch {
+            localStorage.removeItem(DRAFT_KEY);
+            toast({ variant: 'destructive', title: '草稿加载失败', description: '草稿数据已损坏，已清除' });
         }
     }, [selectedPeriod, toast]);
 

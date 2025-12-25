@@ -1,16 +1,43 @@
-import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
-import { Languages } from 'lucide-react';
+import { Languages, Menu, X } from 'lucide-react';
 
 export const MainLayout: React.FC = () => {
     const { isLoading, isAuthenticated, logout } = useAuth();
     const { i18n } = useTranslation();
+    const location = useLocation();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // 路由变化时关闭移动端侧边栏
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [location.pathname]);
+
+    // 监听窗口大小变化，大屏幕时自动关闭移动端侧边栏状态
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setSidebarOpen(false);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // ESC键关闭侧边栏
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setSidebarOpen(false);
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, []);
 
     const handleLanguageChange = (lang: Language) => {
         i18n.changeLanguage(lang);
@@ -35,27 +62,70 @@ export const MainLayout: React.FC = () => {
 
     return (
         <div className="flex min-h-screen bg-slate-100">
-            <Sidebar
-                language={(i18n.language as Language) || 'zh'}
-                setLanguage={handleLanguageChange}
-                onLogout={logout}
+            {/* 移动端遮罩层 */}
+            <div
+                className={`sidebar-overlay lg:hidden ${sidebarOpen ? 'sidebar-overlay-visible' : 'sidebar-overlay-hidden'}`}
+                onClick={() => setSidebarOpen(false)}
+                aria-hidden="true"
             />
-            <main className="flex-1 ml-64">
-                {/* Top Bar */}
-                <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-3">
-                    <div className="flex items-center justify-end gap-3">
+
+            {/* 侧边栏 - 桌面端固定，移动端抽屉式 */}
+            <div className={`
+                fixed top-0 left-0 z-50 h-screen
+                lg:translate-x-0 lg:static lg:z-auto
+                sidebar-transition
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            `}>
+                <Sidebar
+                    language={(i18n.language as Language) || 'zh'}
+                    setLanguage={handleLanguageChange}
+                    onLogout={logout}
+                    onClose={() => setSidebarOpen(false)}
+                />
+            </div>
+
+            {/* 主内容区 */}
+            <main className="flex-1 min-w-0 lg:ml-0">
+                {/* 顶部工具栏 */}
+                <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-slate-200">
+                    <div className="flex items-center px-4 sm:px-6 py-3">
+                        {/* 移动端汉堡菜单按钮 */}
                         <button
-                            onClick={toggleLanguage}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-[#1E4B8E] hover:bg-slate-100 rounded-lg transition-colors"
+                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-[#1E4B8E] hover:bg-slate-100 rounded-lg transition-colors touch-target"
+                            aria-label="Toggle menu"
                         >
-                            <Languages className="w-4 h-4" />
-                            <span>{i18n.language === 'en' ? '中文' : 'EN'}</span>
+                            {sidebarOpen ? (
+                                <X className="w-6 h-6" />
+                            ) : (
+                                <Menu className="w-6 h-6" />
+                            )}
                         </button>
-                        <NotificationDropdown />
+
+                        {/* 移动端Logo - 仅在小屏幕显示 */}
+                        <div className="lg:hidden flex-1 text-center">
+                            <span className="text-lg font-semibold text-slate-900">Makrite KPI</span>
+                        </div>
+
+                        {/* 占位区域 - 桌面端将右侧工具栏推到最右边 */}
+                        <div className="hidden lg:block flex-1" />
+
+                        {/* 右侧工具栏 */}
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <button
+                                onClick={toggleLanguage}
+                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 hover:text-[#1E4B8E] hover:bg-slate-100 rounded-lg transition-colors"
+                            >
+                                <Languages className="w-4 h-4" />
+                                <span className="hidden sm:inline">{i18n.language === 'en' ? '中文' : 'EN'}</span>
+                            </button>
+                            <NotificationDropdown />
+                        </div>
                     </div>
                 </div>
-                {/* Content */}
-                <div className="p-6">
+
+                {/* 内容区域 - 响应式内边距 */}
+                <div className="p-4 sm:p-6 lg:p-8">
                     <Outlet />
                 </div>
             </main>

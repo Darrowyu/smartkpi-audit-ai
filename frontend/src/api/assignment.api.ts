@@ -7,7 +7,10 @@ export interface KPIAssignmentDto {
         id: string;
         code: string;
         name: string;
+        description?: string;
         formulaType: string;
+        frequency?: string;
+        defaultWeight?: number;
         unit?: string;
     };
     periodId: string;

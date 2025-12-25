@@ -133,7 +133,7 @@ export const MyKPIsView: React.FC = memo(() => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('myKPIs.title')}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{t('myKPIs.title')}</h2>
           <p className="text-muted-foreground">{t('myKPIs.subtitle')}</p>
         </div>
         <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>

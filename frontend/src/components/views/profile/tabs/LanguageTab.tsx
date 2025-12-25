@@ -67,19 +67,19 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
 
       {/* 界面语言 */}
       <SectionCard icon={<Globe className="w-5 h-5" />} title={t('settings.language.interfaceLanguage', '界面语言')} description={t('settings.language.interfaceLanguageDesc', '选择系统显示语言')}>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {LANGUAGES.map(lang => {
             const isActive = language === lang.code;
             return (
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 text-left transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border-2 text-left transition-all ${
                   isActive ? 'border-[#1E4B8E] bg-[#1E4B8E]/5' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <span className={`text-sm font-medium ${isActive ? 'text-[#1E4B8E]' : 'text-slate-500'}`}>{lang.label}</span>
-                <span className={`text-sm ${isActive ? 'text-[#1E4B8E] font-medium' : 'text-slate-700'}`}>{lang.name}</span>
+                <span className={`text-xs sm:text-sm font-medium ${isActive ? 'text-[#1E4B8E]' : 'text-slate-500'}`}>{lang.label}</span>
+                <span className={`text-xs sm:text-sm truncate ${isActive ? 'text-[#1E4B8E] font-medium' : 'text-slate-700'}`}>{lang.name}</span>
               </button>
             );
           })}
@@ -91,7 +91,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          className="w-80 px-4 py-2 border border-slate-200 rounded-lg text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+          className="w-full sm:w-80 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
         >
           {TIMEZONES.map(tz => (
             <option key={tz.value} value={tz.value}>{tz.label}</option>
@@ -102,13 +102,13 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
       {/* 日期与时间格式 */}
       <SectionCard icon={<Calendar className="w-5 h-5" />} title={t('settings.language.dateTimeFormat', '日期与时间格式')} description={t('settings.language.dateTimeFormatDesc', '自定义日期和时间的显示格式')}>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">{t('settings.language.dateFormat', '日期格式')}</label>
+              <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">{t('settings.language.dateFormat', '日期格式')}</label>
               <select
                 value={dateFormat}
                 onChange={(e) => setDateFormat(e.target.value as DateFormat)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
               >
                 {DATE_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -116,11 +116,11 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">{t('settings.language.timeFormat', '时间格式')}</label>
+              <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">{t('settings.language.timeFormat', '时间格式')}</label>
               <select
                 value={timeFormat}
                 onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
               >
                 {TIME_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -128,9 +128,9 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               </select>
             </div>
           </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="text-sm text-[#1E4B8E] mb-1">{t('settings.language.preview', '预览')}</div>
-            <div className="text-lg font-medium text-slate-800">{previewDateTime}</div>
+          <div className="bg-slate-50 rounded-lg p-3 sm:p-4">
+            <div className="text-xs sm:text-sm text-[#1E4B8E] mb-1">{t('settings.language.preview', '预览')}</div>
+            <div className="text-base sm:text-lg font-medium text-slate-800">{previewDateTime}</div>
           </div>
         </div>
       </SectionCard>

@@ -42,7 +42,7 @@ export class AssessmentController {
     private readonly assignmentService: AssignmentService,
     private readonly excelTemplateService: ExcelTemplateService,
     @InjectQueue('excel-import') private excelImportQueue: Queue,
-  ) {}
+  ) { }
 
   // ==================== Period 考核周期 ====================
 
@@ -51,7 +51,7 @@ export class AssessmentController {
     return this.assessmentService.createPeriod(
       dto,
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
   }
 
@@ -72,6 +72,11 @@ export class AssessmentController {
   @Post('periods/:id/lock')
   async lockPeriod(@Param('id') id: string, @Request() req: any) {
     return this.assessmentService.lockPeriod(id, req.user.companyId);
+  }
+
+  @Post('periods/:id/activate')
+  async activatePeriod(@Param('id') id: string, @Request() req: any) {
+    return this.assessmentService.activatePeriod(id, req.user.companyId);
   }
 
   @Delete('periods/:id')
@@ -122,7 +127,7 @@ export class AssessmentController {
         dataSource: 'excel',
       },
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
 
     const job = await this.excelImportQueue.add({
@@ -130,7 +135,7 @@ export class AssessmentController {
       fileBuffer: file.buffer.toString('base64'),
       periodId,
       companyId: req.user.companyId,
-      userId: req.user.sub,
+      userId: req.user.userId,
       submissionId: submission.id,
     });
 
@@ -169,7 +174,7 @@ export class AssessmentController {
     return this.assessmentService.createSubmission(
       dto,
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
   }
 
@@ -183,7 +188,7 @@ export class AssessmentController {
     return this.assessmentService.submitForApproval(
       id,
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
   }
 
@@ -192,7 +197,7 @@ export class AssessmentController {
     return this.assessmentService.approveSubmission(
       id,
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
   }
 
@@ -206,7 +211,7 @@ export class AssessmentController {
       id,
       reason,
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
   }
 

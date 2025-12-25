@@ -1,20 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import {
+    Plus, Search, Pencil, Trash2, Upload, Download, Filter,
+    BarChart3, Target, TrendingUp, CheckCircle2, ArrowUpRight, ArrowDownRight
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
     Dialog,
     DialogContent,
@@ -32,10 +29,42 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 import { kpiLibraryApi } from '@/api/kpi-library.api';
 import { KPIDefinition, FormulaType, AssessmentFrequency } from '@/types';
+
+// 分类映射
+const CATEGORY_MAP: Record<string, { label: string; color: string }> = {
+    FIN: { label: '财务指标', color: 'bg-blue-100 text-blue-700' },
+    CUS: { label: '客户指标', color: 'bg-purple-100 text-purple-700' },
+    OPS: { label: '运营指标', color: 'bg-green-100 text-green-700' },
+    MKT: { label: '市场指标', color: 'bg-orange-100 text-orange-700' },
+    HR: { label: '人力资源', color: 'bg-pink-100 text-pink-700' },
+    RND: { label: '创新指标', color: 'bg-cyan-100 text-cyan-700' },
+};
+
+// 频率映射
+const FREQUENCY_MAP: Record<AssessmentFrequency, string> = {
+    [AssessmentFrequency.MONTHLY]: '月',
+    [AssessmentFrequency.QUARTERLY]: '季度',
+    [AssessmentFrequency.YEARLY]: '年',
+};
+
+// 从code获取分类
+const getCategoryFromCode = (code: string): string => {
+    const prefix = code.split('-')[0] || code.substring(0, 3);
+    return prefix.toUpperCase();
+};
+
+// 扩展KPI类型（含展示数据）
+interface KPIDisplayData extends KPIDefinition {
+    progress?: number;
+    currentValue?: number;
+    targetValue?: number;
+    trend?: 'up' | 'down';
+    trendPercent?: number;
+}
 
 interface KPIFormValues {
     code: string;
@@ -50,13 +79,138 @@ interface KPIFormValues {
     unit?: string;
 }
 
+// 统计卡片组件
+interface StatCardProps {
+    title: string;
+    value: number;
+    icon: React.ReactNode;
+    iconBg: string;
+    trend?: number;
+    trendLabel?: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, iconBg, trend, trendLabel }) => (
+    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+            <div className="flex-1">
+                <p className="text-sm text-slate-500 mb-1">{title}</p>
+                <p className="text-3xl font-bold text-slate-900">{value}</p>
+                {trend !== undefined && (
+                    <p className={cn('text-sm font-medium mt-1', trend >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                        {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
+                        {trendLabel && <span className="text-slate-400 font-normal ml-1">{trendLabel}</span>}
+                    </p>
+                )}
+            </div>
+            <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', iconBg)}>
+                {icon}
+            </div>
+        </div>
+    </div>
+);
+
+// KPI卡片组件
+interface KPICardProps {
+    kpi: KPIDisplayData;
+    onEdit: (kpi: KPIDefinition) => void;
+    onDelete: (id: string) => void;
+}
+
+const KPICard: React.FC<KPICardProps> = ({ kpi, onEdit, onDelete }) => {
+    const category = getCategoryFromCode(kpi.code);
+    const categoryInfo = CATEGORY_MAP[category] || { label: '其他', color: 'bg-slate-100 text-slate-700' };
+    const progress = kpi.progress ?? Math.floor(Math.random() * 40 + 60); // 模拟进度
+    const currentValue = kpi.currentValue ?? (progress * (kpi.targetValue ?? 100) / 100).toFixed(1);
+    const targetValue = kpi.targetValue ?? 100;
+    const trend = kpi.trend ?? (Math.random() > 0.3 ? 'up' : 'down');
+    const trendPercent = kpi.trendPercent ?? Math.floor(Math.random() * 20 + 5);
+
+    return (
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+            {/* 头部：状态 + 编码 */}
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <Badge variant={kpi.isActive ? 'default' : 'secondary'} className={kpi.isActive ? 'bg-emerald-500' : ''}>
+                        {kpi.isActive ? '启用' : '停用'}
+                    </Badge>
+                    <span className="text-sm text-slate-500 font-medium">{kpi.code}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(kpi)}>
+                        <Pencil className="h-4 w-4 text-slate-400" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(kpi.id)}>
+                        <Trash2 className="h-4 w-4 text-slate-400" />
+                    </Button>
+                </div>
+            </div>
+
+            {/* 名称 */}
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{kpi.name}</h3>
+
+            {/* 描述 */}
+            <p className="text-sm text-slate-500 mb-4 line-clamp-2">{kpi.description || '暂无描述'}</p>
+
+            {/* 分类 + 单位 */}
+            <div className="flex items-center gap-4 mb-3 text-sm">
+                <div>
+                    <span className="text-slate-400">分类：</span>
+                    <span className={cn('px-2 py-0.5 rounded text-xs font-medium', categoryInfo.color)}>
+                        {categoryInfo.label}
+                    </span>
+                </div>
+                <div>
+                    <span className="text-slate-400">单位：</span>
+                    <span className="text-slate-700">{kpi.unit || '%'}</span>
+                </div>
+            </div>
+
+            {/* 频率 + 趋势 */}
+            <div className="flex items-center gap-4 mb-4 text-sm">
+                <div>
+                    <span className="text-slate-400">频率：</span>
+                    <span className="text-slate-700">{FREQUENCY_MAP[kpi.frequency]}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                    <span className="text-slate-400">趋势：</span>
+                    {trend === 'up' ? (
+                        <ArrowUpRight className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                        <ArrowDownRight className="h-4 w-4 text-red-500" />
+                    )}
+                </div>
+            </div>
+
+            {/* 完成进度 */}
+            <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-slate-500">完成进度</span>
+                    <span className={cn('text-sm font-semibold', progress >= 80 ? 'text-emerald-600' : progress >= 60 ? 'text-amber-500' : 'text-red-500')}>
+                        {progress.toFixed(1)}%
+                    </span>
+                </div>
+                <Progress value={progress} className="h-2" />
+            </div>
+
+            {/* 当前值 / 目标值 */}
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">当前：{currentValue}{kpi.unit || '%'}</span>
+                <span className="text-slate-400">目标：{targetValue}{kpi.unit || '%'}</span>
+            </div>
+        </div>
+    );
+};
+
 export const KPILibraryView: React.FC = () => {
     const { t } = useTranslation();
-    const [kpis, setKpis] = useState<KPIDefinition[]>([]);
+    const [kpis, setKpis] = useState<KPIDisplayData[]>([]);
     const [loading, setLoading] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingKPI, setEditingKPI] = useState<KPIDefinition | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedStatus, setSelectedStatus] = useState<string>('all');
+    const [selectedFrequency, setSelectedFrequency] = useState<string>('all');
 
     const { toast } = useToast();
 
@@ -100,10 +254,7 @@ export const KPILibraryView: React.FC = () => {
             const res = await kpiLibraryApi.findAll({ search: searchTerm });
             setKpis(res.data);
         } catch (_error) {
-            toast({
-                variant: 'destructive',
-                title: t('common.loadFailed'),
-            });
+            toast({ variant: 'destructive', title: t('common.loadFailed') });
         } finally {
             setLoading(false);
         }
@@ -112,6 +263,36 @@ export const KPILibraryView: React.FC = () => {
     useEffect(() => {
         fetchKPIs();
     }, [searchTerm]);
+
+    // 过滤后的KPI列表
+    const filteredKpis = useMemo(() => {
+        return kpis.filter(kpi => {
+            if (selectedCategory !== 'all' && getCategoryFromCode(kpi.code) !== selectedCategory) return false;
+            if (selectedStatus === 'active' && !kpi.isActive) return false;
+            if (selectedStatus === 'inactive' && kpi.isActive) return false;
+            if (selectedFrequency !== 'all' && kpi.frequency !== selectedFrequency) return false;
+            return true;
+        });
+    }, [kpis, selectedCategory, selectedStatus, selectedFrequency]);
+
+    // 统计数据
+    const stats = useMemo(() => {
+        const total = kpis.length;
+        const active = kpis.filter(k => k.isActive).length;
+        const achieved = Math.floor(total * 0.67); // 模拟达成数
+        const trending = Math.floor(total * 0.56); // 模拟上升趋势数
+        return { total, active, achieved, trending };
+    }, [kpis]);
+
+    // 分类统计
+    const categoryStats = useMemo(() => {
+        const counts: Record<string, number> = { all: kpis.length };
+        kpis.forEach(kpi => {
+            const cat = getCategoryFromCode(kpi.code);
+            counts[cat] = (counts[cat] || 0) + 1;
+        });
+        return counts;
+    }, [kpis]);
 
     const onSubmit = async (data: KPIFormValues) => {
         try {
@@ -163,156 +344,224 @@ export const KPILibraryView: React.FC = () => {
         }
     };
 
+    const handleImport = () => {
+        toast({ title: '导入功能开发中' });
+    };
+
+    const handleExport = () => {
+        toast({ title: '导出功能开发中' });
+    };
+
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* 头部 */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">{t('kpiLibrary.title')}</h2>
-                    <p className="text-muted-foreground">{t('kpiLibrary.subtitle')}</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900">KPI指标库</h1>
+                    <p className="text-sm sm:text-base text-slate-500">管理和维护企业关键绩效指标</p>
                 </div>
-                <Button onClick={() => { setEditingKPI(null); form.reset(); setIsDialogOpen(true); }}>
-                    <Plus className="mr-2 h-4 w-4" /> {t('kpiLibrary.createKPI')}
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleImport}>
+                        <Upload className="mr-2 h-4 w-4" /> 导入
+                    </Button>
+                    <Button variant="outline" onClick={handleExport}>
+                        <Download className="mr-2 h-4 w-4" /> 导出
+                    </Button>
+                    <Button onClick={() => { setEditingKPI(null); form.reset(); setIsDialogOpen(true); }}>
+                        <Plus className="mr-2 h-4 w-4" /> 新建指标
+                    </Button>
+                </div>
+            </div>
+
+            {/* 统计卡片 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                    title="指标总数"
+                    value={stats.total}
+                    icon={<BarChart3 className="w-6 h-6 text-[#1E4B8E]" />}
+                    iconBg="bg-blue-50"
+                />
+                <StatCard
+                    title="已开指标"
+                    value={stats.active}
+                    icon={<Target className="w-6 h-6 text-[#5B9BD5]" />}
+                    iconBg="bg-sky-50"
+                    trend={12}
+                />
+                <StatCard
+                    title="达成目标"
+                    value={stats.achieved}
+                    icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />}
+                    iconBg="bg-emerald-50"
+                    trend={5}
+                />
+                <StatCard
+                    title="上升趋势"
+                    value={stats.trending}
+                    icon={<TrendingUp className="w-6 h-6 text-amber-500" />}
+                    iconBg="bg-amber-50"
+                />
+            </div>
+
+            {/* 分类标签 */}
+            <div className="flex flex-wrap items-center gap-2">
+                <Button
+                    variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory('all')}
+                    className={selectedCategory === 'all' ? 'bg-[#1E4B8E]' : ''}
+                >
+                    全部 {categoryStats.all || 0}
+                </Button>
+                {Object.entries(CATEGORY_MAP).map(([key, { label }]) => (
+                    <Button
+                        key={key}
+                        variant={selectedCategory === key ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedCategory(key)}
+                        className={selectedCategory === key ? 'bg-[#1E4B8E]' : ''}
+                    >
+                        {label} {categoryStats[key] || 0}
+                    </Button>
+                ))}
+            </div>
+
+            {/* 搜索和筛选 */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                        placeholder="搜索指标名称、编码..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="w-full sm:w-32">
+                        <SelectValue placeholder="全部状态" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">全部状态</SelectItem>
+                        <SelectItem value="active">启用</SelectItem>
+                        <SelectItem value="inactive">停用</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Select value={selectedFrequency} onValueChange={setSelectedFrequency}>
+                    <SelectTrigger className="w-full sm:w-32">
+                        <SelectValue placeholder="全部频率" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">全部频率</SelectItem>
+                        <SelectItem value={AssessmentFrequency.MONTHLY}>月度</SelectItem>
+                        <SelectItem value={AssessmentFrequency.QUARTERLY}>季度</SelectItem>
+                        <SelectItem value={AssessmentFrequency.YEARLY}>年度</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button variant="outline" size="icon">
+                    <Filter className="h-4 w-4" />
                 </Button>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center space-x-2">
-                        <Search className="h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder={t('kpiLibrary.search')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="max-w-sm"
-                        />
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>{t('kpiLibrary.kpiCode')}</TableHead>
-                                    <TableHead>{t('kpiLibrary.kpiName')}</TableHead>
-                                    <TableHead>{t('kpiLibrary.formulaType')}</TableHead>
-                                    <TableHead>{t('kpiLibrary.frequency')}</TableHead>
-                                    <TableHead>{t('kpiLibrary.defaultWeight')}</TableHead>
-                                    <TableHead className="text-right">{t('kpiLibrary.actions')}</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-10">{t('loading')}</TableCell>
-                                    </TableRow>
-                                ) : kpis.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-10">{t('kpiLibrary.noData')}</TableCell>
-                                    </TableRow>
-                                ) : (
-                                    kpis.map((kpi) => (
-                                        <TableRow key={kpi.id}>
-                                            <TableCell className="font-medium">{kpi.code}</TableCell>
-                                            <TableCell>{kpi.name}</TableCell>
-                                            <TableCell>{kpi.formulaType}</TableCell>
-                                            <TableCell>{kpi.frequency}</TableCell>
-                                            <TableCell>{kpi.defaultWeight}%</TableCell>
-                                            <TableCell className="text-right space-x-2">
-                                                <Button variant="ghost" size="sm" onClick={() => handleEdit(kpi)}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(kpi.id)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* KPI卡片网格 */}
+            {loading ? (
+                <div className="text-center py-20 text-slate-500">加载中...</div>
+            ) : filteredKpis.length === 0 ? (
+                <div className="text-center py-20 text-slate-500">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                    <p>暂无指标数据</p>
+                    <Button className="mt-4" onClick={() => { setEditingKPI(null); form.reset(); setIsDialogOpen(true); }}>
+                        <Plus className="mr-2 h-4 w-4" /> 创建第一个指标
+                    </Button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredKpis.map((kpi) => (
+                        <KPICard key={kpi.id} kpi={kpi} onEdit={handleEdit} onDelete={handleDelete} />
+                    ))}
+                </div>
+            )}
 
+            {/* 新建/编辑对话框 */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-[95vw] sm:max-w-lg lg:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>{editingKPI ? t('kpiLibrary.editKPI') : t('kpiLibrary.createKPI')}</DialogTitle>
-                        <DialogDescription>{t('kpiLibrary.subtitle')}</DialogDescription>
+                        <DialogTitle>{editingKPI ? '编辑指标' : '新建指标'}</DialogTitle>
+                        <DialogDescription>填写指标基本信息和计算规则</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>{t('kpiLibrary.kpiCode')}</Label>
-                                <Input {...form.register('code')} placeholder="e.g., SALES_RATE" disabled={!!editingKPI} />
+                                <Label>指标编码 <span className="text-red-500">*</span></Label>
+                                <Input {...form.register('code')} placeholder="如：FIN-001" disabled={!!editingKPI} />
                                 {form.formState.errors.code && <p className="text-red-500 text-xs">{form.formState.errors.code.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label>{t('kpiLibrary.kpiName')}</Label>
-                                <Input {...form.register('name')} />
+                                <Label>指标名称 <span className="text-red-500">*</span></Label>
+                                <Input {...form.register('name')} placeholder="如：销售收入增长率" />
                                 {form.formState.errors.name && <p className="text-red-500 text-xs">{form.formState.errors.name.message}</p>}
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label>{t('kpiLibrary.description')}</Label>
-                            <Input {...form.register('description')} />
+                            <Label>指标描述</Label>
+                            <Input {...form.register('description')} placeholder="描述该指标的定义和计算方式" />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>{t('kpiLibrary.formulaType')}</Label>
+                                <Label>计算公式</Label>
                                 <Select
                                     onValueChange={(val) => form.setValue('formulaType', val as FormulaType)}
                                     defaultValue={form.watch('formulaType')}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={FormulaType.POSITIVE}>{t('kpiLibrary.formulaHigherBetter')}</SelectItem>
-                                        <SelectItem value={FormulaType.NEGATIVE}>{t('kpiLibrary.formulaLowerBetter')}</SelectItem>
-                                        <SelectItem value={FormulaType.BINARY}>{t('kpiLibrary.formulaBoolean')}</SelectItem>
-                                        <SelectItem value={FormulaType.CUSTOM}>{t('kpiLibrary.formulaCustom')}</SelectItem>
+                                        <SelectItem value={FormulaType.POSITIVE}>越高越好</SelectItem>
+                                        <SelectItem value={FormulaType.NEGATIVE}>越低越好</SelectItem>
+                                        <SelectItem value={FormulaType.BINARY}>是否达成</SelectItem>
+                                        <SelectItem value={FormulaType.CUSTOM}>自定义公式</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>{t('kpiLibrary.frequency')}</Label>
+                                <Label>考核频率</Label>
                                 <Select
                                     onValueChange={(val) => form.setValue('frequency', val as AssessmentFrequency)}
                                     defaultValue={form.watch('frequency')}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={AssessmentFrequency.MONTHLY}>{t('kpiLibrary.freqMonthly')}</SelectItem>
-                                        <SelectItem value={AssessmentFrequency.QUARTERLY}>{t('kpiLibrary.freqQuarterly')}</SelectItem>
-                                        <SelectItem value={AssessmentFrequency.YEARLY}>{t('kpiLibrary.freqYearly')}</SelectItem>
+                                        <SelectItem value={AssessmentFrequency.MONTHLY}>月度</SelectItem>
+                                        <SelectItem value={AssessmentFrequency.QUARTERLY}>季度</SelectItem>
+                                        <SelectItem value={AssessmentFrequency.YEARLY}>年度</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                             <div className="space-y-2">
-                                <Label>{t('kpiLibrary.defaultWeight')} (%)</Label>
-                                <Input type="number" {...form.register('defaultWeight')} />
+                                <Label>默认权重 (%)</Label>
+                                <Input type="number" {...form.register('defaultWeight', { valueAsNumber: true })} />
                             </div>
                             <div className="space-y-2">
-                                <Label>{t('kpiLibrary.scoreCap')}</Label>
-                                <Input type="number" {...form.register('scoreCap')} />
+                                <Label>得分上限</Label>
+                                <Input type="number" {...form.register('scoreCap', { valueAsNumber: true })} />
                             </div>
                             <div className="space-y-2">
-                                <Label>{t('kpiLibrary.scoreFloor')}</Label>
-                                <Input type="number" {...form.register('scoreFloor')} />
+                                <Label>得分下限</Label>
+                                <Input type="number" {...form.register('scoreFloor', { valueAsNumber: true })} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>单位</Label>
+                                <Input {...form.register('unit')} placeholder="如：%、元" />
                             </div>
                         </div>
 
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{t('cancel')}</Button>
-                            <Button type="submit">{t('save')}</Button>
+                        <DialogFooter className="flex-col sm:flex-row gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>取消</Button>
+                            <Button type="submit">{editingKPI ? '保存修改' : '创建指标'}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

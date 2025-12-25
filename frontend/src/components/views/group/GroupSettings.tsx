@@ -3,175 +3,218 @@ import { useTranslation } from 'react-i18next';
 import { groupsApi, Group } from '@/api/groups.api';
 import { useAuth } from '@/context/AuthContext';
 import { Language } from '@/types';
-import { Edit, X, Check, Calendar, Globe, Building2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Edit, Check, Calendar, Globe, Building2, Users, Info, Shield } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface Props {
-  language: Language;
-  onUpdate?: () => void;
+    language: Language;
+    onUpdate?: () => void;
 }
 
-const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
-  const { user } = useAuth();
-  const { t } = useTranslation();
-  const [group, setGroup] = useState<Group | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '' });
-  const [saving, setSaving] = useState(false);
+// 统计卡片
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    subtitle?: string;
+    icon: React.ReactNode;
+    iconBg: string;
+}
 
-  const groupId = user?.groupId || (user as { company?: { groupId?: string } })?.company?.groupId;
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-
-  useEffect(() => { loadGroup(); }, [groupId]);
-
-  const loadGroup = async () => {
-    if (!groupId) { setLoading(false); return; }
-    try {
-      const data = await groupsApi.getGroup(groupId);
-      setGroup(data);
-      setEditForm({ name: data.name });
-    } catch (e) {
-      console.error('Failed to load group:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!groupId) return;
-    setSaving(true);
-    try {
-      const updated = await groupsApi.updateGroup(groupId, { name: editForm.name });
-      setGroup(updated);
-      setShowEditModal(false);
-      onUpdate?.();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t('updateFailed');
-      alert(msg);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-64 text-muted-foreground">{t('loading')}</div>;
-  }
-
-  if (!group) {
-    return <div className="flex items-center justify-center h-64 text-muted-foreground">{t('failedToLoadGroup')}</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('groupSettings')}</h2>
-          <p className="text-muted-foreground">{t('sidebar.groupSettings')}</p>
+const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconBg }) => (
+    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between">
+            <div className="flex-1">
+                <p className="text-sm text-slate-500 mb-1">{title}</p>
+                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+            </div>
+            <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', iconBg)}>
+                {icon}
+            </div>
         </div>
-        {isSuperAdmin && (
-          <Button onClick={() => setShowEditModal(true)}>
-            <Edit className="w-4 h-4 mr-2" />
-            {t('edit')}
-          </Button>
-        )}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('groupName')}</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{group.name}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('companies')}</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{group._count?.companies || 0}</div>
-            <p className="text-xs text-muted-foreground">{t('active')}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('createdAt')}</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{new Date(group.createdAt).toLocaleDateString()}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('status')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${group.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {group.isActive ? t('active') : t('inactive')}
-            </span>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('basicInfo')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label className="text-muted-foreground">{t('groupId')}</Label>
-              <p className="font-mono text-sm mt-1">{group.id}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {!isSuperAdmin && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="pt-6">
-            <p className="text-sm text-yellow-800">{t('onlySuperAdminCanModifyGroup')}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('editGroup')}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSave} className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('groupName')} *</Label>
-              <Input
-                value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
-                {t('cancel')}
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? '...' : <><Check className="w-4 h-4 mr-2" />{t('save')}</>}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
-  );
+);
+
+// 信息行组件
+const InfoRow: React.FC<{ label: string; value: React.ReactNode; mono?: boolean }> = ({ label, value, mono }) => (
+    <div className="flex flex-col sm:flex-row sm:items-center py-3 border-b border-slate-100 last:border-0">
+        <span className="text-sm text-slate-500 sm:w-32 mb-1 sm:mb-0">{label}</span>
+        <span className={cn('text-sm font-medium text-slate-900', mono && 'font-mono text-xs')}>{value}</span>
+    </div>
+);
+
+const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
+    const { user } = useAuth();
+    const { t } = useTranslation();
+    const [group, setGroup] = useState<Group | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editForm, setEditForm] = useState({ name: '' });
+    const [saving, setSaving] = useState(false);
+
+    const groupId = user?.groupId || (user as { company?: { groupId?: string } })?.company?.groupId;
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+    useEffect(() => { loadGroup(); }, [groupId]);
+
+    const loadGroup = async () => {
+        if (!groupId) { setLoading(false); return; }
+        try {
+            const data = await groupsApi.getGroup(groupId);
+            setGroup(data);
+            setEditForm({ name: data.name });
+        } catch {
+            // 静默处理
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!groupId) return;
+        setSaving(true);
+        try {
+            const updated = await groupsApi.updateGroup(groupId, { name: editForm.name });
+            setGroup(updated);
+            setShowEditModal(false);
+            onUpdate?.();
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : t('updateFailed');
+            alert(msg);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E4B8E]" />
+            </div>
+        );
+    }
+
+    if (!group) {
+        return (
+            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                <Info className="h-12 w-12 mb-4" />
+                <p>无法加载集团信息</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* 页面头部 */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">集团设置</h1>
+                    <p className="text-slate-500">管理集团基本信息和配置</p>
+                </div>
+                {isSuperAdmin && (
+                    <Button onClick={() => setShowEditModal(true)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        编辑信息
+                    </Button>
+                )}
+            </div>
+
+            {/* 统计卡片 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                    title="集团名称"
+                    value={group.name}
+                    icon={<Globe className="w-6 h-6 text-[#1E4B8E]" />}
+                    iconBg="bg-blue-50"
+                />
+                <StatCard
+                    title="子公司数量"
+                    value={group._count?.companies || 0}
+                    subtitle="活跃运营中"
+                    icon={<Building2 className="w-6 h-6 text-[#5B9BD5]" />}
+                    iconBg="bg-sky-50"
+                />
+                <StatCard
+                    title="创建时间"
+                    value={new Date(group.createdAt).toLocaleDateString('zh-CN')}
+                    icon={<Calendar className="w-6 h-6 text-emerald-600" />}
+                    iconBg="bg-emerald-50"
+                />
+                <StatCard
+                    title="状态"
+                    value={group.isActive ? '正常运营' : '已停用'}
+                    icon={<Shield className="w-6 h-6 text-amber-500" />}
+                    iconBg="bg-amber-50"
+                />
+            </div>
+
+            {/* 基本信息卡片 */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">基本信息</CardTitle>
+                    <CardDescription>集团的详细配置信息</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <InfoRow label="集团ID" value={group.id} mono />
+                    <InfoRow label="集团名称" value={group.name} />
+                    <InfoRow
+                        label="运营状态"
+                        value={
+                            <Badge variant={group.isActive ? 'default' : 'secondary'} className={group.isActive ? 'bg-emerald-500' : ''}>
+                                {group.isActive ? '正常' : '停用'}
+                            </Badge>
+                        }
+                    />
+                    <InfoRow label="创建时间" value={new Date(group.createdAt).toLocaleString('zh-CN')} />
+                </CardContent>
+            </Card>
+
+            {/* 权限提示 */}
+            {!isSuperAdmin && (
+                <Card className="border-amber-200 bg-amber-50">
+                    <CardContent className="flex items-center gap-3 pt-6">
+                        <Info className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                        <p className="text-sm text-amber-800">仅超级管理员可以修改集团设置</p>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* 编辑对话框 */}
+            <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>编辑集团信息</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSave} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>集团名称 <span className="text-red-500">*</span></Label>
+                            <Input
+                                value={editForm.name}
+                                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                placeholder="请输入集团名称"
+                                required
+                            />
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+                                取消
+                            </Button>
+                            <Button type="submit" disabled={saving}>
+                                {saving ? '保存中...' : <><Check className="w-4 h-4 mr-2" />保存</>}
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
 };
 
 export default GroupSettings;

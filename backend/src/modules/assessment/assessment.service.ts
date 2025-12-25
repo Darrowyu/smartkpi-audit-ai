@@ -21,7 +21,7 @@ export class AssessmentService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   // ==================== Period 考核周期 ====================
 
@@ -136,6 +136,11 @@ export class AssessmentService {
   /** 锁定考核周期 */
   async lockPeriod(id: string, companyId: string) {
     return this.updatePeriod(id, { status: PeriodStatus.LOCKED }, companyId);
+  }
+
+  /** 激活考核周期 */
+  async activatePeriod(id: string, companyId: string) {
+    return this.updatePeriod(id, { status: PeriodStatus.ACTIVE }, companyId);
   }
 
   /** 删除考核周期（仅允许删除DRAFT状态的周期） */

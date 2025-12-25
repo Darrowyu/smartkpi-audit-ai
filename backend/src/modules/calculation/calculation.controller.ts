@@ -13,7 +13,7 @@ import { CalculationService } from './calculation.service';
 @Controller('calculation')
 @UseGuards(JwtAuthGuard)
 export class CalculationController {
-  constructor(private readonly calculationService: CalculationService) {}
+  constructor(private readonly calculationService: CalculationService) { }
 
   /** 触发异步计算任务 */
   @Post('trigger/:periodId')
@@ -24,7 +24,7 @@ export class CalculationController {
     return this.calculationService.triggerCalculation(
       periodId,
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
   }
 
@@ -37,7 +37,7 @@ export class CalculationController {
     return this.calculationService.executeCalculation(
       periodId,
       req.user.companyId,
-      req.user.sub,
+      req.user.userId,
     );
   }
 

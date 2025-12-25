@@ -121,4 +121,95 @@
   .ring-brand-primary {
     --tw-ring-color: var(--brand-primary);
   }
+
+  /* 响应式表格容器 - 小屏幕可滚动 */
+  .table-responsive {
+    @apply w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0;
+  }
+
+  /* 移动端侧边栏遮罩层 */
+  .sidebar-overlay {
+    @apply fixed inset-0 bg-black/50 z-40 transition-opacity duration-300;
+  }
+
+  .sidebar-overlay-hidden {
+    @apply opacity-0 pointer-events-none;
+  }
+
+  .sidebar-overlay-visible {
+    @apply opacity-100 pointer-events-auto;
+  }
+
+  /* 响应式卡片网格 */
+  .card-grid {
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .card-grid-dense {
+    @apply grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6;
+  }
+
+  /* 流式内容容器 */
+  .content-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* 响应式间距 */
+  .section-spacing {
+    @apply py-4 sm:py-6 lg:py-8;
+  }
+
+  /* 移动端友好的按钮组 */
+  .button-group-responsive {
+    @apply flex flex-col sm:flex-row gap-2 sm:gap-3;
+  }
+
+  /* 表单响应式布局 */
+  .form-grid {
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2;
+  }
+
+  .form-grid-3 {
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  /* 隐藏滚动条但保持滚动功能 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 移动端安全区域 */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* 触摸友好的最小尺寸 */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+/* 响应式断点动画 */
+@media (max-width: 1023px) {
+  .sidebar-mobile-hidden {
+    transform: translateX(-100%);
+  }
+
+  .sidebar-mobile-visible {
+    transform: translateX(0);
+  }
+}
+
+/* 平滑过渡 */
+.sidebar-transition {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

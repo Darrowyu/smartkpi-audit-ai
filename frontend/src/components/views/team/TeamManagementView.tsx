@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, MoreHorizontal, Users, UserCheck, UserX, Shield } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -7,337 +7,385 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-
 import { usersApi, User } from '@/api/users.api';
 import { UserRole, Language } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface TeamManagementViewProps {
-  language: Language;
+    language: Language;
 }
 
 type UserFormValues = {
-  username: string;
-  email: string;
-  password?: string;
-  firstName?: string;
-  lastName?: string;
-  role: UserRole;
+    username: string;
+    email: string;
+    password?: string;
+    firstName?: string;
+    lastName?: string;
+    role: UserRole;
+};
+
+// 统计卡片
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    subtitle?: string;
+    icon: React.ReactNode;
+    iconBg: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconBg }) => (
+    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between">
+            <div className="flex-1">
+                <p className="text-sm text-slate-500 mb-1">{title}</p>
+                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+            </div>
+            <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', iconBg)}>
+                {icon}
+            </div>
+        </div>
+    </div>
+);
+
+// 角色徽章颜色
+const getRoleBadgeClass = (role: UserRole) => {
+    switch (role) {
+        case UserRole.SUPER_ADMIN: return 'bg-red-100 text-red-700 border-red-200';
+        case UserRole.GROUP_ADMIN: return 'bg-purple-100 text-purple-700 border-purple-200';
+        case UserRole.MANAGER: return 'bg-blue-100 text-blue-700 border-blue-200';
+        default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+};
+
+// 角色中文名
+const getRoleName = (role: UserRole) => {
+    switch (role) {
+        case UserRole.SUPER_ADMIN: return '超级管理员';
+        case UserRole.GROUP_ADMIN: return '集团管理员';
+        case UserRole.MANAGER: return '部门经理';
+        default: return '普通用户';
+    }
 };
 
 export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
-  const { t } = useTranslation();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const { toast } = useToast();
+    const { t } = useTranslation();
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const { toast } = useToast();
 
-  const userSchema = z.object({
-    username: z.string().min(2, t('teamView.usernameMinLength')),
-    email: z.string().email(t('teamView.emailInvalid')),
-    password: z.string().min(6, t('teamView.passwordMinLength')).optional().or(z.literal('')), // 允许空字符串
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    role: z.enum([
-      UserRole.SUPER_ADMIN,
-      UserRole.GROUP_ADMIN,
-      UserRole.MANAGER,
-      UserRole.USER
-    ]),
-  });
+    const userSchema = z.object({
+        username: z.string().min(2, t('teamView.usernameMinLength')),
+        email: z.string().email(t('teamView.emailInvalid')),
+        password: z.string().min(6, t('teamView.passwordMinLength')).optional().or(z.literal('')),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        role: z.enum([UserRole.SUPER_ADMIN, UserRole.GROUP_ADMIN, UserRole.MANAGER, UserRole.USER]),
+    });
 
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      role: UserRole.USER,
-    },
-  });
+    const form = useForm<UserFormValues>({
+        resolver: zodResolver(userSchema),
+        defaultValues: { role: UserRole.USER },
+    });
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const res = await usersApi.findAll({ search: searchTerm });
-      setUsers(res.data);
-    } catch (_error) {
-      toast({
-        variant: 'destructive',
-        title: t('teamView.getUsersFailed'),
-        description: t('teamView.getUsersFailedDesc'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchUsers();
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
-
-  const onSubmit = async (data: UserFormValues) => {
-    try {
-      if (editingUser) {
-        const { password, ...updateData } = data;
-        await usersApi.update(editingUser.id, password ? data : updateData);
-        toast({ title: t('teamView.userUpdated') });
-      } else {
-        if (!data.password) {
-          form.setError('password', { message: t('teamView.passwordRequired') });
-          return;
+    const fetchUsers = async () => {
+        setLoading(true);
+        try {
+            const res = await usersApi.findAll({ search: searchTerm });
+            setUsers(res.data);
+        } catch {
+            toast({ variant: 'destructive', title: t('teamView.getUsersFailed') });
+        } finally {
+            setLoading(false);
         }
-        await usersApi.create(data as any);
-        toast({ title: t('teamView.userCreated') });
-      }
-      setIsDialogOpen(false);
-      setEditingUser(null);
-      form.reset();
-      fetchUsers();
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: t('teamView.operationFailed'),
-        description: error.response?.data?.message || t('teamView.pleaseRetry'),
-      });
-    }
-  };
+    };
 
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    form.reset({
-      username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-    });
-    setIsDialogOpen(true);
-  };
+    useEffect(() => {
+        const timer = setTimeout(() => fetchUsers(), 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t('teamView.deleteUserConfirm'))) return;
-    try {
-      await usersApi.remove(id);
-      toast({ title: t('teamView.userDeleted') });
-      fetchUsers();
-    } catch (_error) {
-      toast({ variant: 'destructive', title: t('teamView.operationFailed') });
-    }
-  };
+    const onSubmit = async (data: UserFormValues) => {
+        try {
+            if (editingUser) {
+                const { password, ...updateData } = data;
+                await usersApi.update(editingUser.id, password ? data : updateData);
+                toast({ title: t('teamView.userUpdated') });
+            } else {
+                if (!data.password) {
+                    form.setError('password', { message: t('teamView.passwordRequired') });
+                    return;
+                }
+                await usersApi.create(data as any);
+                toast({ title: t('teamView.userCreated') });
+            }
+            setIsDialogOpen(false);
+            setEditingUser(null);
+            form.reset();
+            fetchUsers();
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: t('teamView.operationFailed'), description: error.response?.data?.message });
+        }
+    };
 
-  const openCreateDialog = () => {
-    setEditingUser(null);
-    form.reset({
-      role: UserRole.USER,
-      username: '',
-      email: '',
-      password: '',
-      firstName: '',
-      lastName: '',
-    });
-    setIsDialogOpen(true);
-  };
+    const handleEdit = (user: User) => {
+        setEditingUser(user);
+        form.reset({
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+        });
+        setIsDialogOpen(true);
+    };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('teamManagement')}</h2>
-          <p className="text-muted-foreground">{t('manageUsers')}</p>
-        </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="mr-2 h-4 w-4" /> {t('addUser')}
-        </Button>
-      </div>
+    const handleDelete = async (id: string) => {
+        if (!confirm(t('teamView.deleteUserConfirm'))) return;
+        try {
+            await usersApi.remove(id);
+            toast({ title: t('teamView.userDeleted') });
+            fetchUsers();
+        } catch {
+            toast({ variant: 'destructive', title: t('teamView.operationFailed') });
+        }
+    };
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('teamView.searchUsers')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('user')}</TableHead>
-                <TableHead>{t('role')}</TableHead>
-                <TableHead>{t('email')}</TableHead>
-                <TableHead>{t('status')}</TableHead>
-                <TableHead className="text-right">{t('actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8">{t('loading')}</TableCell></TableRow>
-              ) : users.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8">{t('teamView.noUsers')}</TableCell></TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
+    const openCreateDialog = () => {
+        setEditingUser(null);
+        form.reset({ role: UserRole.USER, username: '', email: '', password: '', firstName: '', lastName: '' });
+        setIsDialogOpen(true);
+    };
+
+    // 统计数据
+    const activeUsers = users.filter(u => u.isActive).length;
+    const inactiveUsers = users.filter(u => !u.isActive).length;
+    const adminUsers = users.filter(u => u.role === UserRole.SUPER_ADMIN || u.role === UserRole.GROUP_ADMIN).length;
+
+    return (
+        <div className="space-y-6">
+            {/* 页面头部 */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">用户管理</h1>
+                    <p className="text-slate-500">管理系统用户账号和权限</p>
+                </div>
+                <Button onClick={openCreateDialog}>
+                    <Plus className="mr-2 h-4 w-4" /> 添加用户
+                </Button>
+            </div>
+
+            {/* 统计卡片 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                    title="总用户数"
+                    value={users.length}
+                    subtitle="系统注册用户"
+                    icon={<Users className="w-6 h-6 text-[#1E4B8E]" />}
+                    iconBg="bg-blue-50"
+                />
+                <StatCard
+                    title="活跃用户"
+                    value={activeUsers}
+                    subtitle="状态正常"
+                    icon={<UserCheck className="w-6 h-6 text-emerald-600" />}
+                    iconBg="bg-emerald-50"
+                />
+                <StatCard
+                    title="停用用户"
+                    value={inactiveUsers}
+                    subtitle="已禁用账号"
+                    icon={<UserX className="w-6 h-6 text-red-500" />}
+                    iconBg="bg-red-50"
+                />
+                <StatCard
+                    title="管理员"
+                    value={adminUsers}
+                    subtitle="具有管理权限"
+                    icon={<Shield className="w-6 h-6 text-purple-600" />}
+                    iconBg="bg-purple-50"
+                />
+            </div>
+
+            {/* 用户列表 */}
+            <Card>
+                <CardHeader className="pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                          <div>{user.username}</div>
-                          <div className="text-xs text-muted-foreground">{user.firstName} {user.lastName}</div>
+                            <CardTitle className="text-base">用户列表</CardTitle>
+                            <CardDescription>共 {users.length} 个用户</CardDescription>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={
-                        user.role === UserRole.SUPER_ADMIN ? 'border-red-500 text-red-500' :
-                          user.role === UserRole.GROUP_ADMIN ? 'border-purple-500 text-purple-500' :
-                            user.role === UserRole.MANAGER ? 'border-blue-500 text-blue-500' :
-                              'border-gray-500 text-gray-500'
-                      }>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                        {user.isActive ? t('active') : t('inactive')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleEdit(user)}>
-                            <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(user.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                        <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input
+                                placeholder="搜索用户名或邮箱..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>用户</TableHead>
+                                    <TableHead>角色</TableHead>
+                                    <TableHead className="hidden sm:table-cell">邮箱</TableHead>
+                                    <TableHead>状态</TableHead>
+                                    <TableHead className="text-right">操作</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-12">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1E4B8E] mx-auto" />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : users.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-12 text-slate-400">
+                                            暂无用户数据
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    users.map((user) => (
+                                        <TableRow key={user.id}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-9 w-9">
+                                                        <AvatarFallback className="bg-[#1E4B8E]/10 text-[#1E4B8E] text-sm">
+                                                            {user.username.substring(0, 2).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <p className="font-medium text-slate-900">{user.username}</p>
+                                                        <p className="text-xs text-slate-500">{user.firstName} {user.lastName}</p>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={getRoleBadgeClass(user.role)}>
+                                                    {getRoleName(user.role)}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="hidden sm:table-cell text-slate-500">
+                                                {user.email}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={user.isActive ? 'default' : 'secondary'} className={user.isActive ? 'bg-emerald-500' : ''}>
+                                                    {user.isActive ? '正常' : '停用'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleEdit(user)}>
+                                                            <Pencil className="mr-2 h-4 w-4" /> 编辑
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(user.id)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" /> 删除
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingUser ? t('teamView.editUserTitle') : t('teamView.createUserTitle')}</DialogTitle>
-            <DialogDescription>
-              {editingUser ? t('teamView.editUserDesc') : t('teamView.createUserDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('username')}</Label>
-              <Input {...form.register('username')} disabled={!!editingUser} />
-              {form.formState.errors.username && <p className="text-red-500 text-xs">{form.formState.errors.username.message}</p>}
-            </div>
+            {/* 用户表单对话框 */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{editingUser ? '编辑用户' : '添加用户'}</DialogTitle>
+                        <DialogDescription>
+                            {editingUser ? '修改用户信息' : '创建新的系统用户'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>用户名 <span className="text-red-500">*</span></Label>
+                            <Input {...form.register('username')} disabled={!!editingUser} placeholder="请输入用户名" />
+                            {form.formState.errors.username && (
+                                <p className="text-red-500 text-xs">{form.formState.errors.username.message}</p>
+                            )}
+                        </div>
 
-            <div className="space-y-2">
-              <Label>{t('email')}</Label>
-              <Input {...form.register('email')} />
-              {form.formState.errors.email && <p className="text-red-500 text-xs">{form.formState.errors.email.message}</p>}
-            </div>
+                        <div className="space-y-2">
+                            <Label>邮箱 <span className="text-red-500">*</span></Label>
+                            <Input {...form.register('email')} placeholder="请输入邮箱地址" />
+                            {form.formState.errors.email && (
+                                <p className="text-red-500 text-xs">{form.formState.errors.email.message}</p>
+                            )}
+                        </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('firstName')}</Label>
-                <Input {...form.register('firstName')} />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('lastName')}</Label>
-                <Input {...form.register('lastName')} />
-              </div>
-            </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>名</Label>
+                                <Input {...form.register('firstName')} placeholder="名" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>姓</Label>
+                                <Input {...form.register('lastName')} placeholder="姓" />
+                            </div>
+                        </div>
 
-            <div className="space-y-2">
-              <Label>{t('role')}</Label>
-              <Select
-                onValueChange={(val) => form.setValue('role', val as UserRole)}
-                defaultValue={form.watch('role')}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={UserRole.USER}>{t('roleUser')}</SelectItem>
-                  <SelectItem value={UserRole.MANAGER}>{t('roleManager')}</SelectItem>
-                  <SelectItem value={UserRole.GROUP_ADMIN}>{t('roleGroupAdmin')}</SelectItem>
-                  <SelectItem value={UserRole.SUPER_ADMIN}>{t('roleSuperAdmin')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                        <div className="space-y-2">
+                            <Label>角色 <span className="text-red-500">*</span></Label>
+                            <Select onValueChange={(val) => form.setValue('role', val as UserRole)} defaultValue={form.watch('role')}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={UserRole.USER}>普通用户</SelectItem>
+                                    <SelectItem value={UserRole.MANAGER}>部门经理</SelectItem>
+                                    <SelectItem value={UserRole.GROUP_ADMIN}>集团管理员</SelectItem>
+                                    <SelectItem value={UserRole.SUPER_ADMIN}>超级管理员</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-            <div className="space-y-2">
-              <Label>{t('password')} {editingUser && t('teamView.passwordKeepEmpty')}</Label>
-              <Input type="password" {...form.register('password')} />
-              {form.formState.errors.password && <p className="text-red-500 text-xs">{form.formState.errors.password.message}</p>}
-            </div>
+                        <div className="space-y-2">
+                            <Label>密码 {editingUser && <span className="text-slate-400 text-xs">(留空保持不变)</span>}</Label>
+                            <Input type="password" {...form.register('password')} placeholder={editingUser ? '••••••' : '请输入密码'} />
+                            {form.formState.errors.password && (
+                                <p className="text-red-500 text-xs">{form.formState.errors.password.message}</p>
+                            )}
+                        </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{t('cancel')}</Button>
-              <Button type="submit">{t('save')}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+                        <DialogFooter className="pt-4">
+                            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>取消</Button>
+                            <Button type="submit">保存</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
 };

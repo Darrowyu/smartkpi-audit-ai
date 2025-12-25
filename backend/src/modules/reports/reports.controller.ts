@@ -19,7 +19,7 @@ export class ReportsController {
   constructor(
     private readonly reportsService: ReportsService,
     private readonly exportService: ExportService,
-  ) {}
+  ) { }
 
   /** 获取周期绩效概览（角色感知） */
   @Get('overview/:periodId')
@@ -62,7 +62,7 @@ export class ReportsController {
     @Request() req: any,
   ) {
     const userContext = {
-      userId: req.user.sub,
+      userId: req.user.userId,
       role: req.user.role,
       companyId: req.user.companyId,
       departmentId: req.user.departmentId,

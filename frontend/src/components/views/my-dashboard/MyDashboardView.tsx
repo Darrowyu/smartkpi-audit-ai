@@ -139,7 +139,7 @@ export const MyDashboardView: React.FC = memo(() => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('myDashboard.title')}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{t('myDashboard.title')}</h2>
           <p className="text-muted-foreground">{t('myDashboard.subtitle')}</p>
         </div>
         <Card>
@@ -159,7 +159,7 @@ export const MyDashboardView: React.FC = memo(() => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('myDashboard.title')}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{t('myDashboard.title')}</h2>
           <p className="text-muted-foreground">{t('myDashboard.subtitle')}</p>
         </div>
         <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>

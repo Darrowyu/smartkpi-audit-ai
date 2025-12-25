@@ -7,11 +7,11 @@ import { reportsApi, DepartmentRanking, TrendData, EmployeeRanking } from '@/api
 import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsManager } from '@/hooks/usePermission';
-import { 
-  StatsCards, 
-  TrendChart, 
-  TeamPerformance, 
-  KeyMetrics, 
+import {
+  StatsCards,
+  TrendChart,
+  TeamPerformance,
+  KeyMetrics,
   RecentActivity,
   type StatsData,
   type TrendDataPoint,
@@ -170,16 +170,16 @@ export const DashboardView: React.FC = () => {
   ], []);
 
   return (
-    <div className="space-y-6 pb-8">
-      {/* 头部区域 */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 pb-8">
+      {/* 头部区域 - 响应式 */}
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">绩效仪表盘</h1>
-          <p className="text-slate-500 mt-1">追踪和管理您的关键绩效指标</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">绩效仪表盘</h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">追踪和管理您的关键绩效指标</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[140px] bg-white">
+            <SelectTrigger className="w-full sm:w-[140px] bg-white">
               <Calendar className="w-4 h-4 mr-2 text-slate-400" />
               <SelectValue placeholder="选择周期" />
             </SelectTrigger>
@@ -190,22 +190,22 @@ export const DashboardView: React.FC = () => {
             </SelectContent>
           </Select>
           {isManager && (
-            <>
-              <Button className="bg-[#1E4B8E] hover:bg-[#163a6e] text-white">
-                <Plus className="w-4 h-4 mr-1" /> 新建KPI
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <Button className="flex-1 sm:flex-none bg-[#1E4B8E] hover:bg-[#163a6e] text-white">
+                <Plus className="w-4 h-4 mr-1" /> <span className="hidden xs:inline">新建</span>KPI
               </Button>
-              <Button variant="outline" onClick={handleExport}>
-                <FileText className="w-4 h-4 mr-1" /> 生成报告
+              <Button variant="outline" onClick={handleExport} className="flex-1 sm:flex-none">
+                <FileText className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">生成报告</span>
               </Button>
-              <Button variant="outline">
-                <Users className="w-4 h-4 mr-1" /> 团队管理
+              <Button variant="outline" className="flex-1 sm:flex-none">
+                <Users className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">团队管理</span>
               </Button>
-              <Button variant="outline">
-                <Calendar className="w-4 h-4 mr-1" /> 设定周期
+              <Button variant="outline" className="flex-1 sm:flex-none">
+                <Calendar className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">设定周期</span>
               </Button>
-            </>
+            </div>
           )}
-          <Button variant="ghost" size="icon" onClick={handleRefresh}>
+          <Button variant="ghost" size="icon" onClick={handleRefresh} className="ml-auto sm:ml-0">
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
@@ -214,22 +214,22 @@ export const DashboardView: React.FC = () => {
       {/* 统计卡片 */}
       <StatsCards data={statsData} />
 
-      {/* 趋势图 + 团队表现 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      {/* 趋势图 + 团队表现 - 响应式网格 */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="xl:col-span-2">
           <TrendChart data={chartData} />
         </div>
-        <div className="lg:col-span-1">
+        <div className="xl:col-span-1">
           <TeamPerformance members={teamMembers} teamName="管理团队" />
         </div>
       </div>
 
-      {/* 关键指标进度 + 最近动态 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <KeyMetrics metrics={keyMetrics} onViewAll={() => {}} />
+      {/* 关键指标进度 + 最近动态 - 响应式网格 */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="xl:col-span-2">
+          <KeyMetrics metrics={keyMetrics} onViewAll={() => { }} />
         </div>
-        <div className="lg:col-span-1">
+        <div className="xl:col-span-1">
           <RecentActivity activities={recentActivities} />
         </div>
       </div>

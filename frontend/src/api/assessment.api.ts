@@ -23,6 +23,11 @@ export const assessmentApi = {
         return response.data;
     },
 
+    activatePeriod: async (id: string) => {
+        const response = await apiClient.post(`/assessment/periods/${id}/activate`, {});
+        return response.data;
+    },
+
     deletePeriod: async (id: string) => {
         const response = await apiClient.delete(`/assessment/periods/${id}`);
         return response.data;

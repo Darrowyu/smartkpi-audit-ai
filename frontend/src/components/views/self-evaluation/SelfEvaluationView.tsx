@@ -197,7 +197,7 @@ export const SelfEvaluationView: React.FC = memo(() => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('selfEvaluation.title')}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{t('selfEvaluation.title')}</h2>
           <p className="text-muted-foreground">{t('selfEvaluation.subtitle')}</p>
         </div>
         <Card>
@@ -217,7 +217,7 @@ export const SelfEvaluationView: React.FC = memo(() => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('selfEvaluation.title')}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{t('selfEvaluation.title')}</h2>
           <p className="text-muted-foreground">{t('selfEvaluation.subtitle')}</p>
         </div>
         <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>

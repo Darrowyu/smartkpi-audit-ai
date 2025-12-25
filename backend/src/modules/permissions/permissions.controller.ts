@@ -13,7 +13,7 @@ import { PermissionsService, RolePermissions } from './permissions.service';
 @Controller('permissions')
 @UseGuards(JwtAuthGuard)
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) {}
+  constructor(private readonly permissionsService: PermissionsService) { }
 
   /** 获取所有可用权限列表 */
   @Get('all')
@@ -36,7 +36,7 @@ export class PermissionsController {
     await this.permissionsService.saveRolePermissions(
       req.user.companyId,
       body.rolePermissions,
-      req.user.sub,
+      req.user.userId,
     );
     return { success: true, message: '权限配置已保存' };
   }

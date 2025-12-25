@@ -44,7 +44,7 @@ export const AppearanceTab: React.FC = () => {
 
       {/* 主题模式 */}
       <SectionCard icon={<Palette className="w-5 h-5" />} title={t('settings.appearance.themeTitle', '主题模式')} description={t('settings.appearance.themeDesc', '选择界面的颜色主题')}>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {THEME_OPTIONS.map(option => {
             const Icon = option.icon;
             const isActive = theme === option.key;
@@ -52,12 +52,12 @@ export const AppearanceTab: React.FC = () => {
               <button
                 key={option.key}
                 onClick={() => setTheme(option.key)}
-                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
+                className={`flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all ${
                   isActive ? 'border-[#1E4B8E] bg-[#1E4B8E]/5' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <Icon className={`w-6 h-6 ${isActive ? 'text-[#1E4B8E]' : 'text-slate-400'}`} />
-                <span className={`text-sm font-medium ${isActive ? 'text-[#1E4B8E]' : 'text-slate-600'}`}>
+                <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'text-[#1E4B8E]' : 'text-slate-400'}`} />
+                <span className={`text-xs sm:text-sm font-medium ${isActive ? 'text-[#1E4B8E]' : 'text-slate-600'}`}>
                   {t(option.labelKey, option.defaultLabel)}
                 </span>
               </button>
@@ -68,19 +68,19 @@ export const AppearanceTab: React.FC = () => {
 
       {/* 强调色 */}
       <SectionCard icon={<Palette className="w-5 h-5" />} title={t('settings.appearance.accentTitle', '强调色')} description={t('settings.appearance.accentDesc', '选择界面的主要强调颜色')}>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
           {ACCENT_COLORS.map(option => {
             const isActive = accentColor === option.key;
             return (
               <button
                 key={option.key}
                 onClick={() => setAccentColor(option.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border-2 transition-all ${
                   isActive ? 'border-slate-400 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: option.color }} />
-                <span className="text-sm font-medium text-slate-700">{t(option.labelKey, option.defaultLabel)}</span>
+                <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: option.color }} />
+                <span className="text-xs sm:text-sm font-medium text-slate-700 truncate">{t(option.labelKey, option.defaultLabel)}</span>
               </button>
             );
           })}
@@ -92,7 +92,7 @@ export const AppearanceTab: React.FC = () => {
         <select
           value={fontSize}
           onChange={(e) => setFontSize(e.target.value as FontSize)}
-          className="w-64 px-4 py-2 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+          className="w-full sm:w-64 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
         >
           {FONT_SIZES.map(option => (
             <option key={option.key} value={option.key}>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Bell, Lock, Target, Palette, Globe, HelpCircle } from 'lucide-react';
+import { User, Bell, Lock, Target, Palette, Globe, HelpCircle, Settings } from 'lucide-react';
 import { Language } from '@/types';
-import { ProfileTab, SecurityTab, NotificationsTab, LanguageTab, KpiTab, AppearanceTab, HelpTab, PlaceholderTab } from './tabs';
+import { ProfileTab, SecurityTab, NotificationsTab, LanguageTab, KpiTab, AppearanceTab, HelpTab } from './tabs';
+import { cn } from '@/lib/utils';
 
 interface ProfileViewProps {
   language: Language;
@@ -27,48 +28,54 @@ const ProfileView: React.FC<ProfileViewProps> = ({ language, setLanguage }) => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'profile':
-        return <ProfileTab />;
-      case 'security':
-        return <SecurityTab />;
-      case 'notifications':
-        return <NotificationsTab />;
-      case 'language':
-        return <LanguageTab language={language} setLanguage={setLanguage} />;
-      case 'kpi':
-        return <KpiTab />;
-      case 'appearance':
-        return <AppearanceTab />;
-      case 'help':
-        return <HelpTab />;
-      default:
-        return null;
+      case 'profile': return <ProfileTab />;
+      case 'security': return <SecurityTab />;
+      case 'notifications': return <NotificationsTab />;
+      case 'language': return <LanguageTab language={language} setLanguage={setLanguage} />;
+      case 'kpi': return <KpiTab />;
+      case 'appearance': return <AppearanceTab />;
+      case 'help': return <HelpTab />;
+      default: return null;
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* 顶部标签页导航 */}
-      <div className="bg-white rounded-xl border border-slate-200 mb-6">
-        <div className="flex items-center gap-1 overflow-x-auto px-2">
-          {TABS.map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                  isActive
-                    ? 'text-[#1E4B8E] border-[#1E4B8E]'
-                    : 'text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {t(tab.labelKey, tab.defaultLabel)}
-              </button>
-            );
-          })}
+    <div className="space-y-6">
+      {/* 页面头部 */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[#1E4B8E]/10 flex items-center justify-center">
+          <Settings className="w-5 h-5 text-[#1E4B8E]" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">系统设置</h1>
+          <p className="text-slate-500">管理您的账户和系统偏好</p>
+        </div>
+      </div>
+
+      {/* 标签页导航 */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex items-center min-w-max border-b border-slate-100">
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={cn(
+                    'flex items-center gap-2 px-4 sm:px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors',
+                    isActive
+                      ? 'text-[#1E4B8E] border-[#1E4B8E] bg-blue-50/50'
+                      : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50'
+                  )}
+                >
+                  <Icon className={cn('w-4 h-4', isActive && 'text-[#1E4B8E]')} />
+                  <span>{t(tab.labelKey, tab.defaultLabel)}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

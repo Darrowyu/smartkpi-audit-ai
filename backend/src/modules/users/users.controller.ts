@@ -10,15 +10,27 @@ import {
   UseGuards,
   ParseUUIDPipe,
   Patch,
+  UseInterceptors,
+  UploadedFile,
+  Res,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { CreateUserDto, UpdateUserDto, UserQueryDto, UpdateProfileDto, ChangePasswordDto } from './dto/user.dto';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UserQueryDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+} from './dto/user.dto';
 import { UserRole } from '@prisma/client';
+import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
@@ -39,6 +51,30 @@ export class UsersController {
     @CurrentUser('userId') userId: string,
   ) {
     return this.service.changePassword(userId, dto);
+  }
+
+  @Post('me/avatar') // POST /api/users/me/avatar - 上传头像
+  @UseInterceptors(FileInterceptor('avatar'))
+  uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('userId') userId: string,
+    @CurrentUser('companyId') companyId: string,
+  ) {
+    return this.service.uploadAvatar(userId, companyId, file);
+  }
+
+  @Public()
+  @Get('avatar/:userId') // GET /api/users/avatar/:userId - 获取用户头像（公开访问）
+  async getAvatar(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Res() res: Response,
+  ) {
+    const { buffer, mimeType } = await this.service.getAvatar(userId);
+    res.set({
+      'Content-Type': mimeType,
+      'Cache-Control': 'public, max-age=86400',
+    });
+    res.send(buffer);
   }
 
   @Post()

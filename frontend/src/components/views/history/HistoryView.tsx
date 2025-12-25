@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { kpiAnalysisApi, AnalysisListItem } from '@/api/kpi-analysis.api';
 import { Calendar, FileText, Trash2, ArrowRight, Clock, Loader2 } from 'lucide-react';
+import { Language } from '@/types';
 
 interface HistoryViewProps {
   onSelectResult?: (result: unknown) => void; // 保留但改为可选
-  language: 'en' | 'zh';
+  language: Language;
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({ language }) => {

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Language } from '../../types';
 import { Eye, EyeOff, LayoutDashboard, BarChart3, ShieldCheck, Languages } from 'lucide-react';
 import logoImage from '../../assets/images/Makrite_KPI_logo.png';
+
+const REMEMBER_KEY = 'smartkpi_remember_credentials';
 
 interface Props {
   language: Language;
@@ -20,6 +22,19 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [currentLang, setCurrentLang] = useState<Language>(language);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REMEMBER_KEY);
+      if (saved) {
+        const { username: savedUser, password: savedPass } = JSON.parse(atob(saved));
+        setUsername(savedUser || '');
+        setPassword(savedPass || '');
+        setRememberMe(true);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const handleLangChange = () => {
     const newLang = currentLang === 'zh' ? 'en' : 'zh';
@@ -33,6 +48,11 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
     setLoading(true);
     try {
       await login(username, password);
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_KEY, btoa(JSON.stringify({ username, password })));
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       onSuccess();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error && 'response' in err
@@ -175,6 +195,20 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+            </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-[#1E4B8E] border-slate-300 rounded focus:ring-[#1E4B8E]/20 cursor-pointer"
+              />
+              <label htmlFor="rememberMe" className="ml-2 text-sm text-slate-600 cursor-pointer select-none">
+                {t('rememberMe', '记住我')}
+              </label>
             </div>
 
             {/* Submit Button */}

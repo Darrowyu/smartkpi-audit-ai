@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight, Globe, Building, User, ListChecks, PenLine } from 'lucide-react';
 import { Language } from '../../types';
 import { SimpleAvatar as Avatar } from '../ui/avatar';
 import { useAuth } from '../../context/AuthContext';
+import { getAvatarUrl } from '../../api/users.api';
 import logoImage from '../../assets/images/Makrite_KPI_logo.png';
 
 interface SidebarProps {
@@ -19,7 +20,7 @@ interface NavItem {
   labelKey: string;
 }
 
-const businessNavItems: NavItem[] = [
+const managerBusinessNavItems: NavItem[] = [
   { path: '/', icon: Home, labelKey: 'sidebar.home' },
   { path: '/dashboard', icon: LayoutDashboard, labelKey: 'sidebar.dashboard' },
   { path: '/kpi-library', icon: Target, labelKey: 'sidebar.kpiLibrary' },
@@ -29,12 +30,21 @@ const businessNavItems: NavItem[] = [
   { path: '/reports', icon: FileText, labelKey: 'sidebar.reports' },
 ];
 
-const personalNavItems: NavItem[] = [
+const userPersonalNavItems: NavItem[] = [
+  { path: '/', icon: Home, labelKey: 'sidebar.home' },
+  { path: '/my-dashboard', icon: User, labelKey: 'sidebar.myDashboard' },
+  { path: '/my-kpis', icon: ListChecks, labelKey: 'sidebar.myKPIs' },
+  { path: '/self-evaluation', icon: PenLine, labelKey: 'sidebar.selfEvaluation' },
+];
+
+const commonPersonalNavItems: NavItem[] = [
   { path: '/settings', icon: Settings, labelKey: 'sidebar.mySettings' },
 ];
 
 const adminNavItems: NavItem[] = [
   { path: '/group-dashboard', icon: Building2, labelKey: 'sidebar.groupCenter' },
+  { path: '/group-settings', icon: Globe, labelKey: 'sidebar.groupSettings' },
+  { path: '/company-settings', icon: Building, labelKey: 'sidebar.companySettings' },
   { path: '/team', icon: Users, labelKey: 'sidebar.users' },
   { path: '/permissions', icon: Shield, labelKey: 'sidebar.permissions' },
 ];
@@ -45,9 +55,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isManager = user?.role === 'MANAGER';
+  const isUser = user?.role === 'USER';
   const [adminExpanded, setAdminExpanded] = useState(false);
 
   const isAdminViewActive = adminNavItems.some(item => location.pathname === item.path);
+
+  const avatarUrl = useMemo(() => user?.avatar ? getAvatarUrl(user.id) : undefined, [user]);
+
+  const businessNavItems = useMemo(() => {
+    if (isUser) return userPersonalNavItems;
+    return managerBusinessNavItems;
+  }, [isUser]);
 
   useEffect(() => {
     if (isAdminViewActive) {
@@ -110,18 +129,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2">
-        {/* Business Section */}
-        <SectionLabel>{t('sidebar.businessSection', '业务功能')}</SectionLabel>
+        {/* Business/Personal Section based on role */}
+        <SectionLabel>
+          {isUser ? t('sidebar.mySection', '我的') : t('sidebar.businessSection', '业务功能')}
+        </SectionLabel>
         <div className="space-y-0.5">
           {businessNavItems.map((item) => (
             <NavButton key={item.path} item={item} />
           ))}
         </div>
 
-        {/* Personal Section */}
+        {/* Common Settings Section */}
         <SectionLabel>{t('sidebar.personalSection', '个人')}</SectionLabel>
         <div className="space-y-0.5">
-          {personalNavItems.map((item) => (
+          {commonPersonalNavItems.map((item) => (
             <NavButton key={item.path} item={item} />
           ))}
         </div>
@@ -149,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
                 }
               </button>
 
-              <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-40' : 'max-h-0'}`}>
+              <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-60' : 'max-h-0'}`}>
                 {adminNavItems.map((item) => (
                   <NavButton key={item.path} item={item} compact />
                 ))}
@@ -162,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       {/* User Footer */}
       <div className="border-t border-white/10 p-3">
         <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#163a6e]/50 transition-colors">
-          <Avatar name={user?.username || 'User'} email={user?.email || ''} size="sm" />
+          <Avatar name={user?.username || 'User'} email={user?.email || ''} avatarUrl={avatarUrl} size="sm" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-white truncate">{user?.username || 'User'}</div>
             <div className="text-[10px] text-white/50 uppercase tracking-wide">{user?.role || 'USER'}</div>

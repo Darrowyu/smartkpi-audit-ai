@@ -50,6 +50,7 @@ AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 interface SimpleAvatarProps {
   name: string;
   email?: string;
+  avatarUrl?: string; // 头像图片URL
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -86,25 +87,32 @@ function getColorFromEmail(email: string): string {
 const SimpleAvatar: React.FC<SimpleAvatarProps & React.HTMLAttributes<HTMLDivElement>> = ({
   name = 'User',
   email = '',
+  avatarUrl,
   size = 'md',
   className,
   children,
   ...restProps
 }) => {
+  const [imgError, setImgError] = React.useState(false);
   const initials = name ? getInitials(name) : 'U';
   const colorClass = getColorFromEmail(email);
+  const showImage = avatarUrl && !imgError;
 
   return (
     <div
       className={cn(
         'relative flex shrink-0 overflow-hidden rounded-full items-center justify-center text-white font-medium',
         sizeClasses[size] || sizeClasses.md,
-        colorClass,
+        !showImage && colorClass,
         className
       )}
       {...restProps}
     >
-      {children || initials}
+      {showImage ? (
+        <img src={avatarUrl} alt="" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+      ) : (
+        children || initials
+      )}
     </div>
   );
 };

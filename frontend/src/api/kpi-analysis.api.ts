@@ -1,6 +1,13 @@
 import { apiClient } from './client';
-import { KPIAnalysisResult } from '../types';
+import { KPIAnalysisResult, Language } from '../types';
 import { PaginatedResponse } from './files.api';
+
+type ApiLanguage = 'en' | 'zh';
+const mapLanguage = (lang: Language | undefined): ApiLanguage => {
+  if (lang === 'zh' || lang === 'zh-TW') return 'zh';
+  if (lang === 'ja') return 'en'; // 日语fallback到英文
+  return lang === 'en' ? 'en' : 'zh';
+};
 
 export interface KPIAnalysis {
   id: string;
@@ -24,8 +31,8 @@ export interface AnalysisListItem {
 }
 
 export const kpiAnalysisApi = {
-  async analyze(fileId: string, language: 'en' | 'zh' = 'en', period?: string): Promise<KPIAnalysis> {
-    const res = await apiClient.post(`/kpi-analysis/analyze/${fileId}`, { language, period });
+  async analyze(fileId: string, language?: Language, period?: string): Promise<KPIAnalysis> {
+    const res = await apiClient.post(`/kpi-analysis/analyze/${fileId}`, { language: mapLanguage(language), period });
     return res.data;
   },
 

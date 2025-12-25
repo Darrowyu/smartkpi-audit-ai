@@ -11,6 +11,7 @@ export interface AuthUser {
   email?: string;
   firstName?: string;
   lastName?: string;
+  avatar?: string; // 头像路径
   role: string;
   companyId: string;
   groupId?: string;

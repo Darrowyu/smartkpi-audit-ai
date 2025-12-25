@@ -95,6 +95,7 @@ model User {
   passwordHash String   @map("password_hash")
   firstName    String?  @map("first_name")
   lastName     String?  @map("last_name")
+  avatar       String?  // 头像文件路径
   role         UserRole @default(USER)
   language     String   @default("en") // User preference: "en" | "zh"
 

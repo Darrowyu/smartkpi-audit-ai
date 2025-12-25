@@ -24,7 +24,8 @@ export interface EmployeeKPI {
   improvements: string[]; // 新增：待改进项
 }
 
-export interface Insight { // 新增：洞察接口
+export interface Insight {
+  // 新增：洞察接口
   title: string;
   content: string;
   type: 'positive' | 'warning' | 'info';
@@ -44,31 +45,41 @@ const kpiSchema = {
   properties: {
     summary: {
       type: Type.STRING,
-      description: 'Comprehensive executive summary of team performance (200-300 words).',
+      description:
+        'Comprehensive executive summary of team performance (200-300 words).',
     },
     period: {
       type: Type.STRING,
       description: "Time period (e.g., 'Q3 2024').",
     },
-    insights: { // 新增
+    insights: {
+      // 新增
       type: Type.ARRAY,
       description: '3-5 key insights about team performance',
       items: {
         type: Type.OBJECT,
         properties: {
           title: { type: Type.STRING, description: 'Short insight title' },
-          content: { type: Type.STRING, description: 'Detailed insight explanation' },
-          type: { type: Type.STRING, description: "Must be: 'positive', 'warning', 'info'" },
+          content: {
+            type: Type.STRING,
+            description: 'Detailed insight explanation',
+          },
+          type: {
+            type: Type.STRING,
+            description: "Must be: 'positive', 'warning', 'info'",
+          },
         },
         required: ['title', 'content', 'type'],
       },
     },
-    recommendations: { // 新增
+    recommendations: {
+      // 新增
       type: Type.ARRAY,
       description: '3-5 actionable recommendations for improvement',
       items: { type: Type.STRING },
     },
-    risks: { // 新增
+    risks: {
+      // 新增
       type: Type.ARRAY,
       description: 'Potential risks or concerns identified',
       items: { type: Type.STRING },
@@ -87,13 +98,19 @@ const kpiSchema = {
             type: Type.STRING,
             description: "Must be: 'Excellent', 'Good', 'Average', 'Poor'",
           },
-          aiAnalysis: { type: Type.STRING, description: 'Detailed analysis of employee performance (50-100 words)' },
-          strengths: { // 新增
+          aiAnalysis: {
+            type: Type.STRING,
+            description:
+              'Detailed analysis of employee performance (50-100 words)',
+          },
+          strengths: {
+            // 新增
             type: Type.ARRAY,
             description: '2-3 key strengths of this employee',
             items: { type: Type.STRING },
           },
-          improvements: { // 新增
+          improvements: {
+            // 新增
             type: Type.ARRAY,
             description: '1-3 areas for improvement',
             items: { type: Type.STRING },
@@ -108,17 +125,45 @@ const kpiSchema = {
                 targetValue: { type: Type.STRING },
                 actualValue: { type: Type.STRING },
                 score: { type: Type.NUMBER },
-                comment: { type: Type.STRING, description: 'Brief analysis of this metric performance' },
+                comment: {
+                  type: Type.STRING,
+                  description: 'Brief analysis of this metric performance',
+                },
               },
-              required: ['name', 'score', 'actualValue', 'targetValue', 'weight', 'comment'],
+              required: [
+                'name',
+                'score',
+                'actualValue',
+                'targetValue',
+                'weight',
+                'comment',
+              ],
             },
           },
         },
-        required: ['id', 'name', 'totalScore', 'status', 'metrics', 'department', 'role', 'aiAnalysis', 'strengths', 'improvements'],
+        required: [
+          'id',
+          'name',
+          'totalScore',
+          'status',
+          'metrics',
+          'department',
+          'role',
+          'aiAnalysis',
+          'strengths',
+          'improvements',
+        ],
       },
     },
   },
-  required: ['summary', 'employees', 'period', 'insights', 'recommendations', 'risks'],
+  required: [
+    'summary',
+    'employees',
+    'period',
+    'insights',
+    'recommendations',
+    'risks',
+  ],
 };
 
 @Injectable()
@@ -138,11 +183,15 @@ export class GeminiClientService {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async analyzeKPIData(csvData: string, language: 'en' | 'zh' = 'en'): Promise<KPIAnalysisResult> {
+  async analyzeKPIData(
+    csvData: string,
+    language: 'en' | 'zh' = 'en',
+  ): Promise<KPIAnalysisResult> {
     try {
-      const langInstruction = language === 'zh'
-        ? '使用简体中文生成所有文本内容（summary, aiAnalysis, insights, recommendations, risks, strengths, improvements, comment）'
-        : 'Generate all text content in English';
+      const langInstruction =
+        language === 'zh'
+          ? '使用简体中文生成所有文本内容（summary, aiAnalysis, insights, recommendations, risks, strengths, improvements, comment）'
+          : 'Generate all text content in English';
 
       const prompt = `
         You are an expert HR Performance Analyst with deep expertise in KPI evaluation and employee development.

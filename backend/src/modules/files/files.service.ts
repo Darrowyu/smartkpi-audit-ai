@@ -22,7 +22,7 @@ export class FilesService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
-  ) { }
+  ) {}
 
   /** 上传并处理Excel文件 */
   async uploadFile(
@@ -200,7 +200,10 @@ export class FilesService {
   }
 
   /** 解析文件为CSV格式 */
-  private parseFile(buffer: Buffer, mimeType: string): { csvData: string; rowCount: number } {
+  private parseFile(
+    buffer: Buffer,
+    mimeType: string,
+  ): { csvData: string; rowCount: number } {
     if (mimeType === 'text/csv' || mimeType === 'application/csv') {
       const csvData = buffer.toString('utf-8'); // CSV直接转为字符串
       const rows = csvData.split('\n').filter((row) => row.trim());

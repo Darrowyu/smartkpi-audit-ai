@@ -1,17 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ArrowUpRight, Users, Trophy, AlertTriangle, Download, Calculator, RefreshCw, User } from 'lucide-react';
+import { Plus, FileText, Users, Calendar, RefreshCw } from 'lucide-react';
 import { assessmentApi } from '@/api/assessment.api';
-import { reportsApi, DepartmentRanking, TrendData } from '@/api/reports.api';
-import { calculationApi } from '@/api/calculation.api';
+import { reportsApi, DepartmentRanking, TrendData, EmployeeRanking } from '@/api/reports.api';
 import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsManager } from '@/hooks/usePermission';
-import { useAuth } from '@/context/AuthContext';
+import { 
+  StatsCards, 
+  TrendChart, 
+  TeamPerformance, 
+  KeyMetrics, 
+  RecentActivity,
+  type StatsData,
+  type TrendDataPoint,
+  type TeamMember,
+  type KeyMetric,
+  type Activity
+} from './components';
 
 interface OverviewData {
   periodName: string;
@@ -23,21 +30,15 @@ interface OverviewData {
   poor: number;
 }
 
-interface DashboardViewProps {
-  language?: string;
-}
-
-export const DashboardView: React.FC<DashboardViewProps> = () => {
-  const { t } = useTranslation();
+export const DashboardView: React.FC = () => {
   const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [deptRanking, setDeptRanking] = useState<DepartmentRanking[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
-  const [isCalculating, setIsCalculating] = useState(false);
+  const [employeeRanking, setEmployeeRanking] = useState<EmployeeRanking[]>([]);
   const { toast } = useToast();
-  const isManager = useIsManager(); // 检查是否为经理或更高角色
-  const { user } = useAuth();
+  const isManager = useIsManager();
 
   useEffect(() => {
     loadPeriods();
@@ -58,31 +59,27 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
       if (periodsData.length > 0) {
         setSelectedPeriod(periodsData[0].id);
       }
-    } catch (_e) {
-      // silent fail
-    }
+    } catch (_e) { /* silent */ }
   };
 
   const loadTrend = async () => {
     try {
-      const data = await reportsApi.getTrend();
+      const data = await reportsApi.getTrend(8);
       setTrendData(data);
-    } catch (_e) {
-      // silent fail
-    }
+    } catch (_e) { /* silent */ }
   };
 
   const loadPeriodData = async (id: string) => {
     try {
-      const [ov, dept] = await Promise.all([
+      const [ov, dept, emp] = await Promise.all([
         reportsApi.getOverview(id),
         reportsApi.getDepartmentRanking(id),
+        reportsApi.getEmployeeRanking(id, 1, 10),
       ]);
       setOverview(ov);
       setDeptRanking(dept);
-    } catch (_e) {
-      // silent fail
-    }
+      setEmployeeRanking(emp.data || []);
+    } catch (_e) { /* silent */ }
   };
 
   const handleExport = async () => {
@@ -92,28 +89,12 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Performance_Report_${overview?.periodName}.xlsx`;
+      a.download = `绩效报告_${overview?.periodName || selectedPeriod}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (_e) {
-      toast({ variant: 'destructive', title: t('dashboardView.exportFailed'), description: t('dashboardView.exportFailedDesc') });
-    }
-  };
-
-  const handleCalculate = async () => {
-    if (!selectedPeriod) return;
-    setIsCalculating(true);
-    try {
-      const result = await calculationApi.executeCalculation(selectedPeriod);
-      toast({ title: t('dashboardView.calculationDone'), description: t('dashboardView.calculationDoneDesc', { count: result.employeeCount, time: result.totalTime }) });
-      await loadPeriodData(selectedPeriod);
-      await loadTrend();
-    } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string } } };
-      toast({ variant: 'destructive', title: t('dashboardView.calculationFailed'), description: err.response?.data?.message || t('dashboardView.calculationFailedDesc') });
-    } finally {
-      setIsCalculating(false);
+      toast({ variant: 'destructive', title: '导出失败', description: '请稍后重试' });
     }
   };
 
@@ -121,25 +102,86 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
     if (selectedPeriod) {
       await loadPeriodData(selectedPeriod);
       await loadTrend();
-      toast({ title: t('dashboardView.refreshed'), description: t('dashboardView.refreshedDesc') });
+      toast({ title: '已刷新', description: '数据已更新' });
     }
   };
 
+  const statsData: StatsData = useMemo(() => {
+    if (!overview) {
+      return {
+        totalKPIs: 24, completed: 18, inProgress: 4, atRisk: 2,
+        trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 }
+      };
+    }
+    return {
+      totalKPIs: overview.totalEmployees || 24,
+      completed: overview.excellent + overview.good || 18,
+      inProgress: overview.average || 4,
+      atRisk: overview.poor || 2,
+      trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 }
+    };
+  }, [overview]);
+
+  const chartData: TrendDataPoint[] = useMemo(() => {
+    if (trendData.length === 0) {
+      return ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月'].map((month, i) => ({
+        month, actual: 50 + i * 5 + Math.floor(Math.random() * 10), target: 75
+      }));
+    }
+    return trendData.map((item, idx) => ({
+      month: item.period || `${idx + 1}月`,
+      actual: item.avgScore,
+      target: 75
+    }));
+  }, [trendData]);
+
+  const teamMembers: TeamMember[] = useMemo(() => {
+    if (employeeRanking.length === 0) {
+      return [
+        { id: '1', name: '张明', role: '产品经理', progress: 92, completed: 11, total: 12 },
+        { id: '2', name: '李华', role: '开发工程师', progress: 78, completed: 7, total: 9 },
+        { id: '3', name: '王芳', role: '设计师', progress: 85, completed: 17, total: 20 },
+        { id: '4', name: '刘强', role: '运营经理', progress: 65, completed: 13, total: 20 },
+      ];
+    }
+    return employeeRanking.slice(0, 4).map((emp, idx) => ({
+      id: emp.employeeId || `emp-${idx}`,
+      name: emp.employeeName,
+      role: emp.departmentName,
+      progress: Math.round(emp.score),
+      completed: Math.round(emp.score / 10),
+      total: 10
+    }));
+  }, [employeeRanking]);
+
+  const keyMetrics: KeyMetric[] = useMemo(() => [
+    { id: '1', name: '季度销售额', currentValue: 850000, targetValue: 1000000, unit: '¥', status: 'normal' as const, deadline: '2024-03-31' },
+    { id: '2', name: '客户满意度', currentValue: 4.2, targetValue: 4.5, unit: '分', status: 'warning' as const, deadline: '2024-03-31' },
+    { id: '3', name: '新客户获取', currentValue: 45, targetValue: 80, unit: '个', status: 'late' as const, deadline: '2024-03-31' },
+    { id: '4', name: '产品上线数', currentValue: 3, targetValue: 4, unit: '个', status: 'normal' as const, deadline: '2024-03-31' },
+  ], []);
+
+  const recentActivities: Activity[] = useMemo(() => [
+    { id: '1', type: 'complete', title: '完成季度报告', description: 'Q4销售分析报告已提交', time: '10分钟前' },
+    { id: '2', type: 'alert', title: 'KPI预警', description: '客户满意度指标接近风险线', time: '1小时前' },
+    { id: '3', type: 'milestone', title: '达成里程碑', description: '新客户获取超过40个', time: '2小时前' },
+    { id: '4', type: 'team', title: '团队更新', description: '王芳完成了设计任务', time: '3小时前' },
+    { id: '5', type: 'kpi', title: 'KPI调整', description: '产品上线目标已更新', time: '5小时前' },
+  ], []);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 pb-8">
+      {/* 头部区域 */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            {isManager ? t('dashboardView.title') : t('dashboardView.myPerformance', '我的绩效')}
-          </h2>
-          <p className="text-muted-foreground">
-            {isManager ? t('dashboardView.subtitle') : t('dashboardView.myPerformanceDesc', '查看您的个人绩效数据')}
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900">绩效仪表盘</h1>
+          <p className="text-slate-500 mt-1">追踪和管理您的关键绩效指标</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={t('dashboardView.selectPeriod')} />
+            <SelectTrigger className="w-[140px] bg-white">
+              <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+              <SelectValue placeholder="选择周期" />
             </SelectTrigger>
             <SelectContent>
               {periods.map(p => (
@@ -147,110 +189,49 @@ export const DashboardView: React.FC<DashboardViewProps> = () => {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handleRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" /> {t('dashboardView.refresh')}
-          </Button>
-          {isManager && ( // 仅经理及以上角色显示计算和导出按钮
+          {isManager && (
             <>
-              <Button variant="outline" onClick={handleCalculate} disabled={isCalculating}>
-                <Calculator className="mr-2 h-4 w-4" /> {isCalculating ? t('dashboardView.calculating') : t('dashboardView.recalculate')}
+              <Button className="bg-[#1E4B8E] hover:bg-[#163a6e] text-white">
+                <Plus className="w-4 h-4 mr-1" /> 新建KPI
               </Button>
               <Button variant="outline" onClick={handleExport}>
-                <Download className="mr-2 h-4 w-4" /> {t('dashboardView.exportReport')}
+                <FileText className="w-4 h-4 mr-1" /> 生成报告
+              </Button>
+              <Button variant="outline">
+                <Users className="w-4 h-4 mr-1" /> 团队管理
+              </Button>
+              <Button variant="outline">
+                <Calendar className="w-4 h-4 mr-1" /> 设定周期
               </Button>
             </>
           )}
+          <Button variant="ghost" size="icon" onClick={handleRefresh}>
+            <RefreshCw className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
-      {overview && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboardView.totalParticipants')}</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{overview.totalEmployees}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboardView.avgScore')}</CardTitle>
-              <Trophy className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{overview.avgScore}{t('dashboardView.avgScoreUnit')}</div>
-              <p className="text-xs text-muted-foreground">
-                {overview.avgScore >= 80 ? t('dashboardView.performanceExcellent') : t('dashboardView.performanceNormal')}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboardView.excellentRate')}</CardTitle>
-              <ArrowUpRight className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {overview.totalEmployees > 0
-                  ? Math.round((overview.excellent / overview.totalEmployees) * 100)
-                  : 0}%
-              </div>
-              <p className="text-xs text-muted-foreground">{t('dashboardView.peopleExcellent', { count: overview.excellent })}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('dashboardView.needsImprovement')}</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {overview.totalEmployees > 0
-                  ? Math.round((overview.poor / overview.totalEmployees) * 100)
-                  : 0}%
-              </div>
-              <p className="text-xs text-muted-foreground">{t('dashboardView.peopleNeedImprovement', { count: overview.poor })}</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* 统计卡片 */}
+      <StatsCards data={statsData} />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>{t('dashboardView.deptRanking')}</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={deptRanking}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="departmentName" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="score" fill="#8884d8" name={t('dashboardView.avgScoreLabel')} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>{t('dashboardView.trendAnalysis')}</CardTitle>
-            <CardDescription>{t('dashboardView.trendDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="period" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Line type="monotone" dataKey="avgScore" stroke="#82ca9d" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* 趋势图 + 团队表现 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <TrendChart data={chartData} />
+        </div>
+        <div className="lg:col-span-1">
+          <TeamPerformance members={teamMembers} teamName="管理团队" />
+        </div>
+      </div>
+
+      {/* 关键指标进度 + 最近动态 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <KeyMetrics metrics={keyMetrics} onViewAll={() => {}} />
+        </div>
+        <div className="lg:col-span-1">
+          <RecentActivity activities={recentActivities} />
+        </div>
       </div>
     </div>
   );

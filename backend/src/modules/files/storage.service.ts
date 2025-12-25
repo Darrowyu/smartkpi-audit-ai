@@ -6,17 +6,23 @@ import * as path from 'path';
 @Injectable()
 export class StorageService {
   private readonly uploadDir: string;
+  private readonly avatarDir: string;
 
   constructor(private configService: ConfigService) {
-    this.uploadDir = this.configService.get('UPLOAD_DIR') || './uploads';
+    const configuredDir = this.configService.get('UPLOAD_DIR') || './uploads';
+    this.uploadDir = path.isAbsolute(configuredDir)
+      ? configuredDir
+      : path.resolve(process.cwd(), configuredDir);
+    this.avatarDir = path.join(this.uploadDir, 'avatars');
     this.ensureUploadDirExists();
   }
 
   /** 确保上传目录存在 */
   private ensureUploadDirExists() {
-    if (!fs.existsSync(this.uploadDir)) {
+    if (!fs.existsSync(this.uploadDir))
       fs.mkdirSync(this.uploadDir, { recursive: true });
-    }
+    if (!fs.existsSync(this.avatarDir))
+      fs.mkdirSync(this.avatarDir, { recursive: true });
   }
 
   /** 保存文件到本地文件系统，按公司组织：uploads/{companyId}/{fileId}.xlsx */
@@ -48,9 +54,12 @@ export class StorageService {
   /** 从存储读取文件 */
   async readFile(filePath: string): Promise<Buffer> {
     try {
-      return await fs.promises.readFile(filePath);
+      const absolutePath = path.isAbsolute(filePath)
+        ? filePath
+        : path.resolve(process.cwd(), filePath);
+      return await fs.promises.readFile(absolutePath);
     } catch (error) {
-      console.error('File read error:', error);
+      console.error('File read error:', error, 'Path:', filePath);
       throw new InternalServerErrorException('Failed to read file');
     }
   }
@@ -58,16 +67,53 @@ export class StorageService {
   /** 从存储删除文件 */
   async deleteFile(filePath: string): Promise<void> {
     try {
-      if (fs.existsSync(filePath)) {
-        await fs.promises.unlink(filePath);
+      const absolutePath = path.isAbsolute(filePath)
+        ? filePath
+        : path.resolve(process.cwd(), filePath);
+      if (fs.existsSync(absolutePath)) {
+        await fs.promises.unlink(absolutePath);
       }
     } catch (error) {
-      console.error('File delete error:', error); // 不抛出错误，文件可能已被删除
+      console.error('File delete error:', error);
     }
   }
 
   /** 检查文件是否存在 */
   fileExists(filePath: string): boolean {
-    return fs.existsSync(filePath);
+    const absolutePath = path.isAbsolute(filePath)
+      ? filePath
+      : path.resolve(process.cwd(), filePath);
+    return fs.existsSync(absolutePath);
+  }
+
+  /** 保存用户头像，覆盖旧文件：uploads/avatars/{userId}.{ext} */
+  async saveAvatar(
+    userId: string,
+    buffer: Buffer,
+    ext: string,
+  ): Promise<string> {
+    try {
+      await this.deleteOldAvatar(userId); // 删除旧头像（任何扩展名）
+      const fileName = `${userId}${ext}`;
+      const filePath = path.join(this.avatarDir, fileName);
+      await fs.promises.writeFile(filePath, buffer);
+      return filePath;
+    } catch (error) {
+      console.error('Avatar save error:', error);
+      throw new InternalServerErrorException('Failed to save avatar');
+    }
+  }
+
+  /** 删除用户旧头像（支持任意扩展名） */
+  private async deleteOldAvatar(userId: string): Promise<void> {
+    try {
+      const files = await fs.promises.readdir(this.avatarDir);
+      const oldAvatars = files.filter((f) => f.startsWith(userId));
+      for (const file of oldAvatars) {
+        await fs.promises.unlink(path.join(this.avatarDir, file));
+      }
+    } catch (error) {
+      /* 忽略删除错误 */
+    }
   }
 }

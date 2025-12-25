@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { groupsApi, Group } from '@/api/groups.api';
 import { useAuth } from '@/context/AuthContext';
 import { Language } from '@/types';
-import { Building2, Edit, X, Check, Calendar, Globe } from 'lucide-react';
+import { Edit, X, Check, Calendar, Globe, Building2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   language: Language;
@@ -55,115 +60,116 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8 text-slate-500">{t('loading')}</div>;
+    return <div className="flex items-center justify-center h-64 text-muted-foreground">{t('loading')}</div>;
   }
 
   if (!group) {
-    return <div className="text-center py-8 text-slate-500">{t('failedToLoadGroup')}</div>;
+    return <div className="flex items-center justify-center h-64 text-muted-foreground">{t('failedToLoadGroup')}</div>;
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <Globe className="w-5 h-5 text-blue-600" />
-          {t('groupSettings')}
-        </h3>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">{t('groupSettings')}</h2>
+          <p className="text-muted-foreground">{t('sidebar.groupSettings')}</p>
+        </div>
         {isSuperAdmin && (
-          <button onClick={() => setShowEditModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            <Edit className="w-4 h-4" />
+          <Button onClick={() => setShowEditModal(true)}>
+            <Edit className="w-4 h-4 mr-2" />
             {t('edit')}
-          </button>
+          </Button>
         )}
       </div>
 
-      {/* 集团基本信息 */}
-      <div className="bg-slate-50 rounded-lg border border-slate-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('groupName')}
-            </label>
-            <p className="text-slate-900 font-medium text-lg">{group.name}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('groupId')}
-            </label>
-            <p className="text-slate-600 font-mono text-sm">{group.id}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('createdAt')}
-            </label>
-            <p className="text-slate-900 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-slate-400" />
-              {new Date(group.createdAt).toLocaleDateString()}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('status')}
-            </label>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('groupName')}</CardTitle>
+            <Globe className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{group.name}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('companies')}</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{group._count?.companies || 0}</div>
+            <p className="text-xs text-muted-foreground">{t('active')}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('createdAt')}</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{new Date(group.createdAt).toLocaleDateString()}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('status')}</CardTitle>
+          </CardHeader>
+          <CardContent>
             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${group.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
               {group.isActive ? t('active') : t('inactive')}
             </span>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('companies')}
-            </label>
-            <p className="text-slate-900 font-medium">{group._count?.companies || 0}</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* 提示信息 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('basicInfo')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label className="text-muted-foreground">{t('groupId')}</Label>
+              <p className="font-mono text-sm mt-1">{group.id}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {!isSuperAdmin && (
-        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            {t('onlySuperAdminCanModifyGroup')}
-          </p>
-        </div>
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="pt-6">
+            <p className="text-sm text-yellow-800">{t('onlySuperAdminCanModifyGroup')}</p>
+          </CardContent>
+        </Card>
       )}
 
-      {/* 编辑模态框 */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-slate-800">
-                {t('editGroup')}
-              </h3>
-              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('editGroup')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t('groupName')} *</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                required
+              />
             </div>
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('groupName')} *
-                </label>
-                <input type="text" value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">
-                  {t('cancel')}
-                </button>
-                <button type="submit" disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-                  {saving ? '...' : <><Check className="w-4 h-4" />{t('save')}</>}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? '...' : <><Check className="w-4 h-4 mr-2" />{t('save')}</>}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

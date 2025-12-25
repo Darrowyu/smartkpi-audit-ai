@@ -13,3 +13,6 @@ export * from './group/GroupDashboardView';
 export * from './profile/ProfileView';
 export * from './history/HistoryView';
 export * from './organization/OrganizationManagement';
+export * from './my-dashboard/MyDashboardView';
+export * from './my-kpis/MyKPIsView';
+export * from './self-evaluation/SelfEvaluationView';

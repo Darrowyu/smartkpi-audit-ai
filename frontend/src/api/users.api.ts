@@ -69,6 +69,13 @@ export interface ChangePasswordData {
   newPassword: string;
 }
 
+export const getAvatarUrl = (userId: string): string => {
+  const apiOrigin = import.meta.env.VITE_API_URL as string | undefined;
+  const apiBasePath = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '/api';
+  const baseUrl = apiOrigin ? `${apiOrigin.replace(/\/$/, '')}${apiBasePath}` : apiBasePath;
+  return `${baseUrl}/users/avatar/${userId}?t=${Date.now()}`;
+};
+
 export const usersApi = {
   findAll: async (params?: UserQueryParams): Promise<PaginatedResponse<User>> => {
     const res = await apiClient.get('/users', { params });
@@ -120,6 +127,15 @@ export const usersApi = {
 
   changePassword: async (data: ChangePasswordData): Promise<{ message: string }> => {
     const res = await apiClient.post('/users/me/password', data);
+    return res.data;
+  },
+
+  uploadAvatar: async (file: File): Promise<{ id: string; avatar: string }> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const res = await apiClient.post('/users/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return res.data;
   },
 };

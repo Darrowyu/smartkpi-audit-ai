@@ -27,6 +27,10 @@ const DataEntryPage = lazy(() => import('@/pages/data-entry/DataEntryPage'));
 
 // Group
 const GroupDashboardPage = lazy(() => import('@/pages/group/GroupDashboardPage'));
+const GroupSettingsPage = lazy(() => import('@/pages/group/GroupSettingsPage'));
+
+// Organization
+const CompanySettingsPage = lazy(() => import('@/pages/organization/CompanySettingsPage'));
 
 // KPI Library
 const KPILibraryPage = lazy(() => import('@/pages/kpi-library/KPILibraryPage'));
@@ -42,6 +46,11 @@ const TeamManagementPage = lazy(() => import('@/pages/team/TeamManagementPage'))
 
 // Profile
 const SettingsPage = lazy(() => import('@/pages/profile/SettingsPage'));
+
+// My (Personal)
+const MyDashboardPage = lazy(() => import('@/pages/my/MyDashboardPage'));
+const MyKPIsPage = lazy(() => import('@/pages/my/MyKPIsPage'));
+const SelfEvaluationPage = lazy(() => import('@/pages/my/SelfEvaluationPage'));
 
 // Error
 const NotFoundPage = lazy(() => import('@/pages/error/NotFoundPage'));
@@ -79,7 +88,12 @@ export const router = createBrowserRouter([
             { path: 'team', element: <ProtectedRoute permission="user:view" adminOnly><SuspenseWrapper><TeamManagementPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'permissions', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><PermissionsPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'group-dashboard', element: <ProtectedRoute adminOnly><SuspenseWrapper><GroupDashboardPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'group-settings', element: <ProtectedRoute adminOnly><SuspenseWrapper><GroupSettingsPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'company-settings', element: <ProtectedRoute adminOnly><SuspenseWrapper><CompanySettingsPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'settings', element: <SuspenseWrapper><SettingsPage /></SuspenseWrapper> },
+            { path: 'my-dashboard', element: <SuspenseWrapper><MyDashboardPage /></SuspenseWrapper> },
+            { path: 'my-kpis', element: <SuspenseWrapper><MyKPIsPage /></SuspenseWrapper> },
+            { path: 'self-evaluation', element: <SuspenseWrapper><SelfEvaluationPage /></SuspenseWrapper> },
             { path: 'upload', element: <ProtectedRoute permission="data:submit"><SuspenseWrapper><UploadPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'history', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><HistoryPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'analysis/:id', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><AnalysisDetailPage /></SuspenseWrapper></ProtectedRoute> },

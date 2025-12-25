@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { companiesApi, Company, CompanyStats } from '@/api/companies.api';
 import { useAuth } from '@/context/AuthContext';
 import { Language } from '@/types';
-import { Building2, Users, Briefcase, UserCircle, FileText, BarChart3, Edit, X, Check, Calendar } from 'lucide-react';
+import { Building2, Users, Briefcase, UserCircle, FileText, BarChart3, Edit, Check, Calendar } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   language: Language;
@@ -61,192 +66,171 @@ const CompanySettings: React.FC<Props> = ({ language }) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-slate-500">{t('loading')}</div>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-64 text-muted-foreground">{t('loading')}</div>;
   }
 
   if (!company) {
-    return (
-      <div className="text-center py-20">
-        <p className="text-slate-500">{t('failedToLoadCompany')}</p>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-64 text-muted-foreground">{t('failedToLoadCompany')}</div>;
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <Building2 className="w-6 h-6 text-blue-600" />
-          {t('companyManagement')}
-        </h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">{t('companyManagement')}</h2>
+          <p className="text-muted-foreground">{t('sidebar.companySettings')}</p>
+        </div>
         {isAdmin && (
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <Edit className="w-4 h-4" />
+          <Button onClick={() => setShowEditModal(true)}>
+            <Edit className="w-4 h-4 mr-2" />
             {t('edit')}
-          </button>
+          </Button>
         )}
       </div>
 
-      {/* 公司基本信息 */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
-        <h3 className="text-lg font-semibold text-slate-800 mb-4">
-          {t('basicInfo')}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('companyName')}
-            </label>
-            <p className="text-slate-900 font-medium">{company.name}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('companyCode')}
-            </label>
-            <p className="text-slate-900 font-medium">{(company as { code?: string }).code || '-'}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('domain')}
-            </label>
-            <p className="text-slate-900 font-medium">{company.domain || '-'}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('createdAt')}
-            </label>
-            <p className="text-slate-900 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-slate-400" />
-              {new Date(company.createdAt).toLocaleDateString()}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 mb-1">
-              {t('status')}
-            </label>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('companyName')}</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{company.name}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('companyCode')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{(company as { code?: string }).code || '-'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('createdAt')}</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{new Date(company.createdAt).toLocaleDateString()}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t('status')}</CardTitle>
+          </CardHeader>
+          <CardContent>
             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${company.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
               {company.isActive ? t('active') : t('inactive')}
             </span>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* 统计数据 */}
       {stats && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">
-            {t('statistics')}
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <StatCard icon={<Users className="w-5 h-5 text-blue-600" />} label={t('user')} value={stats.users} />
-            <StatCard icon={<Briefcase className="w-5 h-5 text-green-600" />} label={t('departments')} value={stats.departments} />
-            <StatCard icon={<UserCircle className="w-5 h-5 text-purple-600" />} label={t('employees')} value={stats.employees} />
-            <StatCard icon={<FileText className="w-5 h-5 text-orange-600" />} label={t('files')} value={stats.files} />
-            <StatCard icon={<BarChart3 className="w-5 h-5 text-blue-600" />} label={t('analyses')} value={stats.analyses} />
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('statistics')}</CardTitle>
+            <CardDescription>{t('sidebar.companySettings')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('user')}</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.users}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('departments')}</CardTitle>
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.departments}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('employees')}</CardTitle>
+                  <UserCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.employees}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('files')}</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.files}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{t('analyses')}</CardTitle>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.analyses}</div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* 编辑模态框 */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-slate-800">
-                {t('editCompany')}
-              </h3>
-              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('editCompany')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t('companyName')} *</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                required
+              />
             </div>
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('companyName')} *
-                </label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('companyCode')}
-                </label>
-                <input
-                  type="text"
-                  value={editForm.code}
-                  onChange={(e) => setEditForm({ ...editForm, code: e.target.value })}
-                  placeholder="DG001"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  {t('companyCodeHint')}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('domain')}
-                </label>
-                <input
-                  type="text"
-                  value={editForm.domain}
-                  onChange={(e) => setEditForm({ ...editForm, domain: e.target.value })}
-                  placeholder="dongguan"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  {t('domainHint')}
-                </p>
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {saving ? '...' : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      {t('save')}
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="space-y-2">
+              <Label>{t('companyCode')}</Label>
+              <Input
+                value={editForm.code}
+                onChange={(e) => setEditForm({ ...editForm, code: e.target.value })}
+                placeholder="DG001"
+              />
+              <p className="text-xs text-muted-foreground">{t('companyCodeHint')}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('domain')}</Label>
+              <Input
+                value={editForm.domain}
+                onChange={(e) => setEditForm({ ...editForm, domain: e.target.value })}
+                placeholder="dongguan"
+              />
+              <p className="text-xs text-muted-foreground">{t('domainHint')}</p>
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? '...' : <><Check className="w-4 h-4 mr-2" />{t('save')}</>}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
-
-const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: number }> = ({ icon, label, value }) => (
-  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-    <div className="flex items-center gap-2 mb-2">
-      {icon}
-      <span className="text-xs font-medium text-slate-600">{label}</span>
-    </div>
-    <p className="text-2xl font-bold text-slate-900">{value}</p>
-  </div>
-);
 
 export default CompanySettings;
 

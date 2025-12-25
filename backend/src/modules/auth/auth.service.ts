@@ -29,7 +29,7 @@ export class AuthService {
     private configService: ConfigService,
     private permissionsService: PermissionsService,
     private mailService: MailService,
-  ) { }
+  ) {}
 
   /** 用户名登录 */
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
@@ -93,6 +93,7 @@ export class AuthService {
         email: true,
         firstName: true,
         lastName: true,
+        avatar: true,
         role: true,
         companyId: true,
         departmentId: true,

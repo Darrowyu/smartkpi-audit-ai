@@ -31,4 +31,4 @@ import { StorageService } from './storage.service';
   providers: [FilesService, StorageService],
   exports: [FilesService, StorageService],
 })
-export class FilesModule { }
+export class FilesModule {}

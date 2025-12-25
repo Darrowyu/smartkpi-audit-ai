@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { EmployeeKPI, KPIStatus } from '../types';
+import { EmployeeKPI, KPIStatus } from '@/types';
 import { ChevronRight } from 'lucide-react';
 
 interface KPITableProps {

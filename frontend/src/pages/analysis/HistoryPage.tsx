@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import HistoryViewComponent from '@/components/HistoryView';
+import HistoryViewComponent from '@/components/views/history/HistoryView';
 import { Language } from '@/types';
 
 const HistoryPage: React.FC = () => {

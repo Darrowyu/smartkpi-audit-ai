@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
-import { groupsApi, GroupStats } from '../api/groups.api';
-import { companiesApi, CompanyStats } from '../api/companies.api';
-import { Language } from '../types';
+import { useAuth } from '@/context/AuthContext';
+import { groupsApi, GroupStats } from '@/api/groups.api';
+import { companiesApi, CompanyStats } from '@/api/companies.api';
+import { Language } from '@/types';
 import { Building2, Users, Briefcase, LayoutGrid, ChevronRight, Settings } from 'lucide-react';
 import OrganizationOverview from './OrganizationOverview';
 import CompanyList from './CompanyList';
 import DepartmentManagement from './DepartmentManagement';
 import UserManagement from './UserManagement';
-import GroupSettings from './GroupSettings';
+import GroupSettings from '@/components/views/group/GroupSettings';
 
 interface Props {
   language: Language;
@@ -148,11 +148,10 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
                 <button
                   key={item.id}
                   onClick={() => setCurrentView(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${isActive
+                    ? 'bg-blue-50 text-blue-700 font-medium'
+                    : 'text-slate-600 hover:bg-slate-50'
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.label}</span>

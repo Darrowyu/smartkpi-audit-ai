@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Plus, Search, Edit2, Trash2, X } from 'lucide-react';
-import { getDepartments, createDepartment, updateDepartment, deleteDepartment, Department } from '../api/departments.api';
-import { Language } from '../types';
+import { getDepartments, createDepartment, updateDepartment, deleteDepartment, Department } from '@/api/departments.api';
+import { Language } from '@/types';
 
 interface Props {
   language: Language;

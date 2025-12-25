@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BarChart3, Languages, Home, Building2 } from 'lucide-react';
-import { Language, View } from '../types';
-import { useAuth } from '../context/AuthContext';
+import { Language, View } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 interface HeaderProps {
   language: Language;

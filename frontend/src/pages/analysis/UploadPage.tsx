@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
-import FileUpload from '@/components/FileUpload';
+import FileUpload from '@/components/ui/FileUpload';
 import { filesApi } from '@/api/files.api';
 import { kpiAnalysisApi } from '@/api/kpi-analysis.api';
 import { Language } from '@/types';

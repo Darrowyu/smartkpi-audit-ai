@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReportsView } from '@/components/views/ReportsView';
+import { ReportsView } from '@/components/views/reports/ReportsView';
 import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
 

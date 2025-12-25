@@ -1,5 +1,5 @@
 import React from 'react';
-import { DashboardView } from '@/components/views/DashboardView';
+import { DashboardView } from '@/components/views/dashboard/DashboardView';
 import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
 

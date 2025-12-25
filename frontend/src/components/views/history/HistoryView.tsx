@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { kpiAnalysisApi, AnalysisListItem } from '../api/kpi-analysis.api';
+import { kpiAnalysisApi, AnalysisListItem } from '@/api/kpi-analysis.api';
 import { Calendar, FileText, Trash2, ArrowRight, Clock, Loader2 } from 'lucide-react';
 
 interface HistoryViewProps {

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
-import { companiesApi } from '../api/companies.api';
-import { getDepartments } from '../api/departments.api';
-import { Language } from '../types';
+import { useAuth } from '@/context/AuthContext';
+import { companiesApi } from '@/api/companies.api';
+import { getDepartments } from '@/api/departments.api';
+import { Language } from '@/types';
 import { ChevronRight, ChevronDown, Building2, Briefcase, Users, Folder } from 'lucide-react';
 
 interface Props {

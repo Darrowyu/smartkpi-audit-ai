@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usersApi, User, CreateUserData, UpdateUserData } from '../api/users.api';
-import { getDepartments, Department } from '../api/departments.api';
-import { companiesApi, Company } from '../api/companies.api';
-import { useAuth } from '../context/AuthContext';
-import { Language, UserRole } from '../types';
+import { usersApi, User, CreateUserData, UpdateUserData } from '@/api/users.api';
+import { getDepartments, Department } from '@/api/departments.api';
+import { companiesApi, Company } from '@/api/companies.api';
+import { useAuth } from '@/context/AuthContext';
+import { Language, UserRole } from '@/types';
 import { Users, Plus, Edit, Trash2, Search, Shield, UserCheck, X } from 'lucide-react';
 
 interface Props {
@@ -236,30 +236,30 @@ const UserManagement: React.FC<Props> = ({ language }) => {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('username')} *</label>
-                <input type="text" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} required disabled={!!editingUser} minLength={2}
+                <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} required disabled={!!editingUser} minLength={2}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 disabled:bg-slate-100" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('firstName')}</label>
-                  <input type="text" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  <input type="text" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('lastName')}</label>
-                  <input type="text" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  <input type="text" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('email')}</label>
-                <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
               </div>
               {!editingUser && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('password')} *</label>
-                  <input type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} required minLength={6}
+                  <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required minLength={6}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
                 </div>
               )}
@@ -268,7 +268,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('company')} *</label>
                   <select
                     value={formData.companyId || ''}
-                    onChange={(e) => setFormData({...formData, companyId: e.target.value || undefined})}
+                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value || undefined })}
                     required
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                   >
@@ -283,7 +283,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('department')}</label>
                 <select
                   value={formData.departmentId || ''}
-                  onChange={(e) => setFormData({...formData, departmentId: e.target.value || undefined})}
+                  onChange={(e) => setFormData({ ...formData, departmentId: e.target.value || undefined })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
                 >
                   <option value="">{t('noDepartment')}</option>
@@ -294,7 +294,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('role')}</label>
-                <select value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value as UserRole})}
+                <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
                   <option value="USER">{roleLabels.USER}</option>
                   <option value="MANAGER">{roleLabels.MANAGER}</option>

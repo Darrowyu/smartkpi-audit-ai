@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { companiesApi, Company, CompanyStats } from '../api/companies.api';
-import { useAuth } from '../context/AuthContext';
-import { Language } from '../types';
+import { companiesApi, Company, CompanyStats } from '@/api/companies.api';
+import { useAuth } from '@/context/AuthContext';
+import { Language } from '@/types';
 import { Building2, Users, Briefcase, UserCircle, FileText, BarChart3, Edit, X, Check, Calendar } from 'lucide-react';
 
 interface Props {

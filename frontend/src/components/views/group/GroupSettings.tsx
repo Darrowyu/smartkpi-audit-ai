@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { groupsApi, Group } from '../api/groups.api';
-import { useAuth } from '../context/AuthContext';
-import { Language } from '../types';
+import { groupsApi, Group } from '@/api/groups.api';
+import { useAuth } from '@/context/AuthContext';
+import { Language } from '@/types';
 import { Building2, Edit, X, Check, Calendar, Globe } from 'lucide-react';
 
 interface Props {

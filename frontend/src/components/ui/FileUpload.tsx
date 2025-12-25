@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UploadCloud, FileSpreadsheet, Loader2, AlertCircle, FileDown } from 'lucide-react';
-import { Language } from '../types';
-import { downloadTemplate } from '../services/excelService';
+import { Language } from '@/types';
+import { downloadTemplate } from '@/services/excelService';
 
 interface FileUploadProps {
   onFileSelect: (file: File, period: string) => void;

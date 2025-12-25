@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KPIAnalysisResult, EmployeeKPI, KPIStatus } from '../types';
-import KPITable from './KPITable';
+import { KPIAnalysisResult, EmployeeKPI, KPIStatus } from '@/types';
+import KPITable from '@/components/ui/KPITable';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { Trophy, TrendingUp, Users, AlertTriangle, Download, Loader2 } from 'lucide-react';
-import { exportKPIReport } from '../utils/pdfExport';
+import { exportKPIReport } from '@/utils/pdfExport';
 
 interface DashboardProps {
   data: KPIAnalysisResult;

@@ -1,5 +1,5 @@
 import React from 'react';
-import ProfileView from '@/components/views/ProfileView';
+import ProfileView from '@/components/views/profile/ProfileView';
 import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
 

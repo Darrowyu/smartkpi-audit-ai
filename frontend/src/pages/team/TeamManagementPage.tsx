@@ -1,5 +1,5 @@
 import React from 'react';
-import { TeamManagementView } from '@/components/views/TeamManagementView';
+import { TeamManagementView } from '@/components/views/team/TeamManagementView';
 import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
 

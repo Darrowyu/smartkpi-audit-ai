@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { companiesApi, Company, CreateCompanyData } from '../api/companies.api';
-import { Language } from '../types';
+import { companiesApi, Company, CreateCompanyData } from '@/api/companies.api';
+import { Language } from '@/types';
 import { Building2, Plus, Edit, Trash2, Search } from 'lucide-react';
 
 interface Props {

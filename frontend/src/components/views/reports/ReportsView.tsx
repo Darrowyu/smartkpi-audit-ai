@@ -1,20 +1,20 @@
 import React, { useEffect, useState, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Button } from '../ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FileText, Download, History, Plus, Upload, RefreshCw, Building2 } from 'lucide-react';
-import { Language, AssessmentPeriod } from '../../types';
+import { Language, AssessmentPeriod } from '@/types';
 import { assessmentApi } from '@/api/assessment.api';
 import { reportsApi, PerformanceOverview, DepartmentRanking, TrendData } from '@/api/reports.api';
 import { useToast } from '@/components/ui/use-toast';
-import { PerformanceOverviewCards } from './reports/PerformanceOverviewCards';
-import { EmployeeRankingTable } from './reports/EmployeeRankingTable';
-import { LowPerformanceAlertPanel } from './reports/LowPerformanceAlertPanel';
-import { PerformanceTrendChart } from './reports/PerformanceTrendChart';
+import { PerformanceOverviewCards } from './PerformanceOverviewCards';
+import { EmployeeRankingTable } from './EmployeeRankingTable';
+import { LowPerformanceAlertPanel } from './LowPerformanceAlertPanel';
+import { PerformanceTrendChart } from './PerformanceTrendChart';
 
 interface ReportsViewProps {
   language: Language;

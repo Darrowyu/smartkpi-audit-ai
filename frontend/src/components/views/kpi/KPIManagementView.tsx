@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, CardBody } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/table';
-import { Badge } from '../ui/badge';
+import { Card, CardBody } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Plus, MoreHorizontal } from 'lucide-react';
-import { Language, KPIStatus } from '../../types';
+import { Language, KPIStatus } from '@/types';
 
 interface KPIManagementViewProps {
   language: Language;

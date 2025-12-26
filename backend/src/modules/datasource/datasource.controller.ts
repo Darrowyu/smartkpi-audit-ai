@@ -17,6 +17,16 @@ export class DataSourceController {
     return this.service.getDataSources(req.user.companyId);
   }
 
+  @Get('logs')
+  getSyncLogs(@Request() req, @Query('dataSourceId') dataSourceId?: string) {
+    return this.service.getSyncLogs(req.user.companyId, dataSourceId);
+  }
+
+  @Get('logs/:logId')
+  getSyncStatus(@Param('logId') logId: string) {
+    return this.service.getSyncStatus(logId);
+  }
+
   @Get(':id')
   getDataSource(@Param('id') id: string) {
     return this.service.getDataSource(id);
@@ -40,15 +50,5 @@ export class DataSourceController {
   @Post(':id/sync')
   triggerSync(@Request() req, @Param('id') id: string) {
     return this.service.triggerSync(id, req.user.companyId);
-  }
-
-  @Get('logs')
-  getSyncLogs(@Request() req, @Query('dataSourceId') dataSourceId?: string) {
-    return this.service.getSyncLogs(req.user.companyId, dataSourceId);
-  }
-
-  @Get('logs/:logId')
-  getSyncStatus(@Param('logId') logId: string) {
-    return this.service.getSyncStatus(logId);
   }
 }

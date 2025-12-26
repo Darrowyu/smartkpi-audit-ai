@@ -22,43 +22,43 @@ interface NavItem {
 }
 
 const managerBusinessNavItems: NavItem[] = [
-  { path: '/', icon: Home, labelKey: 'sidebar.home' },
-  { path: '/dashboard', icon: LayoutDashboard, labelKey: 'sidebar.dashboard' },
-  { path: '/kpi-library', icon: Target, labelKey: 'sidebar.kpiLibrary' },
-  { path: '/assessment', icon: Calendar, labelKey: 'sidebar.assessment' },
-  { path: '/assignment', icon: ClipboardList, labelKey: 'sidebar.assignment' },
-  { path: '/data-entry', icon: FileSpreadsheet, labelKey: 'sidebar.dataEntry' },
-  { path: '/data-approval', icon: CheckSquare, labelKey: 'sidebar.dataApproval' },
-  { path: '/checkin', icon: ClipboardCheck, labelKey: 'sidebar.checkin' },
-  { path: '/interview', icon: MessageSquare, labelKey: 'sidebar.interview' },
-  { path: '/reports', icon: FileText, labelKey: 'sidebar.reports' },
+  { path: '/app', icon: Home, labelKey: 'sidebar.home' },
+  { path: '/app/dashboard', icon: LayoutDashboard, labelKey: 'sidebar.dashboard' },
+  { path: '/app/kpi-library', icon: Target, labelKey: 'sidebar.kpiLibrary' },
+  { path: '/app/assessment', icon: Calendar, labelKey: 'sidebar.assessment' },
+  { path: '/app/assignment', icon: ClipboardList, labelKey: 'sidebar.assignment' },
+  { path: '/app/data-entry', icon: FileSpreadsheet, labelKey: 'sidebar.dataEntry' },
+  { path: '/app/data-approval', icon: CheckSquare, labelKey: 'sidebar.dataApproval' },
+  { path: '/app/checkin', icon: ClipboardCheck, labelKey: 'sidebar.checkin' },
+  { path: '/app/interview', icon: MessageSquare, labelKey: 'sidebar.interview' },
+  { path: '/app/reports', icon: FileText, labelKey: 'sidebar.reports' },
 ];
 
 const userPersonalNavItems: NavItem[] = [
-  { path: '/', icon: Home, labelKey: 'sidebar.home' },
-  { path: '/my-dashboard', icon: User, labelKey: 'sidebar.myDashboard' },
-  { path: '/my-kpis', icon: ListChecks, labelKey: 'sidebar.myKPIs' },
-  { path: '/self-evaluation', icon: PenLine, labelKey: 'sidebar.selfEvaluation' },
+  { path: '/app', icon: Home, labelKey: 'sidebar.home' },
+  { path: '/app/my-dashboard', icon: User, labelKey: 'sidebar.myDashboard' },
+  { path: '/app/my-kpis', icon: ListChecks, labelKey: 'sidebar.myKPIs' },
+  { path: '/app/self-evaluation', icon: PenLine, labelKey: 'sidebar.selfEvaluation' },
 ];
 
 const commonPersonalNavItems: NavItem[] = [
-  { path: '/settings', icon: Settings, labelKey: 'sidebar.mySettings' },
+  { path: '/app/settings', icon: Settings, labelKey: 'sidebar.mySettings' },
 ];
 
 const adminNavItems: NavItem[] = [
-  { path: '/group-dashboard', icon: Building2, labelKey: 'sidebar.groupCenter' },
-  { path: '/group-settings', icon: Globe, labelKey: 'sidebar.groupSettings' },
-  { path: '/company-settings', icon: Building, labelKey: 'sidebar.companySettings' },
-  { path: '/team', icon: Users, labelKey: 'sidebar.users' },
-  { path: '/permissions', icon: Shield, labelKey: 'sidebar.permissions' },
+  { path: '/app/group-dashboard', icon: Building2, labelKey: 'sidebar.groupCenter' },
+  { path: '/app/group-settings', icon: Globe, labelKey: 'sidebar.groupSettings' },
+  { path: '/app/company-settings', icon: Building, labelKey: 'sidebar.companySettings' },
+  { path: '/app/team', icon: Users, labelKey: 'sidebar.users' },
+  { path: '/app/permissions', icon: Shield, labelKey: 'sidebar.permissions' },
 ];
 
 const performanceAdminNavItems: NavItem[] = [
-  { path: '/calibration', icon: Scale, labelKey: 'sidebar.calibration' },
-  { path: '/distribution', icon: PieChart, labelKey: 'sidebar.distribution' },
-  { path: '/talent', icon: Grid3X3, labelKey: 'sidebar.talent' },
-  { path: '/salary', icon: DollarSign, labelKey: 'sidebar.salary' },
-  { path: '/datasource', icon: Database, labelKey: 'sidebar.datasource' },
+  { path: '/app/calibration', icon: Scale, labelKey: 'sidebar.calibration' },
+  { path: '/app/distribution', icon: PieChart, labelKey: 'sidebar.distribution' },
+  { path: '/app/talent', icon: Grid3X3, labelKey: 'sidebar.talent' },
+  { path: '/app/salary', icon: DollarSign, labelKey: 'sidebar.salary' },
+  { path: '/app/datasource', icon: Database, labelKey: 'sidebar.datasource' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
@@ -94,7 +94,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
 
   const handleLogout = () => {
     onLogout();
-    navigate('/login');
+    navigate('/', { replace: true }); // 替换 /app 为 /
+    setTimeout(() => navigate('/login'), 0); // 添加 /login 到历史
   };
 
   const NavButton: React.FC<{ item: NavItem; compact?: boolean }> = ({ item, compact }) => {

@@ -88,7 +88,7 @@ const LandingPage: React.FC = () => {
       <WelcomeBanner
         userName={userName}
         stats={welcomeStats}
-        onViewDashboard={() => navigate('/dashboard')}
+        onViewDashboard={() => navigate('/app/dashboard')}
       />
 
       {/* 快速导航 */}

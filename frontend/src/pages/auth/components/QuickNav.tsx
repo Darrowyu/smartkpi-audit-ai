@@ -22,10 +22,10 @@ const iconMap = {
 };
 
 const defaultItems: NavItem[] = [
-  { id: 'dashboard', title: '数据仪表盘', description: '查看详细的KPI数据分析和趋势图表', icon: 'dashboard', path: '/dashboard' },
-  { id: 'kpi', title: 'KPI管理', description: '创建、编辑和跟踪您的关键绩效指标', icon: 'kpi', path: '/kpi-library' },
-  { id: 'team', title: '团队协作', description: '管理团队成员和分配绩效目标', icon: 'team', path: '/team' },
-  { id: 'report', title: '报告中心', description: '生成和导出绩效报告文档', icon: 'report', path: '/reports' },
+  { id: 'dashboard', title: '数据仪表盘', description: '查看详细的KPI数据分析和趋势图表', icon: 'dashboard', path: '/app/dashboard' },
+  { id: 'kpi', title: 'KPI管理', description: '创建、编辑和跟踪您的关键绩效指标', icon: 'kpi', path: '/app/kpi-library' },
+  { id: 'team', title: '团队协作', description: '管理团队成员和分配绩效目标', icon: 'team', path: '/app/team' },
+  { id: 'report', title: '报告中心', description: '生成和导出绩效报告文档', icon: 'report', path: '/app/reports' },
 ];
 
 export const QuickNav: React.FC<QuickNavProps> = ({ items = defaultItems, onNavigate }) => {

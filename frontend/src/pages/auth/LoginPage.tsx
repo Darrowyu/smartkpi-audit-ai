@@ -12,12 +12,13 @@ const LoginPage: React.FC = () => {
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
-            navigate('/', { replace: true });
+            window.location.replace('/app');
         }
-    }, [isAuthenticated, isLoading, navigate]);
+    }, [isAuthenticated, isLoading]);
 
     const handleSuccess = () => {
-        navigate('/', { replace: true });
+        // 使用 location.replace 让 /app 成为历史起点，返回按钮变为不可点击
+        window.location.replace('/app');
     };
 
     if (isLoading) {

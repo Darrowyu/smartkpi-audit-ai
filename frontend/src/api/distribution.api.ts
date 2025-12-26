@@ -24,8 +24,8 @@ export const distributionApi = {
     apiClient.post<DistributionConfig>('/distribution/config', data).then(r => r.data),
   
   validate: (periodId: string) =>
-    apiClient.get<DistributionValidation>(`/distribution/validate/${periodId}`).then(r => r.data),
+    apiClient.get<DistributionValidation>('/distribution/validate', { params: { periodId } }).then(r => r.data),
   
   getStats: (periodId: string) =>
-    apiClient.get(`/distribution/stats/${periodId}`).then(r => r.data),
+    apiClient.get('/distribution/stats', { params: { periodId } }).then(r => r.data),
 };

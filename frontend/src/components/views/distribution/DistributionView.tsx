@@ -43,7 +43,8 @@ export const DistributionView: React.FC = memo(() => {
   const loadConfig = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await distributionApi.getConfig(selectedPeriod || undefined);
+      const periodId = selectedPeriod === 'global' ? undefined : selectedPeriod;
+      const data = await distributionApi.getConfig(periodId);
       if (data) {
         setConfig(data);
         setDistribution(data.distribution || DEFAULT_DISTRIBUTION);
@@ -55,7 +56,10 @@ export const DistributionView: React.FC = memo(() => {
   }, [selectedPeriod]);
 
   const loadValidation = useCallback(async () => {
-    if (!selectedPeriod) return;
+    if (!selectedPeriod || selectedPeriod === 'global') {
+      setValidation(null);
+      return;
+    }
     try {
       const data = await distributionApi.validate(selectedPeriod);
       setValidation(data);
@@ -79,7 +83,8 @@ export const DistributionView: React.FC = memo(() => {
     }
     setSaving(true);
     try {
-      await distributionApi.saveConfig({ periodId: selectedPeriod || undefined, distribution, isEnforced, tolerance });
+      const periodId = selectedPeriod === 'global' ? undefined : selectedPeriod;
+      await distributionApi.saveConfig({ periodId, distribution, isEnforced, tolerance });
       toast({ title: '配置已保存' });
       loadConfig();
       loadValidation();
@@ -102,7 +107,7 @@ export const DistributionView: React.FC = memo(() => {
             <SelectValue placeholder="选择考核周期" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">全局配置</SelectItem>
+            <SelectItem value="global">全局配置</SelectItem>
             {periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -173,7 +178,7 @@ export const DistributionView: React.FC = memo(() => {
               </div>
             </div>
 
-            {validation && selectedPeriod && (
+            {validation && selectedPeriod && selectedPeriod !== 'global' && (
               <div className="mt-6 pt-6 border-t">
                 <h4 className="font-medium mb-4 flex items-center gap-2">
                   {validation.isValid ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <AlertTriangle className="w-5 h-5 text-amber-500" />}

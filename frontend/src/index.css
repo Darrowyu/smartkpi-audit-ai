@@ -213,3 +213,195 @@
 .sidebar-transition {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ============================================
+   Minimalist Modern Design System
+   ============================================ */
+
+/* Design Tokens */
+:root {
+  --mm-background: #FAFAFA;
+  --mm-foreground: #0F172A;
+  --mm-muted: #F1F5F9;
+  --mm-muted-foreground: #64748B;
+  --mm-accent: #0052FF;
+  --mm-accent-secondary: #4D7CFF;
+  --mm-border: #E2E8F0;
+  --mm-card: #FFFFFF;
+}
+
+/* Gradient Text Effect */
+.mm-gradient-text {
+  background: linear-gradient(to right, var(--mm-accent), var(--mm-accent-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Gradient Background */
+.mm-gradient-bg {
+  background: linear-gradient(to right, var(--mm-accent), var(--mm-accent-secondary));
+}
+
+.mm-gradient-bg-135 {
+  background: linear-gradient(135deg, var(--mm-accent), var(--mm-accent-secondary));
+}
+
+/* Accent Shadows */
+.mm-shadow-accent {
+  box-shadow: 0 4px 14px rgba(0, 82, 255, 0.25);
+}
+
+.mm-shadow-accent-lg {
+  box-shadow: 0 8px 24px rgba(0, 82, 255, 0.35);
+}
+
+/* Animations */
+@keyframes mm-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes mm-float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes mm-pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+@keyframes mm-rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes mm-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mm-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mm-animate-float {
+  animation: mm-float 5s ease-in-out infinite;
+}
+
+.mm-animate-float-delayed {
+  animation: mm-float-delayed 4s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.mm-animate-pulse-dot {
+  animation: mm-pulse-dot 2s ease-in-out infinite;
+}
+
+.mm-animate-rotate-slow {
+  animation: mm-rotate-slow 60s linear infinite;
+}
+
+.mm-animate-fade-in-up {
+  animation: mm-fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.mm-animate-scale-in {
+  animation: mm-scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered animations */
+.mm-stagger-1 { animation-delay: 0.1s; opacity: 0; }
+.mm-stagger-2 { animation-delay: 0.2s; opacity: 0; }
+.mm-stagger-3 { animation-delay: 0.3s; opacity: 0; }
+.mm-stagger-4 { animation-delay: 0.4s; opacity: 0; }
+.mm-stagger-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* Dot Pattern Background */
+.mm-dot-pattern {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Gradient Border Effect */
+.mm-gradient-border {
+  position: relative;
+  background: linear-gradient(135deg, var(--mm-accent), var(--mm-accent-secondary));
+  padding: 2px;
+  border-radius: 1rem;
+}
+
+.mm-gradient-border-inner {
+  background: var(--mm-card);
+  border-radius: calc(1rem - 2px);
+  height: 100%;
+  width: 100%;
+}
+
+/* Inverted Section */
+.mm-inverted {
+  background-color: var(--mm-foreground);
+  color: var(--mm-background);
+}
+
+/* Hero Graphic Styles */
+.mm-hero-ring {
+  border: 2px dashed rgba(0, 82, 255, 0.3);
+  border-radius: 50%;
+}
+
+/* Button Hover Lift */
+.mm-btn-lift {
+  transition: all 0.2s ease-out;
+}
+
+.mm-btn-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Card Hover Effect */
+.mm-card-hover {
+  transition: all 0.3s ease-out;
+}
+
+.mm-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient Underline for Hero */
+.mm-gradient-underline {
+  position: relative;
+}
+
+.mm-gradient-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -0.25rem;
+  left: 0;
+  height: 0.75rem;
+  width: 100%;
+  border-radius: 0.125rem;
+  background: linear-gradient(to right, rgba(0, 82, 255, 0.15), rgba(77, 124, 255, 0.1));
+}
+
+@media (min-width: 768px) {
+  .mm-gradient-underline::after {
+    bottom: -0.5rem;
+    height: 1rem;
+  }
+}

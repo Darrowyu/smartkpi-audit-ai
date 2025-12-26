@@ -4,6 +4,9 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
+// Public pages
+const PublicLandingPage = lazy(() => import('@/pages/public/PublicLandingPage'));
+
 // Auth pages
 const LandingPage = lazy(() => import('@/pages/auth/LandingPage'));
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
@@ -73,6 +76,10 @@ const SuspenseWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
 export const router = createBrowserRouter([
     {
+        path: '/',
+        element: <SuspenseWrapper><PublicLandingPage /></SuspenseWrapper>,
+    },
+    {
         path: '/login',
         element: <SuspenseWrapper><LoginPage /></SuspenseWrapper>,
     },
@@ -85,7 +92,7 @@ export const router = createBrowserRouter([
         element: <SuspenseWrapper><ResetPasswordPage /></SuspenseWrapper>,
     },
     {
-        path: '/',
+        path: '/app',
         element: <MainLayout />,
         children: [
             { index: true, element: <SuspenseWrapper><LandingPage /></SuspenseWrapper> },

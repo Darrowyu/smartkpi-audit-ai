@@ -178,6 +178,11 @@ export class AssessmentController {
     );
   }
 
+  @Get('submissions')
+  async getSubmissions(@Query('periodId') periodId: string, @Request() req: any) {
+    return this.assessmentService.findSubmissions(periodId, req.user.companyId);
+  }
+
   @Get('submissions/:id')
   async getSubmission(@Param('id') id: string, @Request() req: any) {
     return this.assessmentService.getSubmissionEntries(id, req.user.companyId);

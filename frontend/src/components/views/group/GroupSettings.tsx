@@ -27,17 +27,15 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconBg }) => (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between">
-            <div className="flex-1">
-                <p className="text-sm text-slate-500 mb-1">{title}</p>
-                <p className="text-2xl font-bold text-slate-900">{value}</p>
-                {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
-            </div>
-            <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', iconBg)}>
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-slate-500">{title}</p>
+            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconBg)}>
                 {icon}
             </div>
         </div>
+        <p className="text-xl font-bold text-slate-900">{value}</p>
+        {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
     </div>
 );
 
@@ -127,30 +125,30 @@ const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
             </div>
 
             {/* 统计卡片 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="集团名称"
                     value={group.name}
-                    icon={<Globe className="w-6 h-6 text-[#1E4B8E]" />}
+                    icon={<Globe className="w-4 h-4 text-[#1E4B8E]" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard
                     title="子公司数量"
                     value={group._count?.companies || 0}
                     subtitle="活跃运营中"
-                    icon={<Building2 className="w-6 h-6 text-[#5B9BD5]" />}
+                    icon={<Building2 className="w-4 h-4 text-[#5B9BD5]" />}
                     iconBg="bg-sky-50"
                 />
                 <StatCard
                     title="创建时间"
                     value={new Date(group.createdAt).toLocaleDateString('zh-CN')}
-                    icon={<Calendar className="w-6 h-6 text-emerald-600" />}
+                    icon={<Calendar className="w-4 h-4 text-emerald-600" />}
                     iconBg="bg-emerald-50"
                 />
                 <StatCard
-                    title="状态"
+                    title="运营状态"
                     value={group.isActive ? '正常运营' : '已停用'}
-                    icon={<Shield className="w-6 h-6 text-amber-500" />}
+                    icon={<Shield className="w-4 h-4 text-amber-500" />}
                     iconBg="bg-amber-50"
                 />
             </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { kpiAnalysisApi, AnalysisListItem } from '@/api/kpi-analysis.api';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Calendar, FileText, Trash2, ArrowRight, Clock, Loader2 } from 'lucide-react';
 import { Language } from '@/types';
 
@@ -13,6 +14,7 @@ interface HistoryViewProps {
 const HistoryView: React.FC<HistoryViewProps> = ({ language }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [history, setHistory] = useState<AnalysisListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,12 @@ const HistoryView: React.FC<HistoryViewProps> = ({ language }) => {
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm(t('confirmDeleteAnalysis'))) return;
+    const confirmed = await confirm({
+      title: t('common.confirm'),
+      description: t('confirmDeleteAnalysis'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await kpiAnalysisApi.deleteAnalysis(id);
       setHistory(prev => prev.filter(item => item.id !== id));

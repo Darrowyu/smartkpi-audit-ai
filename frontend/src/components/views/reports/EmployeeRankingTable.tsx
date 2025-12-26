@@ -1,5 +1,6 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { TableRowSkeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +72,7 @@ export const EmployeeRankingTable: React.FC<EmployeeRankingTableProps> = memo(({
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={5} className="text-center py-8">{t('loading', '加载中...')}</TableCell></TableRow>
+                            Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} columns={5} />)
                         ) : employees.length === 0 ? (
                             <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">{t('reports.noData', '暂无数据')}</TableCell></TableRow>
                         ) : employees.map((emp) => {

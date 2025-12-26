@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { usersApi, User, CreateUserData, UpdateUserData } from '@/api/users.api';
 import { getDepartments, Department } from '@/api/departments.api';
 import { companiesApi, Company } from '@/api/companies.api';
+import { useConfirm } from '@/components/ui/confirm-dialog';
+import { TableSkeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
 import { Language, UserRole } from '@/types';
 import { Users, Plus, Edit, Trash2, Search, Shield, UserCheck, X } from 'lucide-react';
@@ -14,6 +16,7 @@ interface Props {
 const UserManagement: React.FC<Props> = ({ language }) => {
   const { user: currentUser } = useAuth();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -96,7 +99,12 @@ const UserManagement: React.FC<Props> = ({ language }) => {
   };
 
   const handleDelete = async (user: User) => {
-    if (!confirm(t('confirmDeleteUser', { name: user.username }))) return;
+    const confirmed = await confirm({
+      title: t('common.confirm'),
+      description: t('confirmDeleteUser', { name: user.username }),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await usersApi.deleteUser(user.id);
       loadUsers();
@@ -163,7 +171,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
       {/* 用户列表 */}
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-500">{t('loading')}</div>
+          <div className="p-4"><TableSkeleton rows={5} columns={5} /></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

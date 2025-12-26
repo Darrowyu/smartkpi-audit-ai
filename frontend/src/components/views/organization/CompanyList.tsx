@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { companiesApi, Company, CreateCompanyData } from '@/api/companies.api';
+import { useConfirm } from '@/components/ui/confirm-dialog';
+import { TableSkeleton } from '@/components/ui/skeleton';
 import { Language } from '@/types';
 import { Building2, Plus, Edit, Trash2, Search } from 'lucide-react';
 
@@ -10,6 +12,7 @@ interface Props {
 
 const CompanyList: React.FC<Props> = ({ language }) => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -66,7 +69,12 @@ const CompanyList: React.FC<Props> = ({ language }) => {
   };
 
   const handleDelete = async (company: Company) => {
-    if (!confirm(t('confirmDeleteCompany', { name: company.name }))) return;
+    const confirmed = await confirm({
+      title: t('common.confirm'),
+      description: t('confirmDeleteCompany', { name: company.name }),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await companiesApi.deleteCompany(company.id);
       loadCompanies();
@@ -112,7 +120,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
 
       {/* 表格 */}
       {loading ? (
-        <div className="text-center py-8 text-slate-500">{t('loading')}</div>
+        <div className="p-4"><TableSkeleton rows={5} columns={5} /></div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">

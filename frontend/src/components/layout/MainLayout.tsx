@@ -61,7 +61,7 @@ export const MainLayout: React.FC = () => {
     }
 
     return (
-        <div className="flex min-h-screen bg-slate-100">
+        <div className="flex h-screen bg-slate-100 overflow-hidden">
             {/* 移动端遮罩层 */}
             <div
                 className={`sidebar-overlay lg:hidden ${sidebarOpen ? 'sidebar-overlay-visible' : 'sidebar-overlay-hidden'}`}
@@ -70,10 +70,10 @@ export const MainLayout: React.FC = () => {
             />
 
             {/* 侧边栏 - 桌面端固定，移动端抽屉式 */}
-            <div className={`
-                fixed top-0 left-0 z-50 h-screen
-                lg:translate-x-0 lg:static lg:z-auto
-                sidebar-transition
+            <aside className={`
+                fixed inset-y-0 left-0 z-50
+                lg:relative lg:z-auto
+                sidebar-transition flex-shrink-0
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 <Sidebar
@@ -82,10 +82,10 @@ export const MainLayout: React.FC = () => {
                     onLogout={logout}
                     onClose={() => setSidebarOpen(false)}
                 />
-            </div>
+            </aside>
 
             {/* 主内容区 */}
-            <main className="flex-1 min-w-0 lg:ml-0">
+            <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
                 {/* 顶部工具栏 */}
                 <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-slate-200">
                     <div className="flex items-center px-4 sm:px-6 py-3">
@@ -124,8 +124,8 @@ export const MainLayout: React.FC = () => {
                     </div>
                 </div>
 
-                {/* 内容区域 - 响应式内边距 */}
-                <div className="p-4 sm:p-6 lg:p-8">
+                {/* 内容区域 - 响应式内边距，可滚动 */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                     <Outlet />
                 </div>
             </main>

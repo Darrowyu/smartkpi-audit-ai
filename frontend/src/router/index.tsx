@@ -24,6 +24,7 @@ const AssignmentPage = lazy(() => import('@/pages/assignment/AssignmentPage'));
 
 // Data Entry
 const DataEntryPage = lazy(() => import('@/pages/data-entry/DataEntryPage'));
+const DataApprovalPage = lazy(() => import('@/pages/data-approval/DataApprovalPage'));
 
 // Group
 const GroupDashboardPage = lazy(() => import('@/pages/group/GroupDashboardPage'));
@@ -84,6 +85,7 @@ export const router = createBrowserRouter([
             { path: 'assessment', element: <ProtectedRoute permission="period:view"><SuspenseWrapper><AssessmentPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'assignment', element: <ProtectedRoute permission="period:view" adminOnly><SuspenseWrapper><AssignmentPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'data-entry', element: <ProtectedRoute permission="data:view"><SuspenseWrapper><DataEntryPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'data-approval', element: <ProtectedRoute permission="data:approve" adminOnly><SuspenseWrapper><DataApprovalPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'reports', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><ReportsPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'team', element: <ProtectedRoute permission="user:view" adminOnly><SuspenseWrapper><TeamManagementPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'permissions', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><PermissionsPage /></SuspenseWrapper></ProtectedRoute> },

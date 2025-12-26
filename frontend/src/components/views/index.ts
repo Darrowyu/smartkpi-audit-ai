@@ -16,3 +16,4 @@ export * from './organization/OrganizationManagement';
 export * from './my-dashboard/MyDashboardView';
 export * from './my-kpis/MyKPIsView';
 export * from './self-evaluation/SelfEvaluationView';
+export * from './data-approval/DataApprovalView';

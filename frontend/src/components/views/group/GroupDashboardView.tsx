@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
+import { CardSkeleton, TableSkeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useAuth } from '@/context/AuthContext';
 import { groupsApi, GroupStats, CompanyPerformance } from '@/api/groups.api';
 import { cn } from '@/lib/utils';
@@ -22,15 +24,6 @@ const COLORS = {
     chart: ['#10b981', '#5B9BD5', '#f59e0b', '#ef4444'],
 };
 
-// 模拟数据
-const MOCK_PERFORMANCES: CompanyPerformance[] = [
-    { companyId: '1', companyName: '东莞分公司', periodName: '2024年Q4', totalEmployees: 45, avgScore: 88.5, excellent: 15, good: 20, average: 8, poor: 2 },
-    { companyId: '2', companyName: '深圳分公司', periodName: '2024年Q4', totalEmployees: 38, avgScore: 85.2, excellent: 12, good: 16, average: 7, poor: 3 },
-    { companyId: '3', companyName: '广州分公司', periodName: '2024年Q4', totalEmployees: 32, avgScore: 82.8, excellent: 8, good: 15, average: 6, poor: 3 },
-    { companyId: '4', companyName: '佛山分公司', periodName: '2024年Q4', totalEmployees: 25, avgScore: 80.1, excellent: 6, good: 12, average: 5, poor: 2 },
-    { companyId: '5', companyName: '惠州分公司', periodName: '2024年Q4', totalEmployees: 16, avgScore: 78.6, excellent: 3, good: 8, average: 3, poor: 2 },
-];
-
 // 统计卡片
 interface StatCardProps {
     title: string;
@@ -41,24 +34,16 @@ interface StatCardProps {
     trend?: { value: number; isUp: boolean };
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconBg, trend }) => (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between">
-            <div className="flex-1">
-                <p className="text-sm text-slate-500 mb-1">{title}</p>
-                <p className="text-2xl font-bold text-slate-900">{value}</p>
-                {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
-                {trend && (
-                    <p className={cn('text-xs mt-1 flex items-center gap-1', trend.isUp ? 'text-emerald-600' : 'text-red-500')}>
-                        {trend.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                        {trend.isUp ? '+' : ''}{trend.value}% 较上期
-                    </p>
-                )}
-            </div>
-            <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', iconBg)}>
+const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconBg }) => (
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-slate-500">{title}</p>
+            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconBg)}>
                 {icon}
             </div>
         </div>
+        <p className="text-2xl font-bold text-slate-900">{value}</p>
+        {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
     </div>
 );
 
@@ -97,8 +82,8 @@ export const GroupDashboardView: React.FC = () => {
     const { user } = useAuth();
     const { toast } = useToast();
     const [groupStats, setGroupStats] = useState<GroupStats | null>(null);
-    const [companyPerformances, setCompanyPerformances] = useState<CompanyPerformance[]>(MOCK_PERFORMANCES);
-    const [loading, setLoading] = useState(false);
+    const [companyPerformances, setCompanyPerformances] = useState<CompanyPerformance[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const groupId = user?.groupId || (user as any)?.company?.groupId;
 
@@ -106,17 +91,17 @@ export const GroupDashboardView: React.FC = () => {
         setLoading(true);
         try {
             const performances = await groupsApi.getGroupPerformance();
-            if (performances?.length) setCompanyPerformances(performances);
+            setCompanyPerformances(performances || []);
             if (groupId) {
                 const stats = await groupsApi.getGroupStats(groupId);
                 setGroupStats(stats);
             }
         } catch {
-            // 使用模拟数据
+            toast({ variant: 'destructive', title: '加载数据失败' });
         } finally {
             setLoading(false);
         }
-    }, [groupId]);
+    }, [groupId, toast]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
@@ -155,39 +140,42 @@ export const GroupDashboardView: React.FC = () => {
             </div>
 
             {/* 统计卡片 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
+                </div>
+            ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="子公司数量"
                     value={groupStats?.totalCompanies || companyPerformances.length}
                     subtitle="活跃运营中"
-                    icon={<Building2 className="w-6 h-6 text-[#1E4B8E]" />}
+                    icon={<Building2 className="w-4 h-4 text-[#1E4B8E]" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard
                     title="总员工数"
                     value={totalEmployees}
                     subtitle="覆盖所有子公司"
-                    icon={<Users className="w-6 h-6 text-[#5B9BD5]" />}
+                    icon={<Users className="w-4 h-4 text-[#5B9BD5]" />}
                     iconBg="bg-sky-50"
-                    trend={{ value: 3.2, isUp: true }}
                 />
                 <StatCard
                     title="集团平均分"
-                    value={`${avgScore}分`}
-                    subtitle={avgScore >= 80 ? '整体表现优秀' : '需要关注'}
-                    icon={<Trophy className="w-6 h-6 text-amber-500" />}
+                    value={avgScore > 0 ? `${avgScore}分` : '-'}
+                    subtitle={avgScore >= 80 ? '表现优秀' : avgScore > 0 ? '需关注' : '暂无数据'}
+                    icon={<Trophy className="w-4 h-4 text-amber-500" />}
                     iconBg="bg-amber-50"
-                    trend={{ value: 2.1, isUp: true }}
                 />
                 <StatCard
                     title="待改进人数"
                     value={totalPoor}
-                    subtitle={`占比 ${totalEmployees > 0 ? Math.round(totalPoor / totalEmployees * 100) : 0}%`}
-                    icon={<AlertTriangle className="w-6 h-6 text-red-500" />}
+                    subtitle={`占比${totalEmployees > 0 ? Math.round(totalPoor / totalEmployees * 100) : 0}%`}
+                    icon={<AlertTriangle className="w-4 h-4 text-red-500" />}
                     iconBg="bg-red-50"
-                    trend={{ value: 1.5, isUp: false }}
                 />
             </div>
+            )}
 
             {/* 图表区域 */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -232,6 +220,15 @@ export const GroupDashboardView: React.FC = () => {
                     <CardDescription>各子公司详细绩效数据</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {loading ? (
+                        <TableSkeleton rows={5} columns={6} />
+                    ) : companyPerformances.length === 0 ? (
+                        <EmptyState
+                            icon={Building2}
+                            title="暂无子公司数据"
+                            description="请先添加子公司或等待数据同步"
+                        />
+                    ) : (
                     <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
@@ -245,13 +242,7 @@ export const GroupDashboardView: React.FC = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {companyPerformances.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                                            暂无数据
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
+                                {
                                     companyPerformances
                                         .sort((a, b) => b.avgScore - a.avgScore)
                                         .map((company, index) => (
@@ -283,10 +274,11 @@ export const GroupDashboardView: React.FC = () => {
                                                 </TableCell>
                                             </TableRow>
                                         ))
-                                )}
+                                }
                             </TableBody>
                         </Table>
                     </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

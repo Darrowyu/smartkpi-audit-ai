@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { CardSkeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { apiClient } from '@/api/client';
 
 // 类型定义
@@ -184,7 +186,7 @@ const EntryCard: React.FC<EntryCardProps> = ({
                     </div>
 
                     {/* 展开/收起按钮 */}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 ml-2 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 ml-2 flex-shrink-0" aria-label={expanded ? '收起' : '展开'}>
                         {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
                 </div>
@@ -691,16 +693,20 @@ export const DataEntryView: React.FC = () => {
 
                     {/* 录入卡片列表 */}
                     {loading ? (
-                        <div className="text-center py-20 text-slate-500">加载中...</div>
-                    ) : manualEntries.length === 0 ? (
-                        <div className="text-center py-20">
-                            <FileSpreadsheet className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                            <p className="text-slate-500 mb-2">暂无录入记录</p>
-                            <p className="text-sm text-slate-400 mb-4">点击"添加记录"开始录入数据</p>
-                            <Button onClick={addEntry}>
-                                <Plus className="mr-2 h-4 w-4" /> 添加第一条记录
-                            </Button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
                         </div>
+                    ) : manualEntries.length === 0 ? (
+                        <EmptyState
+                            icon={FileSpreadsheet}
+                            title="暂无录入记录"
+                            description="点击下方按钮开始录入数据"
+                            action={
+                                <Button onClick={addEntry}>
+                                    <Plus className="mr-2 h-4 w-4" /> 添加第一条记录
+                                </Button>
+                            }
+                        />
                     ) : (
                         <div className="space-y-3">
                             {manualEntries.map((entry, index) => (

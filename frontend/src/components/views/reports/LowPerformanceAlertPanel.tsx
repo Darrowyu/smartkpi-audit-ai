@@ -1,6 +1,7 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle, TrendingDown } from 'lucide-react';
 import { reportsApi, EmployeeRanking } from '@/api/reports.api';
 
@@ -44,7 +45,20 @@ export const LowPerformanceAlertPanel: React.FC<LowPerformanceAlertPanelProps> =
             </CardHeader>
             <CardContent>
                 {loading ? (
-                    <div className="text-center py-4 text-muted-foreground">{t('loading')}</div>
+                    <div className="space-y-3">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                    <div className="space-y-1">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-3 w-16" />
+                                    </div>
+                                </div>
+                                <Skeleton className="h-6 w-12" />
+                            </div>
+                        ))}
+                    </div>
                 ) : alerts.length === 0 ? (
                     <div className="text-center py-6 text-green-600">
                         <div className="text-2xl mb-2">🎉</div>

@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, Users, Calendar, RefreshCw } from 'lucide-react';
+import { Plus, FileText, Users, Calendar, RefreshCw, Calculator, Loader2 } from 'lucide-react';
 import { assessmentApi } from '@/api/assessment.api';
 import { reportsApi, DepartmentRanking, TrendData, EmployeeRanking } from '@/api/reports.api';
+import { calculationApi } from '@/api/calculation.api';
 import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsManager } from '@/hooks/usePermission';
@@ -37,6 +38,7 @@ export const DashboardView: React.FC = () => {
   const [deptRanking, setDeptRanking] = useState<DepartmentRanking[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [employeeRanking, setEmployeeRanking] = useState<EmployeeRanking[]>([]);
+  const [isCalculating, setIsCalculating] = useState(false);
   const { toast } = useToast();
   const isManager = useIsManager();
 
@@ -106,6 +108,27 @@ export const DashboardView: React.FC = () => {
     }
   };
 
+  const handleCalculate = useCallback(async () => {
+    if (!selectedPeriod) return;
+    setIsCalculating(true);
+    try {
+      const result = await calculationApi.executeCalculation(selectedPeriod);
+      toast({
+        title: '计算完成',
+        description: `已计算 ${result.employeeCount} 名员工、${result.departmentCount} 个部门的绩效`,
+      });
+      await loadPeriodData(selectedPeriod);
+    } catch (e: any) {
+      toast({
+        variant: 'destructive',
+        title: '计算失败',
+        description: e.response?.data?.message || '请确保有已审批的数据提交',
+      });
+    } finally {
+      setIsCalculating(false);
+    }
+  }, [selectedPeriod, toast]);
+
   const statsData: StatsData = useMemo(() => {
     if (!overview) {
       return {
@@ -123,11 +146,7 @@ export const DashboardView: React.FC = () => {
   }, [overview]);
 
   const chartData: TrendDataPoint[] = useMemo(() => {
-    if (trendData.length === 0) {
-      return ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月'].map((month, i) => ({
-        month, actual: 50 + i * 5 + Math.floor(Math.random() * 10), target: 75
-      }));
-    }
+    if (trendData.length === 0) return [];
     return trendData.map((item, idx) => ({
       month: item.period || `${idx + 1}月`,
       actual: item.avgScore,
@@ -136,14 +155,7 @@ export const DashboardView: React.FC = () => {
   }, [trendData]);
 
   const teamMembers: TeamMember[] = useMemo(() => {
-    if (employeeRanking.length === 0) {
-      return [
-        { id: '1', name: '张明', role: '产品经理', progress: 92, completed: 11, total: 12 },
-        { id: '2', name: '李华', role: '开发工程师', progress: 78, completed: 7, total: 9 },
-        { id: '3', name: '王芳', role: '设计师', progress: 85, completed: 17, total: 20 },
-        { id: '4', name: '刘强', role: '运营经理', progress: 65, completed: 13, total: 20 },
-      ];
-    }
+    if (employeeRanking.length === 0) return [];
     return employeeRanking.slice(0, 4).map((emp, idx) => ({
       id: emp.employeeId || `emp-${idx}`,
       name: emp.employeeName,
@@ -154,20 +166,11 @@ export const DashboardView: React.FC = () => {
     }));
   }, [employeeRanking]);
 
-  const keyMetrics: KeyMetric[] = useMemo(() => [
-    { id: '1', name: '季度销售额', currentValue: 850000, targetValue: 1000000, unit: '¥', status: 'normal' as const, deadline: '2024-03-31' },
-    { id: '2', name: '客户满意度', currentValue: 4.2, targetValue: 4.5, unit: '分', status: 'warning' as const, deadline: '2024-03-31' },
-    { id: '3', name: '新客户获取', currentValue: 45, targetValue: 80, unit: '个', status: 'late' as const, deadline: '2024-03-31' },
-    { id: '4', name: '产品上线数', currentValue: 3, targetValue: 4, unit: '个', status: 'normal' as const, deadline: '2024-03-31' },
-  ], []);
+  // TODO: 后续从API获取真实的关键指标数据
+  const keyMetrics: KeyMetric[] = useMemo(() => [], []);
 
-  const recentActivities: Activity[] = useMemo(() => [
-    { id: '1', type: 'complete', title: '完成季度报告', description: 'Q4销售分析报告已提交', time: '10分钟前' },
-    { id: '2', type: 'alert', title: 'KPI预警', description: '客户满意度指标接近风险线', time: '1小时前' },
-    { id: '3', type: 'milestone', title: '达成里程碑', description: '新客户获取超过40个', time: '2小时前' },
-    { id: '4', type: 'team', title: '团队更新', description: '王芳完成了设计任务', time: '3小时前' },
-    { id: '5', type: 'kpi', title: 'KPI调整', description: '产品上线目标已更新', time: '5小时前' },
-  ], []);
+  // TODO: 后续从API获取真实的活动记录
+  const recentActivities: Activity[] = useMemo(() => [], []);
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-8">
@@ -191,6 +194,18 @@ export const DashboardView: React.FC = () => {
           </Select>
           {isManager && (
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <Button
+                onClick={handleCalculate}
+                disabled={isCalculating || !selectedPeriod}
+                className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                {isCalculating ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Calculator className="w-4 h-4 mr-1" />
+                )}
+                <span className="hidden xs:inline">{isCalculating ? '计算中...' : '计算绩效'}</span>
+              </Button>
               <Button className="flex-1 sm:flex-none bg-[#1E4B8E] hover:bg-[#163a6e] text-white">
                 <Plus className="w-4 h-4 mr-1" /> <span className="hidden xs:inline">新建</span>KPI
               </Button>
@@ -205,7 +220,7 @@ export const DashboardView: React.FC = () => {
               </Button>
             </div>
           )}
-          <Button variant="ghost" size="icon" onClick={handleRefresh} className="ml-auto sm:ml-0">
+          <Button variant="ghost" size="icon" onClick={handleRefresh} className="ml-auto sm:ml-0" aria-label="刷新数据">
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>

@@ -133,7 +133,7 @@ export const AnalysisDetailView: React.FC = memo(() => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/history')}><ArrowLeft className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/history')} aria-label="返回历史记录"><ArrowLeft className="h-5 w-5" /></Button>
                     <div>
                         <h2 className="text-2xl font-bold">{analysis.file.originalName}</h2>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
@@ -213,7 +213,7 @@ export const AnalysisDetailView: React.FC = memo(() => {
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="text-right"><div className="text-4xl font-bold" style={{ color: statusConfig[selectedEmployee.status]?.color }}>{selectedEmployee.totalScore}%</div><Badge style={{ backgroundColor: `${statusConfig[selectedEmployee.status]?.color}20`, color: statusConfig[selectedEmployee.status]?.color }}>{statusConfig[selectedEmployee.status]?.label}</Badge></div>
-                                    <Button variant="ghost" size="icon" onClick={() => setSelectedEmployee(null)}><X className="h-5 w-5" /></Button>
+                                    <Button variant="ghost" size="icon" onClick={() => setSelectedEmployee(null)} aria-label="关闭详情"><X className="h-5 w-5" /></Button>
                                 </div>
                             </div>
                         </CardHeader>

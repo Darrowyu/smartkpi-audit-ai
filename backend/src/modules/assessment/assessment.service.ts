@@ -172,6 +172,34 @@ export class AssessmentService {
 
   // ==================== Submission 数据提交 ====================
 
+  /** 查询提交列表 */
+  async findSubmissions(periodId: string, companyId: string) {
+    const submissions = await this.prisma.dataSubmission.findMany({
+      where: { companyId, ...(periodId && { periodId }) },
+      include: {
+        period: { select: { name: true } },
+        _count: { select: { dataEntries: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    // 获取用户信息
+    const userIds = [
+      ...new Set(submissions.flatMap(s => [s.submittedById, s.approvedById].filter(Boolean))),
+    ] as string[];
+    const users = userIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, username: true },
+        })
+      : [];
+    const userMap = new Map(users.map(u => [u.id, u]));
+    return submissions.map(s => ({
+      ...s,
+      submittedBy: s.submittedById ? userMap.get(s.submittedById) : null,
+      approvedBy: s.approvedById ? userMap.get(s.approvedById) : null,
+    }));
+  }
+
   /** 创建数据提交 */
   async createSubmission(
     dto: CreateSubmissionDto,

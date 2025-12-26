@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Plus, Search, Edit2, Trash2, X } from 'lucide-react';
 import { getDepartments, createDepartment, updateDepartment, deleteDepartment, Department } from '@/api/departments.api';
+import { useConfirm } from '@/components/ui/confirm-dialog';
+import { TableSkeleton } from '@/components/ui/skeleton';
 import { Language } from '@/types';
 
 interface Props {
@@ -10,6 +12,7 @@ interface Props {
 
 const DepartmentManagement: React.FC<Props> = ({ language }) => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,7 +64,12 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('confirmDeleteDepartment'))) return;
+    const confirmed = await confirm({
+      title: t('common.confirm'),
+      description: t('confirmDeleteDepartment'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await deleteDepartment(id);
       loadDepartments();
@@ -110,9 +118,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
 
       {/* Table */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
+        <div className="p-4"><TableSkeleton rows={5} columns={4} /></div>
       ) : filteredDepts.length === 0 ? (
         <div className="text-center py-12 text-gray-500">{t('noDepartmentsFound')}</div>
       ) : (

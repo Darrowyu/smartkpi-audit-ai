@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { UserRole } from '@/types';
@@ -137,6 +138,7 @@ export const PermissionsView: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [activeModule, setActiveModule] = useState('kpi-library');
     const { toast } = useToast();
+    const confirm = useConfirm();
 
     useEffect(() => { loadData(); }, []);
 
@@ -178,7 +180,12 @@ export const PermissionsView: React.FC = () => {
     };
 
     const handleReset = async () => {
-        if (!confirm('确定要重置为默认权限配置吗？')) return;
+        const confirmed = await confirm({
+            title: '重置权限',
+            description: '确定要重置为默认权限配置吗？',
+            variant: 'destructive',
+        });
+        if (!confirmed) return;
         try {
             await permissionsApi.resetToDefault();
             toast({ title: '重置成功' });

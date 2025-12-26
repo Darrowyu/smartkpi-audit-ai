@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Plus, MoreHorizontal, Loader2 } from 'lucide-react';
+import { TableSkeleton } from '@/components/ui/skeleton';
 import { Language, KPIStatus, KPIDefinition } from '@/types';
 import { kpiLibraryApi } from '@/api/kpi-library.api';
 import { useToast } from '@/components/ui/use-toast';
@@ -119,9 +120,7 @@ export const KPIManagementView: React.FC<KPIManagementViewProps> = ({ language }
       {/* KPI Table */}
       <Card>
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-          </div>
+          <div className="p-4"><TableSkeleton rows={5} columns={6} /></div>
         ) : (
         <Table>
           <TableHeader>

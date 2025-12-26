@@ -11,6 +11,8 @@ export interface User {
   isActive: boolean;
   departmentId?: string;
   department?: { id: string; name: string };
+  linkedEmployeeId?: string;
+  linkedEmployee?: { id: string; name: string; employeeId: string };
   phoneNumber?: string;
   language: string;
   lastLoginAt?: string;
@@ -27,6 +29,7 @@ export interface CreateUserData {
   role: UserRole;
   phoneNumber?: string;
   departmentId?: string;
+  linkedEmployeeId?: string;
   language?: string;
 }
 
@@ -38,6 +41,7 @@ export interface UpdateUserData {
   isActive?: boolean;
   phoneNumber?: string;
   departmentId?: string;
+  linkedEmployeeId?: string | null;
   password?: string;
   language?: string;
 }

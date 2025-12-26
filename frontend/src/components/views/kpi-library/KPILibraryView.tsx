@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
 import {
     Plus, Search, Pencil, Trash2, Upload, Download, Filter,
     BarChart3, Target, TrendingUp, CheckCircle2, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
+import { CardSkeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,6 +31,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
@@ -136,10 +140,10 @@ const KPICard: React.FC<KPICardProps> = ({ kpi, onEdit, onDelete }) => {
                     <span className="text-sm text-slate-500 font-medium">{kpi.code}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(kpi)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(kpi)} aria-label="编辑指标">
                         <Pencil className="h-4 w-4 text-slate-400" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(kpi.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(kpi.id)} aria-label="删除指标">
                         <Trash2 className="h-4 w-4 text-slate-400" />
                     </Button>
                 </div>
@@ -208,11 +212,13 @@ export const KPILibraryView: React.FC = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingKPI, setEditingKPI] = useState<KPIDefinition | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearch = useDebounce(searchTerm, 300);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [selectedStatus, setSelectedStatus] = useState<string>('all');
     const [selectedFrequency, setSelectedFrequency] = useState<string>('all');
 
     const { toast } = useToast();
+    const confirm = useConfirm();
 
     const kpiSchema = z.object({
         code: z.string().min(1, t('kpiLibrary.enterKpiCode')),
@@ -248,21 +254,21 @@ export const KPILibraryView: React.FC = () => {
         },
     });
 
-    const fetchKPIs = async () => {
+    const fetchKPIs = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await kpiLibraryApi.findAll({ search: searchTerm });
+            const res = await kpiLibraryApi.findAll({ search: debouncedSearch });
             setKpis(res.data);
         } catch (_error) {
             toast({ variant: 'destructive', title: t('common.loadFailed') });
         } finally {
             setLoading(false);
         }
-    };
+    }, [debouncedSearch, toast, t]);
 
     useEffect(() => {
         fetchKPIs();
-    }, [searchTerm]);
+    }, [fetchKPIs]);
 
     // 过滤后的KPI列表
     const filteredKpis = useMemo(() => {
@@ -334,7 +340,12 @@ export const KPILibraryView: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm(t('kpiLibrary.deleteConfirm'))) return;
+        const confirmed = await confirm({
+            title: t('common.confirm'),
+            description: t('kpiLibrary.deleteConfirm'),
+            variant: 'destructive',
+        });
+        if (!confirmed) return;
         try {
             await kpiLibraryApi.remove(id);
             toast({ title: t('kpiLibrary.deleteSuccess') });
@@ -465,15 +476,20 @@ export const KPILibraryView: React.FC = () => {
 
             {/* KPI卡片网格 */}
             {loading ? (
-                <div className="text-center py-20 text-slate-500">加载中...</div>
-            ) : filteredKpis.length === 0 ? (
-                <div className="text-center py-20 text-slate-500">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                    <p>暂无指标数据</p>
-                    <Button className="mt-4" onClick={() => { setEditingKPI(null); form.reset(); setIsDialogOpen(true); }}>
-                        <Plus className="mr-2 h-4 w-4" /> 创建第一个指标
-                    </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
                 </div>
+            ) : filteredKpis.length === 0 ? (
+                <EmptyState
+                    icon={BarChart3}
+                    title="暂无指标数据"
+                    description="开始创建您的第一个KPI指标"
+                    action={
+                        <Button className="mt-2" onClick={() => { setEditingKPI(null); form.reset(); setIsDialogOpen(true); }}>
+                            <Plus className="mr-2 h-4 w-4" /> 创建第一个指标
+                        </Button>
+                    }
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredKpis.map((kpi) => (

@@ -12,13 +12,23 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { TableRowSkeleton } from '@/components/ui/skeleton';
 import { usersApi, User } from '@/api/users.api';
+import { apiClient } from '@/api/client';
 import { UserRole, Language } from '@/types';
 import { cn } from '@/lib/utils';
+
+interface Employee {
+    id: string;
+    employeeId: string;
+    name: string;
+    department?: { name: string };
+}
 
 interface TeamManagementViewProps {
     language: Language;
@@ -31,6 +41,7 @@ type UserFormValues = {
     firstName?: string;
     lastName?: string;
     role: UserRole;
+    linkedEmployeeId?: string;
 };
 
 // 统计卡片
@@ -79,12 +90,14 @@ const getRoleName = (role: UserRole) => {
 
 export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
     const { t } = useTranslation();
+    const { toast } = useToast();
+    const confirm = useConfirm();
     const [users, setUsers] = useState<User[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
-    const { toast } = useToast();
 
     const userSchema = z.object({
         username: z.string().min(2, t('teamView.usernameMinLength')),
@@ -93,6 +106,7 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
         firstName: z.string().optional(),
         lastName: z.string().optional(),
         role: z.enum([UserRole.SUPER_ADMIN, UserRole.GROUP_ADMIN, UserRole.MANAGER, UserRole.USER]),
+        linkedEmployeeId: z.string().optional(),
     });
 
     const form = useForm<UserFormValues>({
@@ -111,6 +125,19 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
             setLoading(false);
         }
     };
+
+    const fetchEmployees = async () => {
+        try {
+            const res = await apiClient.get('/employees');
+            setEmployees(res.data?.data || []);
+        } catch {
+            // 静默处理，员工列表加载失败不影响主功能
+        }
+    };
+
+    useEffect(() => {
+        fetchEmployees();
+    }, []);
 
     useEffect(() => {
         const timer = setTimeout(() => fetchUsers(), 500);
@@ -148,12 +175,18 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
             firstName: user.firstName,
             lastName: user.lastName,
             role: user.role,
+            linkedEmployeeId: user.linkedEmployeeId || '',
         });
         setIsDialogOpen(true);
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm(t('teamView.deleteUserConfirm'))) return;
+        const confirmed = await confirm({
+            title: t('common.confirm'),
+            description: t('teamView.deleteUserConfirm'),
+            variant: 'destructive',
+        });
+        if (!confirmed) return;
         try {
             await usersApi.remove(id);
             toast({ title: t('teamView.userDeleted') });
@@ -252,11 +285,9 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-12">
-                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1E4B8E] mx-auto" />
-                                        </TableCell>
-                                    </TableRow>
+                                    <>
+                                        {Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} columns={5} />)}
+                                    </>
                                 ) : users.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-12 text-slate-400">
@@ -369,6 +400,27 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                                     <SelectItem value={UserRole.SUPER_ADMIN}>超级管理员</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>关联员工 <span className="text-slate-400 text-xs">(可选)</span></Label>
+                            <Select
+                                onValueChange={(val) => form.setValue('linkedEmployeeId', val === '_none_' ? '' : val)}
+                                value={form.watch('linkedEmployeeId') || '_none_'}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="选择员工" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="_none_">不关联员工</SelectItem>
+                                    {employees.map(emp => (
+                                        <SelectItem key={emp.id} value={emp.id}>
+                                            {emp.name} ({emp.employeeId}){emp.department?.name && ` - ${emp.department.name}`}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-400">关联员工后，用户可以查看和管理该员工的绩效数据</p>
                         </div>
 
                         <div className="space-y-2">

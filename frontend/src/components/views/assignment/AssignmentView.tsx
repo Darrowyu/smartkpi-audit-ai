@@ -10,7 +10,9 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
+import { CardSkeleton } from '@/components/ui/skeleton';
 import { assignmentApi, KPIAssignmentDto, CreateAssignmentDto } from '@/api/assignment.api';
 import { assessmentApi } from '@/api/assessment.api';
 import { kpiLibraryApi } from '@/api/kpi-library.api';
@@ -88,10 +90,10 @@ const AssignmentRow: React.FC<AssignmentRowProps> = ({ assignment, onEdit, onDel
             </div>
 
             <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(assignment)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(assignment)} aria-label="编辑指标">
                     <Pencil className="h-4 w-4 text-slate-400 hover:text-slate-600" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(assignment.id)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(assignment.id)} aria-label="删除指标">
                     <Trash2 className="h-4 w-4 text-slate-400 hover:text-red-500" />
                 </Button>
             </div>
@@ -149,13 +151,13 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
                 </div>
 
                 <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onAdd(group.category)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onAdd(group.category)} aria-label="添加指标">
                         <Plus className="h-4 w-4 text-slate-400 hover:text-slate-600" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditGroup(group)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditGroup(group)} aria-label="编辑分组">
                         <Pencil className="h-4 w-4 text-slate-400 hover:text-slate-600" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDeleteGroup(group.category)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDeleteGroup(group.category)} aria-label="删除分组">
                         <Trash2 className="h-4 w-4 text-slate-400 hover:text-red-500" />
                     </Button>
                 </div>
@@ -183,6 +185,7 @@ type EditType = 'none' | 'group' | 'assignment' | 'addChild';
 // 主组件
 export const AssignmentView: React.FC = () => {
     const { toast } = useToast();
+    const confirm = useConfirm();
 
     const [data, setData] = useState<CategoryGroup[]>([]);
     const [loading, setLoading] = useState(true);
@@ -341,7 +344,12 @@ export const AssignmentView: React.FC = () => {
 
     // 删除子指标
     const handleDeleteAssignment = async (id: string) => {
-        if (!confirm('确定要删除此指标吗？')) return;
+        const confirmed = await confirm({
+            title: '确认删除',
+            description: '确定要删除此指标吗？',
+            variant: 'destructive',
+        });
+        if (!confirmed) return;
         try {
             await assignmentApi.remove(id);
             toast({ title: '删除成功' });
@@ -353,7 +361,12 @@ export const AssignmentView: React.FC = () => {
 
     // 删除分组
     const handleDeleteGroup = async (category: string) => {
-        if (!confirm('确定要删除此分组及其所有指标吗？')) return;
+        const confirmed = await confirm({
+            title: '确认删除',
+            description: '确定要删除此分组及其所有指标吗？',
+            variant: 'destructive',
+        });
+        if (!confirmed) return;
         const group = data.find(g => g.category === category);
         if (!group) return;
         try {
@@ -446,8 +459,8 @@ export const AssignmentView: React.FC = () => {
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                <div className="space-y-4">
+                    {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
                 </div>
             ) : data.length === 0 ? (
                 <div className="text-center py-12 text-slate-500">

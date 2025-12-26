@@ -20,6 +20,7 @@ export type View =
   | 'kpi-library'
   | 'assessment'
   | 'data-entry'
+  | 'data-approval'
   | 'permissions'
   | 'assignment'
   | 'group-dashboard';

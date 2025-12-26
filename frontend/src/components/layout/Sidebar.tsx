@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight, Globe, Building, User, ListChecks, PenLine, X } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight, Globe, Building, User, ListChecks, PenLine, X, CheckSquare } from 'lucide-react';
 import { Language } from '../../types';
 import { SimpleAvatar as Avatar } from '../ui/avatar';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +28,7 @@ const managerBusinessNavItems: NavItem[] = [
   { path: '/assessment', icon: Calendar, labelKey: 'sidebar.assessment' },
   { path: '/assignment', icon: ClipboardList, labelKey: 'sidebar.assignment' },
   { path: '/data-entry', icon: FileSpreadsheet, labelKey: 'sidebar.dataEntry' },
+  { path: '/data-approval', icon: CheckSquare, labelKey: 'sidebar.dataApproval' },
   { path: '/reports', icon: FileText, labelKey: 'sidebar.reports' },
 ];
 
@@ -118,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
   );
 
   return (
-    <div className="w-72 sm:w-64 bg-[#1E4B8E] text-white flex flex-col h-screen border-r border-[#163a6e]">
+    <div className="w-72 sm:w-64 bg-[#1E4B8E] text-white flex flex-col h-full border-r border-[#163a6e]">
       {/* Logo 区域 */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -167,14 +168,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
             <div className="space-y-0.5">
               <button
                 onClick={() => setAdminExpanded(!adminExpanded)}
-                className={`group relative w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm font-medium transition-all duration-200 touch-target
-                  ${isAdminViewActive
-                    ? 'text-white bg-[#163a6e]'
-                    : 'text-white/70 hover:text-white hover:bg-[#163a6e]/50'
-                  }`}
+                className="group relative w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm font-medium transition-all duration-200 touch-target text-white/70 hover:text-white hover:bg-[#163a6e]/50"
               >
                 <div className="flex items-center gap-3">
-                  <Shield className={`w-5 h-5 sm:w-[18px] sm:h-[18px] ${isAdminViewActive ? 'text-[#5B9BD5]' : ''}`} />
+                  <Shield className="w-5 h-5 sm:w-[18px] sm:h-[18px]" />
                   <span>{t('sidebar.admin')}</span>
                 </div>
                 {adminExpanded

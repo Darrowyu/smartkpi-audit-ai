@@ -28,6 +28,9 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
+import { CardSkeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
@@ -126,9 +129,10 @@ interface PeriodCardProps {
     period: AssessmentPeriod;
     onLock: (id: string) => void;
     onActivate: (id: string) => void;
+    onArchive: (id: string) => void;
 }
 
-const PeriodCard: React.FC<PeriodCardProps> = ({ period, onLock, onActivate }) => {
+const PeriodCard: React.FC<PeriodCardProps> = ({ period, onLock, onActivate, onArchive }) => {
     const statusConfig = STATUS_CONFIG[period.status] || STATUS_CONFIG[PeriodStatus.DRAFT];
     const StatusIcon = statusConfig.icon;
     const progress = calculateProgress(period.startDate, period.endDate);
@@ -167,6 +171,11 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period, onLock, onActivate }) =
                         {isActive && (
                             <DropdownMenuItem onClick={() => onLock(period.id)}>
                                 <Lock className="h-4 w-4 mr-2" /> 锁定周期
+                            </DropdownMenuItem>
+                        )}
+                        {period.status === PeriodStatus.LOCKED && (
+                            <DropdownMenuItem onClick={() => onArchive(period.id)}>
+                                <Archive className="h-4 w-4 mr-2" /> 归档周期
                             </DropdownMenuItem>
                         )}
                     </DropdownMenuContent>
@@ -219,10 +228,11 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period, onLock, onActivate }) =
 
 export const AssessmentPeriodView: React.FC = () => {
     const { t } = useTranslation();
+    const { toast } = useToast();
+    const confirm = useConfirm();
     const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
     const [loading, setLoading] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const { toast } = useToast();
 
     const periodSchema = z.object({
         name: z.string().min(1, t('assessmentView.enterPeriodName')),
@@ -272,7 +282,11 @@ export const AssessmentPeriodView: React.FC = () => {
     };
 
     const handleLock = async (id: string) => {
-        if (!confirm(t('assessmentView.lockConfirm'))) return;
+        const confirmed = await confirm({
+            title: t('common.confirm'),
+            description: t('assessmentView.lockConfirm'),
+        });
+        if (!confirmed) return;
         try {
             await assessmentApi.lockPeriod(id);
             toast({ title: t('assessmentView.locked') });
@@ -289,6 +303,21 @@ export const AssessmentPeriodView: React.FC = () => {
             fetchPeriods();
         } catch (_error) {
             toast({ variant: 'destructive', title: '激活失败' });
+        }
+    };
+
+    const handleArchive = async (id: string) => {
+        const confirmed = await confirm({
+            title: t('common.confirm'),
+            description: '确定要归档此周期吗？归档后数据将保留但无法修改。',
+        });
+        if (!confirmed) return;
+        try {
+            await assessmentApi.archivePeriod(id);
+            toast({ title: '周期已归档' });
+            fetchPeriods();
+        } catch (_error) {
+            toast({ variant: 'destructive', title: '归档失败' });
         }
     };
 
@@ -351,14 +380,21 @@ export const AssessmentPeriodView: React.FC = () => {
 
             {/* 周期卡片网格 */}
             {loading ? (
-                <div className="text-center py-20 text-slate-500">加载中...</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+                </div>
             ) : sortedPeriods.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-xl border border-slate-200">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                    <p className="text-slate-500 mb-4">暂无考核周期</p>
-                    <Button onClick={() => { form.reset(); setIsDialogOpen(true); }}>
-                        <Plus className="mr-2 h-4 w-4" /> 创建第一个周期
-                    </Button>
+                <div className="bg-white rounded-xl border border-slate-200">
+                    <EmptyState
+                        icon={Calendar}
+                        title="暂无考核周期"
+                        description="开始创建您的第一个考核周期"
+                        action={
+                            <Button onClick={() => { form.reset(); setIsDialogOpen(true); }}>
+                                <Plus className="mr-2 h-4 w-4" /> 创建第一个周期
+                            </Button>
+                        }
+                    />
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -368,6 +404,7 @@ export const AssessmentPeriodView: React.FC = () => {
                             period={period}
                             onLock={handleLock}
                             onActivate={handleActivate}
+                            onArchive={handleArchive}
                         />
                     ))}
                 </div>

@@ -28,6 +28,11 @@ export const assessmentApi = {
         return response.data;
     },
 
+    archivePeriod: async (id: string) => {
+        const response = await apiClient.put(`/assessment/periods/${id}`, { status: 'ARCHIVED' });
+        return response.data;
+    },
+
     deletePeriod: async (id: string) => {
         const response = await apiClient.delete(`/assessment/periods/${id}`);
         return response.data;
@@ -50,6 +55,27 @@ export const assessmentApi = {
         const response = await apiClient.post('/assessment/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
+        return response.data;
+    },
+
+    // 审批流程
+    submitForApproval: async (submissionId: string) => {
+        const response = await apiClient.post(`/assessment/submissions/${submissionId}/submit`);
+        return response.data;
+    },
+
+    approveSubmission: async (submissionId: string) => {
+        const response = await apiClient.post(`/assessment/submissions/${submissionId}/approve`);
+        return response.data;
+    },
+
+    rejectSubmission: async (submissionId: string, reason: string) => {
+        const response = await apiClient.post(`/assessment/submissions/${submissionId}/reject`, { reason });
+        return response.data;
+    },
+
+    getSubmissions: async (periodId?: string) => {
+        const response = await apiClient.get('/assessment/submissions', { params: { periodId } });
         return response.data;
     },
 };

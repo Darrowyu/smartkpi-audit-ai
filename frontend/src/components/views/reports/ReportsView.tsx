@@ -22,38 +22,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { EmployeeRankingTable } from './EmployeeRankingTable';
 
-// 模拟数据
-const MOCK_OVERVIEW: PerformanceOverview = {
-    periodName: '2024年Q4',
-    totalEmployees: 156,
-    avgScore: 82.5,
-    excellent: 45,
-    good: 68,
-    average: 32,
-    poor: 11,
+// 默认空数据
+const EMPTY_OVERVIEW: PerformanceOverview = {
+    periodName: '',
+    totalEmployees: 0,
+    avgScore: 0,
+    excellent: 0,
+    good: 0,
+    average: 0,
+    poor: 0,
 };
-
-const MOCK_DEPT_RANKING: DepartmentRanking[] = [
-    { departmentId: '1', departmentName: '研发部', score: 88.5, employeeCount: 45, rank: 1 },
-    { departmentId: '2', departmentName: '销售部', score: 85.2, employeeCount: 32, rank: 2 },
-    { departmentId: '3', departmentName: '市场部', score: 82.8, employeeCount: 18, rank: 3 },
-    { departmentId: '4', departmentName: '客服部', score: 80.1, employeeCount: 25, rank: 4 },
-    { departmentId: '5', departmentName: '人力资源', score: 78.6, employeeCount: 12, rank: 5 },
-    { departmentId: '6', departmentName: '财务部', score: 76.3, employeeCount: 10, rank: 6 },
-];
-
-const MOCK_TREND: TrendData[] = [
-    { period: '2024 Q1', avgScore: 78.2, employeeCount: 142 },
-    { period: '2024 Q2', avgScore: 80.5, employeeCount: 148 },
-    { period: '2024 Q3', avgScore: 81.8, employeeCount: 152 },
-    { period: '2024 Q4', avgScore: 82.5, employeeCount: 156 },
-];
-
-const MOCK_LOW_PERFORMERS = [
-    { employeeId: '1', employeeName: '张某某', departmentName: '销售部', score: 58, status: 'poor', rank: 1 },
-    { employeeId: '2', employeeName: '李某某', departmentName: '客服部', score: 55, status: 'poor', rank: 2 },
-    { employeeId: '3', employeeName: '王某某', departmentName: '市场部', score: 52, status: 'poor', rank: 3 },
-];
 
 // 配色
 const COLORS = {
@@ -76,23 +54,21 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon, iconBg, trend }) => (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between">
-            <div className="flex-1">
-                <p className="text-sm text-slate-500 mb-1">{title}</p>
-                <p className="text-2xl font-bold text-slate-900">{value}</p>
-                {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
-                {trend && (
-                    <p className={cn('text-xs mt-1 flex items-center gap-1', trend.isUp ? 'text-emerald-600' : 'text-red-500')}>
-                        <TrendingUp className={cn('h-3 w-3', !trend.isUp && 'rotate-180')} />
-                        {trend.isUp ? '+' : ''}{trend.value}% 较上期
-                    </p>
-                )}
-            </div>
-            <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center', iconBg)}>
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-slate-500">{title}</p>
+            <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconBg)}>
                 {icon}
             </div>
         </div>
+        <p className="text-2xl font-bold text-slate-900">{value}</p>
+        {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+        {trend && (
+            <p className={cn('text-xs mt-1 flex items-center gap-1', trend.isUp ? 'text-emerald-600' : 'text-red-500')}>
+                <TrendingUp className={cn('h-3 w-3', !trend.isUp && 'rotate-180')} />
+                {trend.isUp ? '+' : ''}{trend.value}%
+            </p>
+        )}
     </div>
 );
 
@@ -147,10 +123,10 @@ export const ReportsView: React.FC = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
     const [selectedPeriod, setSelectedPeriod] = useState<string>('');
-    const [overview, setOverview] = useState<PerformanceOverview>(MOCK_OVERVIEW);
-    const [deptRanking, setDeptRanking] = useState<DepartmentRanking[]>(MOCK_DEPT_RANKING);
-    const [trendData, setTrendData] = useState<TrendData[]>(MOCK_TREND);
-    const [lowPerformers, setLowPerformers] = useState(MOCK_LOW_PERFORMERS);
+    const [overview, setOverview] = useState<PerformanceOverview>(EMPTY_OVERVIEW);
+    const [deptRanking, setDeptRanking] = useState<DepartmentRanking[]>([]);
+    const [trendData, setTrendData] = useState<TrendData[]>([]);
+    const [lowPerformers, setLowPerformers] = useState<Array<{ employeeId: string; employeeName: string; departmentName: string; score: number; status: string; rank: number }>>([]);
     const [loading, setLoading] = useState(false);
 
     const loadPeriods = useCallback(async () => {
@@ -227,11 +203,11 @@ export const ReportsView: React.FC = () => {
                                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                                 ))
                             ) : (
-                                <SelectItem value="mock">2024年Q4</SelectItem>
+                                <SelectItem value="_none_" disabled>暂无周期</SelectItem>
                             )}
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" size="icon" onClick={() => loadReportData()} disabled={loading}>
+                    <Button variant="outline" size="icon" onClick={() => loadReportData()} disabled={loading} aria-label="刷新数据">
                         <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
                     </Button>
                 </div>
@@ -254,37 +230,33 @@ export const ReportsView: React.FC = () => {
                 {/* 仪表盘 */}
                 <TabsContent value="dashboard" className="space-y-6 mt-6">
                     {/* 统计卡片 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <StatCard
                             title="参与人数"
                             value={overview.totalEmployees}
-                            subtitle={overview.periodName}
-                            icon={<Users className="w-6 h-6 text-[#1E4B8E]" />}
+                            icon={<Users className="w-4 h-4 text-[#1E4B8E]" />}
                             iconBg="bg-blue-50"
                         />
                         <StatCard
                             title="平均得分"
                             value={`${overview.avgScore}分`}
-                            subtitle={overview.avgScore >= 80 ? '整体优秀' : '正常水平'}
-                            icon={<Trophy className="w-6 h-6 text-amber-500" />}
+                            subtitle={overview.avgScore >= 80 ? '优秀' : '正常'}
+                            icon={<Trophy className="w-4 h-4 text-amber-500" />}
                             iconBg="bg-amber-50"
-                            trend={{ value: 2.3, isUp: true }}
                         />
                         <StatCard
                             title="优秀率"
                             value={`${excellentRate}%`}
-                            subtitle={`${overview.excellent}人达到优秀`}
-                            icon={<TrendingUp className="w-6 h-6 text-emerald-600" />}
+                            subtitle={`${overview.excellent}人优秀`}
+                            icon={<TrendingUp className="w-4 h-4 text-emerald-600" />}
                             iconBg="bg-emerald-50"
-                            trend={{ value: 5.2, isUp: true }}
                         />
                         <StatCard
                             title="待改进"
                             value={`${poorRate}%`}
-                            subtitle={`${overview.poor}人需关注`}
-                            icon={<AlertTriangle className="w-6 h-6 text-red-500" />}
+                            subtitle={`${overview.poor}人`}
+                            icon={<AlertTriangle className="w-4 h-4 text-red-500" />}
                             iconBg="bg-red-50"
-                            trend={{ value: 1.5, isUp: false }}
                         />
                     </div>
 

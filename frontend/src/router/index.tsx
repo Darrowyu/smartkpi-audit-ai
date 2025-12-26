@@ -53,6 +53,15 @@ const MyDashboardPage = lazy(() => import('@/pages/my/MyDashboardPage'));
 const MyKPIsPage = lazy(() => import('@/pages/my/MyKPIsPage'));
 const SelfEvaluationPage = lazy(() => import('@/pages/my/SelfEvaluationPage'));
 
+// P0-P2 Enhancement Pages
+const CalibrationPage = lazy(() => import('@/pages/calibration/CalibrationPage'));
+const DistributionPage = lazy(() => import('@/pages/distribution/DistributionPage'));
+const InterviewPage = lazy(() => import('@/pages/interview/InterviewPage'));
+const TalentPage = lazy(() => import('@/pages/talent/TalentPage'));
+const SalaryPage = lazy(() => import('@/pages/salary/SalaryPage'));
+const CheckInPage = lazy(() => import('@/pages/checkin/CheckInPage'));
+const DataSourcePage = lazy(() => import('@/pages/datasource/DataSourcePage'));
+
 // Error
 const NotFoundPage = lazy(() => import('@/pages/error/NotFoundPage'));
 
@@ -99,6 +108,14 @@ export const router = createBrowserRouter([
             { path: 'upload', element: <ProtectedRoute permission="data:submit"><SuspenseWrapper><UploadPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'history', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><HistoryPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'analysis/:id', element: <ProtectedRoute permission="report:view"><SuspenseWrapper><AnalysisDetailPage /></SuspenseWrapper></ProtectedRoute> },
+            // P0-P2 Enhancement Routes
+            { path: 'calibration', element: <ProtectedRoute permission="data:approve" adminOnly><SuspenseWrapper><CalibrationPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'distribution', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><DistributionPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'interview', element: <ProtectedRoute permission="data:view"><SuspenseWrapper><InterviewPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'talent', element: <ProtectedRoute permission="report:view" adminOnly><SuspenseWrapper><TalentPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'salary', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><SalaryPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'checkin', element: <ProtectedRoute permission="data:view"><SuspenseWrapper><CheckInPage /></SuspenseWrapper></ProtectedRoute> },
+            { path: 'datasource', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><DataSourcePage /></SuspenseWrapper></ProtectedRoute> },
             { path: '404', element: <SuspenseWrapper><NotFoundPage /></SuspenseWrapper> },
             { path: '*', element: <Navigate to="/404" replace /> },
         ],

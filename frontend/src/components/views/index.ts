@@ -17,3 +17,11 @@ export * from './my-dashboard/MyDashboardView';
 export * from './my-kpis/MyKPIsView';
 export * from './self-evaluation/SelfEvaluationView';
 export * from './data-approval/DataApprovalView';
+// P0-P2 Enhancement Views
+export * from './calibration/CalibrationView';
+export * from './distribution/DistributionView';
+export * from './interview/InterviewView';
+export * from './talent/TalentNineBoxView';
+export * from './salary/SalaryView';
+export * from './checkin/CheckInView';
+export * from './datasource/DataSourceView';

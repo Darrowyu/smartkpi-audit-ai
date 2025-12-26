@@ -14,10 +14,10 @@ datasource db {
 // ============================================
 
 enum UserRole {
-  SUPER_ADMIN  // Platform admin (cross-group)
-  GROUP_ADMIN  // Group admin (cross-company within group)
-  MANAGER      // Department manager
-  USER         // Regular user
+  SUPER_ADMIN // Platform admin (cross-group)
+  GROUP_ADMIN // Group admin (cross-company within group)
+  MANAGER // Department manager
+  USER // Regular user
 }
 
 enum KPIStatusEnum {
@@ -39,9 +39,9 @@ enum FileProcessStatus {
 // ============================================
 
 model Group {
-  id        String   @id @default(uuid())
-  name      String   // e.g., "Makrite"
-  settings  Json?    // Group-level settings
+  id       String @id @default(uuid())
+  name     String // e.g., "Makrite"
+  settings Json? // Group-level settings
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -58,25 +58,25 @@ model Group {
 // ============================================
 
 model Company {
-  id        String   @id @default(uuid())
-  name      String   // e.g., "Makrite USA", "Makrite China"
-  code      String?  // 公司代码，如 "DG001"
-  domain    String?  @unique // 域名标识，如 "dongguan.makrite.com"
-  settings  Json?    // Company-specific settings (language, branding, etc.)
+  id       String  @id @default(uuid())
+  name     String // e.g., "Makrite USA", "Makrite China"
+  code     String? // 公司代码，如 "DG001"
+  domain   String? @unique // 域名标识，如 "dongguan.makrite.com"
+  settings Json? // Company-specific settings (language, branding, etc.)
 
-  groupId   String   @map("group_id")
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId String @map("group_id")
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isActive  Boolean  @default(true)
 
   // Relations
-  users          User[]
-  departments    Department[]
-  employees      Employee[]
-  uploadedFiles  UploadedFile[]
-  kpiAnalyses    KPIAnalysis[]
+  users         User[]
+  departments   Department[]
+  employees     Employee[]
+  uploadedFiles UploadedFile[]
+  kpiAnalyses   KPIAnalysis[]
 
   @@unique([groupId, code]) // 同一集团内公司代码唯一
   @@index([groupId])
@@ -91,28 +91,28 @@ model Company {
 model User {
   id           String   @id @default(uuid())
   username     String   @unique // 用户名，用于登录
-  email        String?  // 邮箱，可选联系方式
+  email        String? // 邮箱，可选联系方式
   passwordHash String   @map("password_hash")
   firstName    String?  @map("first_name")
   lastName     String?  @map("last_name")
-  avatar       String?  // 头像文件路径
+  avatar       String? // 头像文件路径
   role         UserRole @default(USER)
   language     String   @default("en") // User preference: "en" | "zh"
 
-  companyId    String   @map("company_id")
-  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  departmentId String?  @map("department_id") // Optional: user's department
+  departmentId String?     @map("department_id") // Optional: user's department
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
   // Password reset fields
   passwordResetToken   String?   @map("password_reset_token")
   passwordResetExpires DateTime? @map("password_reset_expires")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  lastLoginAt  DateTime? @map("last_login_at")
-  isActive     Boolean  @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime? @map("last_login_at")
+  isActive    Boolean   @default(true)
 
   // Employee link for data isolation
   linkedEmployeeId String?   @unique @map("linked_employee_id")
@@ -135,20 +135,20 @@ model User {
 // ============================================
 
 model Department {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String?
 
-  companyId   String   @map("company_id")
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isActive    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
 
   // Relations
-  users       User[]     // Users in this department
-  employees   Employee[] // Employees in this department
+  users     User[] // Users in this department
+  employees Employee[] // Employees in this department
 
   @@index([companyId])
   @@map("departments")
@@ -159,27 +159,27 @@ model Department {
 // ============================================
 
 model Employee {
-  id           String   @id @default(uuid())
-  employeeId   String   @map("employee_id") // Business ID (e.g., "EMP001")
-  name         String
-  email        String?
-  role         String?  // Job title (e.g., "Account Executive")
+  id         String  @id @default(uuid())
+  employeeId String  @map("employee_id") // Business ID (e.g., "EMP001")
+  name       String
+  email      String?
+  role       String? // Job title (e.g., "Account Executive")
 
-  departmentId String?  @map("department_id")
+  departmentId String?     @map("department_id")
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
-  companyId    String   @map("company_id")
-  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  metadata     Json?    // Additional employee data
+  metadata Json? // Additional employee data
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  isActive     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
 
   // Relations
-  kpiRecords   KPIEmployeeRecord[]
-  linkedUser   User?  // Linked user account for data isolation
+  kpiRecords        KPIEmployeeRecord[]
+  linkedUser        User? // Linked user account for data isolation
   departmentHistory EmployeeDepartmentHistory[]
 
   @@unique([companyId, employeeId]) // Unique employee ID per company
@@ -193,23 +193,23 @@ model Employee {
 // ============================================
 
 model EmployeeDepartmentHistory {
-  id           String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  employeeId   String   @map("employee_id")
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String   @map("employee_id")
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  departmentId String   @map("department_id")
+  departmentId   String @map("department_id")
   departmentName String @map("department_name") // 快照，防止部门改名后丢失
 
-  companyId    String   @map("company_id")
+  companyId String @map("company_id")
 
-  effectiveDate DateTime @map("effective_date") // 生效日期
-  endDate      DateTime? @map("end_date") // 结束日期，null表示当前部门
+  effectiveDate DateTime  @map("effective_date") // 生效日期
+  endDate       DateTime? @map("end_date") // 结束日期，null表示当前部门
 
-  reason       String?  // 调动原因
+  reason String? // 调动原因
 
-  createdAt    DateTime @default(now())
-  createdById  String?  @map("created_by_id")
+  createdAt   DateTime @default(now())
+  createdById String?  @map("created_by_id")
 
   @@index([employeeId])
   @@index([companyId])
@@ -222,31 +222,31 @@ model EmployeeDepartmentHistory {
 // ============================================
 
 model UploadedFile {
-  id              String            @id @default(uuid())
-  fileName        String            @map("file_name")
-  originalName    String            @map("original_name")
-  mimeType        String            @map("mime_type")
-  fileSize        Int               @map("file_size") // in bytes
-  storagePath     String            @map("storage_path") // e.g., "uploads/company-id/file-id.xlsx"
+  id           String @id @default(uuid())
+  fileName     String @map("file_name")
+  originalName String @map("original_name")
+  mimeType     String @map("mime_type")
+  fileSize     Int    @map("file_size") // in bytes
+  storagePath  String @map("storage_path") // e.g., "uploads/company-id/file-id.xlsx"
 
-  status          FileProcessStatus @default(PENDING)
-  errorMessage    String?           @map("error_message")
+  status       FileProcessStatus @default(PENDING)
+  errorMessage String?           @map("error_message")
 
   // Parsed metadata from Excel
-  parsedData      Json?             @map("parsed_data") // Raw CSV-like data
-  rowCount        Int?              @map("row_count")
+  parsedData Json? @map("parsed_data") // Raw CSV-like data
+  rowCount   Int?  @map("row_count")
 
-  companyId       String            @map("company_id")
-  company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  uploadedById    String            @map("uploaded_by_id")
-  uploadedBy      User              @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedById String @map("uploaded_by_id")
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  kpiAnalyses     KPIAnalysis[]
+  kpiAnalyses KPIAnalysis[]
 
   @@index([companyId])
   @@index([uploadedById])
@@ -259,26 +259,26 @@ model UploadedFile {
 // ============================================
 
 model KPIAnalysis {
-  id          String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Summary metadata
-  summary     String   @db.Text
-  period      String   // e.g., "Q3 2024"
+  summary String @db.Text
+  period  String // e.g., "Q3 2024"
 
   // Full AI response (complete JSON structure)
-  rawResult   Json     @map("raw_result") // Complete KPIAnalysisResult from Gemini
+  rawResult Json @map("raw_result") // Complete KPIAnalysisResult from Gemini
 
-  fileId      String   @map("file_id")
-  file        UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId String       @map("file_id")
+  file   UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
-  companyId   String   @map("company_id")
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  analyzedById String  @map("analyzed_by_id")
-  analyzedBy   User    @relation(fields: [analyzedById], references: [id], onDelete: Cascade)
+  analyzedById String @map("analyzed_by_id")
+  analyzedBy   User   @relation(fields: [analyzedById], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations - Individual employee records for querying
   employeeRecords KPIEmployeeRecord[]
@@ -295,30 +295,30 @@ model KPIAnalysis {
 // ============================================
 
 model KPIEmployeeRecord {
-  id           String        @id @default(uuid())
+  id String @id @default(uuid())
 
   // Employee info (denormalized for easier querying)
-  employeeId   String?       @map("employee_id") // Link to Employee master if exists
-  employee     Employee?     @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeId String?   @map("employee_id") // Link to Employee master if exists
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
 
-  employeeName String        @map("employee_name")
+  employeeName String @map("employee_name")
   department   String
   role         String
 
   // KPI Scores
-  totalScore   Float         @map("total_score")
-  status       KPIStatusEnum
-  aiAnalysis   String        @db.Text @map("ai_analysis")
+  totalScore Float         @map("total_score")
+  status     KPIStatusEnum
+  aiAnalysis String        @map("ai_analysis") @db.Text
 
   // Detailed metrics stored as JSON
-  metrics      Json          // Array of KPIMetric objects
+  metrics Json // Array of KPIMetric objects
 
-  analysisId   String        @map("analysis_id")
-  analysis     KPIAnalysis   @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  analysisId String      @map("analysis_id")
+  analysis   KPIAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
-  companyId    String        @map("company_id")
+  companyId String @map("company_id")
 
-  createdAt    DateTime      @default(now())
+  createdAt DateTime @default(now())
 
   @@index([analysisId])
   @@index([companyId])
@@ -332,38 +332,38 @@ model KPIEmployeeRecord {
 // ============================================
 
 enum FormulaType {
-  POSITIVE    // 正向指标：越大越好
-  NEGATIVE    // 反向指标：越小越好
-  BINARY      // 二元指标：0/1
-  STEPPED     // 阶梯指标：分段计分
-  CUSTOM      // 自定义公式
+  POSITIVE // 正向指标：越大越好
+  NEGATIVE // 反向指标：越小越好
+  BINARY // 二元指标：0/1
+  STEPPED // 阶梯指标：分段计分
+  CUSTOM // 自定义公式
 }
 
 enum AssessmentFrequency {
-  MONTHLY     // 月度
-  QUARTERLY   // 季度
-  YEARLY      // 年度
+  MONTHLY // 月度
+  QUARTERLY // 季度
+  YEARLY // 年度
 }
 
 enum PeriodStatus {
-  DRAFT       // 草稿
-  ACTIVE      // 进行中
-  LOCKED      // 已锁定
-  ARCHIVED    // 已归档
+  DRAFT // 草稿
+  ACTIVE // 进行中
+  LOCKED // 已锁定
+  ARCHIVED // 已归档
 }
 
 enum SubmissionStatus {
-  DRAFT       // 草稿
-  PENDING     // 待审批
-  APPROVED    // 已通过
-  REJECTED    // 已驳回
+  DRAFT // 草稿
+  PENDING // 待审批
+  APPROVED // 已通过
+  REJECTED // 已驳回
 }
 
 enum RollupMethod {
-  AVERAGE           // 全员平均
-  WEIGHTED_AVERAGE  // 加权平均
-  LEADER_SCORE      // 负责人得分
-  SUM               // 求和
+  AVERAGE // 全员平均
+  WEIGHTED_AVERAGE // 加权平均
+  LEADER_SCORE // 负责人得分
+  SUM // 求和
 }
 
 // ============================================
@@ -371,33 +371,33 @@ enum RollupMethod {
 // ============================================
 
 model KPIDefinition {
-  id          String              @id @default(uuid())
-  code        String              // 指标编码，如 "PROD_RATE"
-  name        String              // 指标名称
-  description String?             @db.Text // 定义/说明
+  id          String  @id @default(uuid())
+  code        String // 指标编码，如 "PROD_RATE"
+  name        String // 指标名称
+  description String? @db.Text // 定义/说明
 
-  formulaType FormulaType         @default(POSITIVE) @map("formula_type")
-  customFormula String?           @map("custom_formula") // Math.js 表达式
+  formulaType   FormulaType @default(POSITIVE) @map("formula_type")
+  customFormula String?     @map("custom_formula") // Math.js 表达式
 
-  frequency   AssessmentFrequency @default(MONTHLY) // 考核频率
-  defaultWeight Float             @default(10) @map("default_weight") // 默认权重%
+  frequency     AssessmentFrequency @default(MONTHLY) // 考核频率
+  defaultWeight Float               @default(10) @map("default_weight") // 默认权重%
 
-  scoreCap    Float               @default(120) @map("score_cap") // 得分上限
-  scoreFloor  Float               @default(0) @map("score_floor") // 得分下限
+  scoreCap   Float @default(120) @map("score_cap") // 得分上限
+  scoreFloor Float @default(0) @map("score_floor") // 得分下限
 
-  scoringRules Json?              @map("scoring_rules") // 阶梯规则等JSON配置
+  scoringRules Json? @map("scoring_rules") // 阶梯规则等JSON配置
 
-  sourceDepartment String?        @map("source_department") // 数据来源部门
-  unit        String?             // 单位（如 %、件、元）
+  sourceDepartment String? @map("source_department") // 数据来源部门
+  unit             String? // 单位（如 %、件、元）
 
   // 层级关联
-  groupId     String?             @map("group_id") // 集团级指标
-  companyId   String?             @map("company_id") // 公司级指标
-  isGlobal    Boolean             @default(false) @map("is_global") // 是否全局可用
+  groupId   String? @map("group_id") // 集团级指标
+  companyId String? @map("company_id") // 公司级指标
+  isGlobal  Boolean @default(false) @map("is_global") // 是否全局可用
 
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  isActive    Boolean             @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
 
   // Relations
   assignments KPIAssignment[]
@@ -414,25 +414,29 @@ model KPIDefinition {
 // ============================================
 
 model AssessmentPeriod {
-  id          String       @id @default(uuid())
-  name        String       // 如 "2024年Q1"、"2024年12月"
-  
-  startDate   DateTime     @map("start_date")
-  endDate     DateTime     @map("end_date")
-  lockDate    DateTime?    @map("lock_date") // 锁定日期
+  id   String @id @default(uuid())
+  name String // 如 "2024年Q1"、"2024年12月"
 
-  status      PeriodStatus @default(DRAFT)
+  startDate DateTime  @map("start_date")
+  endDate   DateTime  @map("end_date")
+  lockDate  DateTime? @map("lock_date") // 锁定日期
 
-  companyId   String       @map("company_id")
+  status PeriodStatus @default(DRAFT)
 
-  createdById String       @map("created_by_id")
+  companyId String @map("company_id")
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdById String @map("created_by_id")
+
+  // 审批工作流关联
+  workflowId String?           @map("workflow_id")
+  workflow   ApprovalWorkflow? @relation("PeriodWorkflow", fields: [workflowId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  assignments  KPIAssignment[]
-  submissions  DataSubmission[]
+  assignments KPIAssignment[]
+  submissions DataSubmission[]
 
   @@index([companyId])
   @@index([status])
@@ -445,29 +449,29 @@ model AssessmentPeriod {
 // ============================================
 
 model KPIAssignment {
-  id               String           @id @default(uuid())
+  id String @id @default(uuid())
 
-  kpiDefinitionId  String           @map("kpi_definition_id")
-  kpiDefinition    KPIDefinition    @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
+  kpiDefinitionId String        @map("kpi_definition_id")
+  kpiDefinition   KPIDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
 
-  periodId         String           @map("period_id")
-  period           AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  periodId String           @map("period_id")
+  period   AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
 
   // 分配层级（互斥）
-  companyId        String           @map("company_id") // 所属公司
-  departmentId     String?          @map("department_id") // 部门级分配
-  employeeId       String?          @map("employee_id") // 个人级分配
+  companyId    String  @map("company_id") // 所属公司
+  departmentId String? @map("department_id") // 部门级分配
+  employeeId   String? @map("employee_id") // 个人级分配
 
   // 目标设定
-  targetValue      Float            @map("target_value") // 目标值
-  challengeValue   Float?           @map("challenge_value") // 挑战值
-  weight           Float            @default(10) // 权重%
+  targetValue    Float  @map("target_value") // 目标值
+  challengeValue Float? @map("challenge_value") // 挑战值
+  weight         Float  @default(10) // 权重%
 
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  dataEntries      KPIDataEntry[]
+  dataEntries KPIDataEntry[]
 
   @@index([periodId])
   @@index([companyId])
@@ -481,32 +485,32 @@ model KPIAssignment {
 // ============================================
 
 model DataSubmission {
-  id           String           @id @default(uuid())
+  id String @id @default(uuid())
 
-  periodId     String           @map("period_id")
-  period       AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  periodId String           @map("period_id")
+  period   AssessmentPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
 
-  companyId    String           @map("company_id")
-  departmentId String?          @map("department_id") // 可选：部门级提交
+  companyId    String  @map("company_id")
+  departmentId String? @map("department_id") // 可选：部门级提交
 
-  version      Int              @default(1) // 版本号
-  status       SubmissionStatus @default(DRAFT)
+  version Int              @default(1) // 版本号
+  status  SubmissionStatus @default(DRAFT)
 
-  dataSource   String           @default("manual") @map("data_source") // "excel" | "manual"
-  fileId       String?          @map("file_id") // 关联的上传文件
+  dataSource String  @default("manual") @map("data_source") // "excel" | "manual"
+  fileId     String? @map("file_id") // 关联的上传文件
 
-  submittedById String?         @map("submitted_by_id")
-  submittedAt   DateTime?       @map("submitted_at")
+  submittedById String?   @map("submitted_by_id")
+  submittedAt   DateTime? @map("submitted_at")
 
-  approvedById  String?         @map("approved_by_id")
-  approvedAt    DateTime?       @map("approved_at")
-  rejectReason  String?         @map("reject_reason")
+  approvedById String?   @map("approved_by_id")
+  approvedAt   DateTime? @map("approved_at")
+  rejectReason String?   @map("reject_reason")
 
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  dataEntries  KPIDataEntry[]
+  dataEntries KPIDataEntry[]
 
   @@index([periodId])
   @@index([companyId])
@@ -520,27 +524,27 @@ model DataSubmission {
 // ============================================
 
 model KPIDataEntry {
-  id              String          @id @default(uuid())
+  id String @id @default(uuid())
 
-  submissionId    String          @map("submission_id")
-  submission      DataSubmission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId String         @map("submission_id")
+  submission   DataSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
-  assignmentId    String          @map("assignment_id")
-  assignment      KPIAssignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId String        @map("assignment_id")
+  assignment   KPIAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
-  employeeId      String          @map("employee_id") // 被考核员工
+  employeeId String @map("employee_id") // 被考核员工
 
-  actualValue     Float           @map("actual_value") // 实际完成值
+  actualValue Float @map("actual_value") // 实际完成值
 
   // 计算结果
-  rawScore        Float?          @map("raw_score") // 原始得分
-  cappedScore     Float?          @map("capped_score") // 封顶后得分
-  weightedScore   Float?          @map("weighted_score") // 加权得分
+  rawScore      Float? @map("raw_score") // 原始得分
+  cappedScore   Float? @map("capped_score") // 封顶后得分
+  weightedScore Float? @map("weighted_score") // 加权得分
 
-  remark          String?         // 备注
+  remark String? // 备注
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([submissionId, assignmentId, employeeId]) // 同一提交内，同一指标同一员工唯一
   @@index([submissionId])
@@ -554,24 +558,24 @@ model KPIDataEntry {
 // ============================================
 
 model EmployeePerformance {
-  id              String           @id @default(uuid())
+  id String @id @default(uuid())
 
-  periodId        String           @map("period_id")
-  employeeId      String           @map("employee_id")
-  companyId       String           @map("company_id")
-  departmentId    String?          @map("department_id")
+  periodId     String  @map("period_id")
+  employeeId   String  @map("employee_id")
+  companyId    String  @map("company_id")
+  departmentId String? @map("department_id")
 
-  totalScore      Float            @map("total_score")
-  status          KPIStatusEnum
+  totalScore Float         @map("total_score")
+  status     KPIStatusEnum
 
   // 归属锁定：考核期第一天所在部门
-  lockedDeptId    String?          @map("locked_dept_id")
-  lockedDeptName  String?          @map("locked_dept_name")
+  lockedDeptId   String? @map("locked_dept_id")
+  lockedDeptName String? @map("locked_dept_name")
 
-  calculatedAt    DateTime         @default(now()) @map("calculated_at")
-  calculatedById  String?          @map("calculated_by_id")
+  calculatedAt   DateTime @default(now()) @map("calculated_at")
+  calculatedById String?  @map("calculated_by_id")
 
-  createdAt       DateTime         @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([periodId, employeeId]) // 同一周期同一员工唯一
   @@index([periodId])
@@ -586,17 +590,17 @@ model EmployeePerformance {
 // ============================================
 
 model DepartmentPerformance {
-  id              String       @id @default(uuid())
+  id String @id @default(uuid())
 
-  periodId        String       @map("period_id")
-  departmentId    String       @map("department_id")
-  companyId       String       @map("company_id")
+  periodId     String @map("period_id")
+  departmentId String @map("department_id")
+  companyId    String @map("company_id")
 
-  totalScore      Float        @map("total_score")
-  employeeCount   Int          @map("employee_count")
-  rollupMethod    RollupMethod @default(AVERAGE) @map("rollup_method")
+  totalScore    Float        @map("total_score")
+  employeeCount Int          @map("employee_count")
+  rollupMethod  RollupMethod @default(AVERAGE) @map("rollup_method")
 
-  calculatedAt    DateTime     @default(now()) @map("calculated_at")
+  calculatedAt DateTime @default(now()) @map("calculated_at")
 
   @@unique([periodId, departmentId]) // 同一周期同一部门唯一
   @@index([periodId])
@@ -609,19 +613,19 @@ model DepartmentPerformance {
 // ============================================
 
 model PermissionConfig {
-  id          String   @id @default(uuid())
-  
-  companyId   String   @map("company_id")
-  
+  id String @id @default(uuid())
+
+  companyId String @map("company_id")
+
   // 角色权限映射 JSON 结构:
   // { "MANAGER": ["kpi:view", "period:view", ...], "USER": [...] }
-  rolePermissions Json  @map("role_permissions")
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  createdById String   @map("created_by_id")
-  updatedById String?  @map("updated_by_id")
+  rolePermissions Json @map("role_permissions")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById String  @map("created_by_id")
+  updatedById String? @map("updated_by_id")
 
   @@unique([companyId]) // 每个公司一条配置记录
   @@map("permission_configs")
@@ -632,40 +636,75 @@ model PermissionConfig {
 // ============================================
 
 enum NotificationType {
-  SUBMISSION_PENDING    // 数据提交待审批
-  SUBMISSION_APPROVED   // 数据提交已通过
-  SUBMISSION_REJECTED   // 数据提交被驳回
-  CALCULATION_COMPLETE  // 绩效计算完成
-  PERIOD_ACTIVATED      // 考核周期已激活
-  PERIOD_LOCKED         // 考核周期已锁定
+  SUBMISSION_PENDING // 数据提交待审批
+  SUBMISSION_APPROVED // 数据提交已通过
+  SUBMISSION_REJECTED // 数据提交被驳回
+  CALCULATION_COMPLETE // 绩效计算完成
+  PERIOD_ACTIVATED // 考核周期已激活
+  PERIOD_LOCKED // 考核周期已锁定
   LOW_PERFORMANCE_ALERT // 低绩效预警
-  ASSIGNMENT_CREATED    // 新指标分配
-  SYSTEM_ANNOUNCEMENT   // 系统公告
+  ASSIGNMENT_CREATED // 新指标分配
+  SYSTEM_ANNOUNCEMENT // 系统公告
+  APPROVAL_PENDING // 审批待处理
+  APPROVAL_COMPLETED // 审批已完成
+  INTERVIEW_SCHEDULED // 面谈已安排
+  CHECKIN_REMINDER // 进度更新提醒
+}
+
+// ============================================
+// P0-1: 多级审批工作流 Enums
+// ============================================
+
+enum ApprovalStage {
+  SELF_EVAL // 自评
+  MANAGER_REVIEW // 主管评分
+  SKIP_LEVEL // 隔级审批
+  HR_CONFIRM // HR确认
+  COMPLETED // 完成
+}
+
+enum ApprovalAction {
+  SUBMIT // 提交
+  APPROVE // 通过
+  REJECT // 驳回
+  RETURN // 退回修改
+}
+
+// ============================================
+// P0-3: 强制分布等级
+// ============================================
+
+enum PerformanceGrade {
+  S // 卓越 (Top 10%)
+  A // 优秀 (20%)
+  B // 良好 (40%)
+  C // 待改进 (20%)
+  D // 不合格 (10%)
 }
 
 model Notification {
-  id          String           @id @default(uuid())
-  
-  type        NotificationType
-  title       String           // 通知标题
-  content     String           @db.Text // 通知内容
-  
+  id String @id @default(uuid())
+
+  type    NotificationType
+  title   String // 通知标题
+  content String           @db.Text // 通知内容
+
   // 关联数据（可选，用于跳转）
-  relatedType String?          @map("related_type") // "period" | "submission" | "employee"
-  relatedId   String?          @map("related_id")
-  
+  relatedType String? @map("related_type") // "period" | "submission" | "employee"
+  relatedId   String? @map("related_id")
+
   // 接收者
-  userId      String           @map("user_id")
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  companyId   String           @map("company_id")
-  
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  companyId String @map("company_id")
+
   // 状态
-  isRead      Boolean          @default(false) @map("is_read")
-  readAt      DateTime?        @map("read_at")
-  
-  createdAt   DateTime         @default(now())
-  
+  isRead Boolean   @default(false) @map("is_read")
+  readAt DateTime? @map("read_at")
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([companyId])
   @@index([isRead])
@@ -673,3 +712,416 @@ model Notification {
   @@map("notifications")
 }
 
+// ============================================
+// P0-1: 审批工作流配置
+// ============================================
+
+model ApprovalWorkflow {
+  id        String @id @default(uuid())
+  name      String // 流程名称
+  companyId String @map("company_id")
+
+  // 流程配置JSON: [{ stage: "SELF_EVAL", required: true, approverRole: "USER" }, ...]
+  stages Json
+
+  isDefault Boolean @default(false) @map("is_default")
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  periods AssessmentPeriod[] @relation("PeriodWorkflow")
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("approval_workflows")
+}
+
+// 审批实例
+model ApprovalInstance {
+  id String @id @default(uuid())
+
+  periodId   String @map("period_id")
+  employeeId String @map("employee_id")
+
+  currentStage ApprovalStage @default(SELF_EVAL) @map("current_stage")
+
+  // 各阶段数据快照
+  selfEvalData  Json? @map("self_eval_data")
+  managerData   Json? @map("manager_data")
+  skipLevelData Json? @map("skip_level_data")
+  hrData        Json? @map("hr_data")
+
+  // 最终得分
+  finalScore Float?            @map("final_score")
+  finalGrade PerformanceGrade? @map("final_grade")
+
+  companyId String @map("company_id")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  logs ApprovalLog[]
+
+  @@unique([periodId, employeeId])
+  @@index([periodId])
+  @@index([employeeId])
+  @@index([currentStage])
+  @@map("approval_instances")
+}
+
+// 审批日志
+model ApprovalLog {
+  id String @id @default(uuid())
+
+  instanceId String           @map("instance_id")
+  instance   ApprovalInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  stage  ApprovalStage
+  action ApprovalAction
+
+  operatorId   String @map("operator_id")
+  operatorName String @map("operator_name")
+  operatorRole String @map("operator_role")
+
+  comment String? @db.Text
+  data    Json? // 本次操作的数据快照
+
+  createdAt DateTime @default(now())
+
+  @@index([instanceId])
+  @@index([operatorId])
+  @@map("approval_logs")
+}
+
+// ============================================
+// P0-2: 绩效校准会话
+// ============================================
+
+model CalibrationSession {
+  id   String @id @default(uuid())
+  name String // 会话名称，如"2024Q4销售部门校准"
+
+  periodId  String @map("period_id")
+  companyId String @map("company_id")
+
+  // 参与部门
+  departmentIds Json @map("department_ids") // string[]
+
+  // 原始分数范围统计
+  originalStats   Json? @map("original_stats")
+  // 校准后分数统计
+  calibratedStats Json? @map("calibrated_stats")
+
+  status String @default("draft") // draft | in_progress | completed
+
+  createdById String @map("created_by_id")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  adjustments CalibrationAdjustment[]
+
+  @@index([periodId])
+  @@index([companyId])
+  @@map("calibration_sessions")
+}
+
+// 校准调整记录
+model CalibrationAdjustment {
+  id String @id @default(uuid())
+
+  sessionId String             @map("session_id")
+  session   CalibrationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  employeeId String @map("employee_id")
+
+  originalScore Float             @map("original_score")
+  adjustedScore Float             @map("adjusted_score")
+  originalGrade PerformanceGrade? @map("original_grade")
+  adjustedGrade PerformanceGrade? @map("adjusted_grade")
+
+  reason       String? @db.Text
+  adjustedById String  @map("adjusted_by_id")
+
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, employeeId])
+  @@index([sessionId])
+  @@index([employeeId])
+  @@map("calibration_adjustments")
+}
+
+// ============================================
+// P0-3: 强制分布配置
+// ============================================
+
+model DistributionConfig {
+  id String @id @default(uuid())
+
+  companyId String  @map("company_id")
+  periodId  String? @map("period_id") // null表示默认配置
+
+  // 分布规则 JSON: { "S": 10, "A": 20, "B": 40, "C": 20, "D": 10 }
+  distribution Json
+
+  // 分数边界 JSON: { "S": 95, "A": 85, "B": 70, "C": 60 }
+  scoreBoundaries Json? @map("score_boundaries")
+
+  // 是否强制执行
+  isEnforced Boolean @default(false) @map("is_enforced")
+
+  // 允许的偏差百分比
+  tolerance Float @default(5)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, periodId])
+  @@map("distribution_configs")
+}
+
+// ============================================
+// P0-4: 面谈记录
+// ============================================
+
+model PerformanceInterview {
+  id String @id @default(uuid())
+
+  periodId   String @map("period_id")
+  employeeId String @map("employee_id")
+
+  interviewerId   String @map("interviewer_id")
+  interviewerName String @map("interviewer_name")
+
+  scheduledAt DateTime  @map("scheduled_at")
+  conductedAt DateTime? @map("conducted_at")
+
+  // 面谈内容
+  summary          String? @db.Text // 面谈摘要
+  strengths        String? @db.Text // 优势
+  improvements     String? @db.Text // 改进点
+  goals            String? @db.Text // 下期目标
+  employeeFeedback String? @map("employee_feedback") @db.Text // 员工反馈
+
+  // 附件
+  attachments Json? // 附件URL列表
+
+  // 员工签字确认
+  employeeConfirmed   Boolean   @default(false) @map("employee_confirmed")
+  employeeConfirmedAt DateTime? @map("employee_confirmed_at")
+
+  companyId String @map("company_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([periodId, employeeId])
+  @@index([periodId])
+  @@index([interviewerId])
+  @@map("performance_interviews")
+}
+
+// ============================================
+// P1-1: 潜力评估 (人才九宫格)
+// ============================================
+
+model PotentialAssessment {
+  id String @id @default(uuid())
+
+  employeeId String @map("employee_id")
+  periodId   String @map("period_id")
+  companyId  String @map("company_id")
+
+  // 潜力维度评分 (1-5)
+  learningAgility     Int @map("learning_agility") // 学习敏捷度
+  leadershipPotential Int @map("leadership_potential") // 领导潜力
+  technicalDepth      Int @map("technical_depth") // 技术深度
+  collaborationSkill  Int @map("collaboration_skill") // 协作能力
+
+  // 综合潜力分 (自动计算)
+  potentialScore Float @map("potential_score")
+
+  // 九宫格位置
+  gridPosition String? @map("grid_position") // e.g., "star", "core", "potential", ...
+
+  assessorId String @map("assessor_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, periodId])
+  @@index([periodId])
+  @@index([companyId])
+  @@map("potential_assessments")
+}
+
+// ============================================
+// P1-2: 目标对齐
+// ============================================
+
+model GoalAlignment {
+  id String @id @default(uuid())
+
+  childAssignmentId  String @map("child_assignment_id") // 子目标(KPIAssignment)
+  parentAssignmentId String @map("parent_assignment_id") // 父目标(KPIAssignment)
+
+  // 贡献权重
+  contributionWeight Float @default(100) @map("contribution_weight")
+
+  periodId  String @map("period_id")
+  companyId String @map("company_id")
+
+  createdAt DateTime @default(now())
+
+  @@unique([childAssignmentId, parentAssignmentId])
+  @@index([periodId])
+  @@index([parentAssignmentId])
+  @@map("goal_alignments")
+}
+
+// ============================================
+// P1-3: 薪酬系数
+// ============================================
+
+model SalaryCoefficient {
+  id String @id @default(uuid())
+
+  companyId String @map("company_id")
+
+  // 等级对应系数 JSON: { "S": 1.5, "A": 1.2, "B": 1.0, "C": 0.8, "D": 0.5 }
+  coefficients Json
+
+  // 奖金计算基数类型
+  bonusBaseType String @default("fixed") @map("bonus_base_type") // fixed | salary_percent
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId])
+  @@map("salary_coefficients")
+}
+
+// 员工薪酬计算结果
+model SalaryCalculation {
+  id String @id @default(uuid())
+
+  periodId   String @map("period_id")
+  employeeId String @map("employee_id")
+  companyId  String @map("company_id")
+
+  performanceScore Float            @map("performance_score")
+  performanceGrade PerformanceGrade @map("performance_grade")
+  coefficient      Float
+
+  baseSalary  Float? @map("base_salary")
+  bonusAmount Float? @map("bonus_amount")
+
+  // 导出状态
+  exportedAt   DateTime? @map("exported_at")
+  exportedById String?   @map("exported_by_id")
+
+  createdAt DateTime @default(now())
+
+  @@unique([periodId, employeeId])
+  @@index([periodId])
+  @@index([companyId])
+  @@map("salary_calculations")
+}
+
+// ============================================
+// P1-4: 过程检查点 (Check-ins)
+// ============================================
+
+model ProgressCheckIn {
+  id String @id @default(uuid())
+
+  assignmentId String @map("assignment_id") // 关联的KPI分配
+  employeeId   String @map("employee_id")
+  companyId    String @map("company_id")
+
+  checkInDate DateTime @map("check_in_date")
+
+  // 进度数据
+  currentValue    Float @map("current_value")
+  progressPercent Float @map("progress_percent")
+
+  // 说明和附件
+  notes       String? @db.Text
+  attachments Json? // 附件URL列表
+
+  // 风险标记
+  riskLevel String @default("normal") @map("risk_level") // normal | warning | critical
+
+  // 管理者反馈
+  managerFeedback String?   @map("manager_feedback") @db.Text
+  feedbackById    String?   @map("feedback_by_id")
+  feedbackAt      DateTime? @map("feedback_at")
+
+  createdAt DateTime @default(now())
+
+  @@index([assignmentId])
+  @@index([employeeId])
+  @@index([checkInDate])
+  @@map("progress_check_ins")
+}
+
+// ============================================
+// P2-1: 外部数据源配置
+// ============================================
+
+model DataSourceConfig {
+  id String @id @default(uuid())
+
+  companyId String @map("company_id")
+  name      String // 数据源名称
+
+  type String // erp | crm | hr | custom_api
+
+  // 连接配置 (加密存储)
+  connectionConfig Json @map("connection_config")
+
+  // 字段映射 JSON
+  fieldMapping Json @map("field_mapping")
+
+  // 同步配置
+  syncFrequency  String    @default("daily") @map("sync_frequency") // hourly | daily | weekly
+  lastSyncAt     DateTime? @map("last_sync_at")
+  lastSyncStatus String?   @map("last_sync_status") // success | failed
+  lastSyncError  String?   @map("last_sync_error") @db.Text
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("data_source_configs")
+}
+
+// 数据同步日志
+model DataSyncLog {
+  id String @id @default(uuid())
+
+  dataSourceId String @map("data_source_id")
+  companyId    String @map("company_id")
+
+  startedAt   DateTime  @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  status           String // running | success | failed
+  recordsProcessed Int    @default(0) @map("records_processed")
+  recordsFailed    Int    @default(0) @map("records_failed")
+
+  errorMessage String? @map("error_message") @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([dataSourceId])
+  @@index([companyId])
+  @@map("data_sync_logs")
+}

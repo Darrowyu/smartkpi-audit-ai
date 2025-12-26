@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight, Globe, Building, User, ListChecks, PenLine, X, CheckSquare } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight, Globe, Building, User, ListChecks, PenLine, X, CheckSquare, Scale, PieChart, MessageSquare, Grid3X3, DollarSign, ClipboardCheck, Database } from 'lucide-react';
 import { Language } from '../../types';
 import { SimpleAvatar as Avatar } from '../ui/avatar';
 import { useAuth } from '../../context/AuthContext';
@@ -29,6 +29,8 @@ const managerBusinessNavItems: NavItem[] = [
   { path: '/assignment', icon: ClipboardList, labelKey: 'sidebar.assignment' },
   { path: '/data-entry', icon: FileSpreadsheet, labelKey: 'sidebar.dataEntry' },
   { path: '/data-approval', icon: CheckSquare, labelKey: 'sidebar.dataApproval' },
+  { path: '/checkin', icon: ClipboardCheck, labelKey: 'sidebar.checkin' },
+  { path: '/interview', icon: MessageSquare, labelKey: 'sidebar.interview' },
   { path: '/reports', icon: FileText, labelKey: 'sidebar.reports' },
 ];
 
@@ -51,6 +53,14 @@ const adminNavItems: NavItem[] = [
   { path: '/permissions', icon: Shield, labelKey: 'sidebar.permissions' },
 ];
 
+const performanceAdminNavItems: NavItem[] = [
+  { path: '/calibration', icon: Scale, labelKey: 'sidebar.calibration' },
+  { path: '/distribution', icon: PieChart, labelKey: 'sidebar.distribution' },
+  { path: '/talent', icon: Grid3X3, labelKey: 'sidebar.talent' },
+  { path: '/salary', icon: DollarSign, labelKey: 'sidebar.salary' },
+  { path: '/datasource', icon: Database, labelKey: 'sidebar.datasource' },
+];
+
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -60,8 +70,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
   const isManager = user?.role === 'MANAGER';
   const isUser = user?.role === 'USER';
   const [adminExpanded, setAdminExpanded] = useState(false);
+  const [perfExpanded, setPerfExpanded] = useState(false);
 
   const isAdminViewActive = adminNavItems.some(item => location.pathname === item.path);
+  const isPerfViewActive = performanceAdminNavItems.some(item => location.pathname === item.path);
 
   const avatarUrl = useMemo(() => user?.avatar ? getAvatarUrl(user.id) : undefined, [user]);
 
@@ -71,10 +83,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
   }, [isUser]);
 
   useEffect(() => {
-    if (isAdminViewActive) {
-      setAdminExpanded(true);
-    }
-  }, [isAdminViewActive]);
+    if (isAdminViewActive) setAdminExpanded(true);
+    if (isPerfViewActive) setPerfExpanded(true);
+  }, [isAdminViewActive, isPerfViewActive]);
 
   const handleNavClick = (path: string) => {
     navigate(path);
@@ -166,22 +177,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
           <>
             <SectionLabel>{t('sidebar.adminSection', '系统管理')}</SectionLabel>
             <div className="space-y-0.5">
+              {/* 组织管理折叠组 */}
               <button
                 onClick={() => setAdminExpanded(!adminExpanded)}
                 className="group relative w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm font-medium transition-all duration-200 touch-target text-white/70 hover:text-white hover:bg-[#163a6e]/50"
               >
                 <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 sm:w-[18px] sm:h-[18px]" />
-                  <span>{t('sidebar.admin')}</span>
+                  <Building2 className="w-5 h-5 sm:w-[18px] sm:h-[18px]" />
+                  <span>{t('sidebar.orgAdmin', '组织管理')}</span>
                 </div>
                 {adminExpanded
                   ? <ChevronDown className="w-4 h-4 text-white/50" />
                   : <ChevronRight className="w-4 h-4 text-white/50" />
                 }
               </button>
-
               <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-60' : 'max-h-0'}`}>
                 {adminNavItems.map((item) => (
+                  <NavButton key={item.path} item={item} compact />
+                ))}
+              </div>
+
+              {/* 绩效管理折叠组 */}
+              <button
+                onClick={() => setPerfExpanded(!perfExpanded)}
+                className="group relative w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm font-medium transition-all duration-200 touch-target text-white/70 hover:text-white hover:bg-[#163a6e]/50"
+              >
+                <div className="flex items-center gap-3">
+                  <Scale className="w-5 h-5 sm:w-[18px] sm:h-[18px]" />
+                  <span>{t('sidebar.perfAdmin', '绩效管理')}</span>
+                </div>
+                {perfExpanded
+                  ? <ChevronDown className="w-4 h-4 text-white/50" />
+                  : <ChevronRight className="w-4 h-4 text-white/50" />
+                }
+              </button>
+              <div className={`overflow-hidden transition-all duration-200 ${perfExpanded ? 'max-h-60' : 'max-h-0'}`}>
+                {performanceAdminNavItems.map((item) => (
                   <NavButton key={item.path} item={item} compact />
                 ))}
               </div>

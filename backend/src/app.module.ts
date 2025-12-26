@@ -20,6 +20,14 @@ import { CalculationModule } from './modules/calculation/calculation.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+// P0-P2 Enhancement Modules
+import { CalibrationModule } from './modules/calibration/calibration.module';
+import { DistributionModule } from './modules/distribution/distribution.module';
+import { InterviewModule } from './modules/interview/interview.module';
+import { TalentModule } from './modules/talent/talent.module';
+import { SalaryModule } from './modules/salary/salary.module';
+import { CheckInModule } from './modules/checkin/checkin.module';
+import { DataSourceModule } from './modules/datasource/datasource.module';
 
 @Module({
   imports: [
@@ -42,6 +50,14 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ReportsModule,
     PermissionsModule,
     NotificationsModule,
+    // P0-P2 Enhancement Modules
+    CalibrationModule,
+    DistributionModule,
+    InterviewModule,
+    TalentModule,
+    SalaryModule,
+    CheckInModule,
+    DataSourceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

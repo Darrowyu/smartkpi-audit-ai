@@ -3,20 +3,25 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from './storage.service';
 import { FileProcessStatus } from '@prisma/client';
 import * as XLSX from 'xlsx';
+import * as fileType from 'file-type';
 
 @Injectable()
 export class FilesService {
+  private readonly logger = new Logger(FilesService.name);
+
   private readonly allowedMimeTypes = [
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
     'application/vnd.ms-excel', // .xls
     'text/csv', // .csv
     'application/csv', // .csv (部分浏览器)
   ];
+  private readonly allowedExtensions = ['xlsx', 'xls', 'csv']; // 允许的文件扩展名
   private readonly maxFileSize = 10 * 1024 * 1024; // 10MB
 
   constructor(
@@ -31,7 +36,7 @@ export class FilesService {
     userId: string,
     description?: string,
   ) {
-    this.validateFile(file); // 验证文件
+    await this.validateFile(file); // 验证文件(含Magic Bytes检查)
 
     const originalName = Buffer.from(file.originalname, 'latin1').toString(
       'utf8',
@@ -183,7 +188,7 @@ export class FilesService {
   }
 
   /** 验证上传的文件 */
-  private validateFile(file: Express.Multer.File) {
+  private async validateFile(file: Express.Multer.File): Promise<void> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -197,6 +202,16 @@ export class FilesService {
     if (file.size > this.maxFileSize) {
       throw new BadRequestException('File size exceeds 10MB limit');
     }
+
+    // Magic Bytes验证 - 检查文件实际类型
+    const detected = await fileType.fromBuffer(file.buffer);
+    if (detected) {
+      if (!this.allowedExtensions.includes(detected.ext)) {
+        this.logger.warn(`File type mismatch: claimed ${file.mimetype}, detected ${detected.mime}`);
+        throw new BadRequestException('File content does not match allowed types');
+      }
+    }
+    // CSV文件没有magic bytes，跳过检测（依赖MIME类型验证）
   }
 
   /** 解析文件为CSV格式 */

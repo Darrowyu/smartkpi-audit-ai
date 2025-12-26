@@ -65,12 +65,54 @@ export interface UpdateProfileData {
   email?: string;
   firstName?: string;
   lastName?: string;
+  phoneNumber?: string;
+  bio?: string;
   language?: string;
 }
 
 export interface ChangePasswordData {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface NotificationSettings {
+  emailNotify: boolean;
+  pushNotify: boolean;
+  smsNotify: boolean;
+  kpiReminder: boolean;
+  weeklyReport: boolean;
+  teamUpdates: boolean;
+  achievements: boolean;
+  deadlineAlert: boolean;
+}
+
+export interface LoginHistoryItem {
+  id: string;
+  device: string | null;
+  browser: string | null;
+  os: string | null;
+  ipAddress: string | null;
+  location: string | null;
+  isCurrent: boolean;
+  createdAt: string;
+}
+
+export interface KpiPreferences {
+  defaultView: 'month' | 'week' | 'year';
+  reminderFrequency: 'daily' | 'weekly' | 'monthly';
+  showProgressBar: boolean;
+  showTrendChart: boolean;
+  autoCalculate: boolean;
+  warningThreshold: number;
+  selectedQuarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+}
+
+export interface AppearanceSettings {
+  theme: 'light' | 'dark' | 'system';
+  accentColor: 'blue' | 'teal' | 'purple' | 'orange';
+  fontSize: 'small' | 'medium' | 'large';
+  compactMode: boolean;
+  animations: boolean;
 }
 
 export const getAvatarUrl = (userId: string): string => {
@@ -140,6 +182,41 @@ export const usersApi = {
     const res = await apiClient.post('/users/me/avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return res.data;
+  },
+
+  getNotificationSettings: async (): Promise<NotificationSettings> => {
+    const res = await apiClient.get('/users/me/notification-settings');
+    return res.data;
+  },
+
+  updateNotificationSettings: async (data: Partial<NotificationSettings>): Promise<NotificationSettings> => {
+    const res = await apiClient.patch('/users/me/notification-settings', data);
+    return res.data;
+  },
+
+  getLoginHistory: async (): Promise<LoginHistoryItem[]> => {
+    const res = await apiClient.get('/users/me/login-history');
+    return res.data;
+  },
+
+  getKpiPreferences: async (): Promise<KpiPreferences> => {
+    const res = await apiClient.get('/users/me/kpi-preferences');
+    return res.data;
+  },
+
+  updateKpiPreferences: async (data: Partial<KpiPreferences>): Promise<KpiPreferences> => {
+    const res = await apiClient.patch('/users/me/kpi-preferences', data);
+    return res.data;
+  },
+
+  getAppearanceSettings: async (): Promise<AppearanceSettings> => {
+    const res = await apiClient.get('/users/me/appearance-settings');
+    return res.data;
+  },
+
+  updateAppearanceSettings: async (data: Partial<AppearanceSettings>): Promise<AppearanceSettings> => {
+    const res = await apiClient.patch('/users/me/appearance-settings', data);
     return res.data;
   },
 };

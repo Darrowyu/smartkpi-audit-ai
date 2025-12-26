@@ -348,7 +348,16 @@ export const DataEntryView: React.FC = () => {
                     setHasDraft(true);
                 } else {
                     setHasDraft(false);
+                    setManualEntries([]); // 切换周期时清空当前录入数据
                 }
+                const savedTime = new Date(data.savedAt).getTime(); // 检查草稿是否过期（7天）
+                const now = Date.now();
+                if (now - savedTime > 7 * 24 * 60 * 60 * 1000) {
+                    localStorage.removeItem(DRAFT_KEY);
+                    setHasDraft(false);
+                }
+            } else {
+                setManualEntries([]); // 无草稿时也清空
             }
         } catch {
             localStorage.removeItem(DRAFT_KEY);

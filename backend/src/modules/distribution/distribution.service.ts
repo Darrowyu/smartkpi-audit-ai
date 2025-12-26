@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { GRADE_BOUNDARIES, getGradeFromScore } from '../../common/constants/grade-boundaries';
 
 const DEFAULT_DISTRIBUTION = { S: 10, A: 20, B: 40, C: 20, D: 10 };
-const DEFAULT_BOUNDARIES = { S: 95, A: 85, B: 70, C: 60 };
+const DEFAULT_BOUNDARIES = GRADE_BOUNDARIES;
 
 @Injectable()
 export class DistributionService {
@@ -33,8 +34,9 @@ export class DistributionService {
 
   async saveConfig(companyId: string, dto: { periodId?: string; distribution: Record<string, number>; scoreBoundaries?: Record<string, number>; isEnforced?: boolean; tolerance?: number }) {
     const total = Object.values(dto.distribution).reduce((a, b) => a + b, 0);
-    if (Math.abs(total - 100) > 0.01) {
-      throw new BadRequestException('分布比例总和必须为100%');
+    const roundedTotal = Math.round(total * 100) / 100; // 四舍五入到两位小数
+    if (Math.abs(roundedTotal - 100) > 0.5) { // 允许0.5%的浮点误差
+      throw new BadRequestException(`分布比例总和必须为100%（当前: ${roundedTotal}%）`);
     }
 
     const existing = await this.prisma.distributionConfig.findFirst({
@@ -81,7 +83,7 @@ export class DistributionService {
 
     const actualCounts = { S: 0, A: 0, B: 0, C: 0, D: 0 };
     for (const p of performances) {
-      const grade = this.getGradeFromScore(p.totalScore, boundaries);
+      const grade = this.getGradeFromScoreLocal(p.totalScore, boundaries);
       actualCounts[grade]++;
     }
 
@@ -116,7 +118,7 @@ export class DistributionService {
 
     const counts = { S: 0, A: 0, B: 0, C: 0, D: 0 };
     for (const p of performances) {
-      const grade = this.getGradeFromScore(p.totalScore, boundaries);
+      const grade = this.getGradeFromScoreLocal(p.totalScore, boundaries);
       counts[grade]++;
     }
 
@@ -135,11 +137,7 @@ export class DistributionService {
     };
   }
 
-  private getGradeFromScore(score: number, boundaries: Record<string, number>): string {
-    if (score >= boundaries.S) return 'S';
-    if (score >= boundaries.A) return 'A';
-    if (score >= boundaries.B) return 'B';
-    if (score >= boundaries.C) return 'C';
-    return 'D';
+  private getGradeFromScoreLocal(score: number, boundaries: Record<string, number>): string {
+    return getGradeFromScore(score, boundaries); // 使用统一边界配置
   }
 }

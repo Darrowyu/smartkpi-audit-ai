@@ -41,6 +41,10 @@
     --brand-primary: #1E4B8E;
     --brand-secondary: #5B9BD5;
     --brand-dark: #163a6e;
+
+    /* Appearance settings defaults */
+    --accent-color: #1E4B8E;
+    --base-font-size: 16px;
   }
 
   .dark {
@@ -81,6 +85,7 @@
 
   body {
     @apply bg-background text-foreground;
+    font-size: var(--base-font-size);
   }
 
   /* 隐藏浏览器原生的密码显示/隐藏按钮 */
@@ -89,6 +94,23 @@
   input::-webkit-credentials-auto-fill-button,
   input::-webkit-password-toggle-button {
     display: none !important;
+  }
+
+  /* 紧凑模式 */
+  .compact .p-4 { padding: 0.75rem; }
+  .compact .p-6 { padding: 1rem; }
+  .compact .gap-4 { gap: 0.75rem; }
+  .compact .gap-6 { gap: 1rem; }
+  .compact .space-y-4 > * + * { margin-top: 0.75rem; }
+  .compact .space-y-6 > * + * { margin-top: 1rem; }
+
+  /* 禁用动画 */
+  .no-animations *,
+  .no-animations *::before,
+  .no-animations *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

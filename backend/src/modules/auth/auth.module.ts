@@ -13,10 +13,13 @@ import { PermissionsModule } from '../permissions/permissions.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'default-secret',
-        signOptions: { expiresIn: 900 },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret || secret.length < 32) {
+          throw new Error('JWT_SECRET must be set and at least 32 characters');
+        }
+        return { secret, signOptions: { expiresIn: 900 } };
+      },
     }),
   ],
   controllers: [AuthController],

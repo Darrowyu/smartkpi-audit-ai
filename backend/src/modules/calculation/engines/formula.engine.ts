@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { evaluate, compile } from 'mathjs';
+import { determineKPIStatus } from '../../../common/constants/grade-boundaries';
 
 export enum FormulaType {
   POSITIVE = 'POSITIVE', // 正向指标：越大越好
@@ -58,8 +59,14 @@ export class FormulaEngine {
     cap = 120,
     floor = 0,
   ): CalculationResult {
-    const rawScore =
-      input.actual === 0 ? cap : (input.target / input.actual) * 100;
+    let rawScore: number;
+    if (input.actual === 0) {
+      rawScore = input.target === 0 ? 100 : cap; // 目标和实际都为0时得100分，否则得满分
+    } else if (input.actual < 0) {
+      rawScore = floor; // 实际值为负数时得最低分
+    } else {
+      rawScore = (input.target / input.actual) * 100;
+    }
     const cappedScore = Math.max(floor, Math.min(rawScore, cap));
     const weightedScore = cappedScore * (input.weight / 100);
 
@@ -137,14 +144,11 @@ export class FormulaEngine {
     return results.reduce((sum, r) => sum + r.weightedScore, 0);
   }
 
-  /** 根据总分判定绩效等级 */
+  /** 根据总分判定绩效等级（使用统一边界配置） */
   determineStatus(
     totalScore: number,
   ): 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'POOR' {
-    if (totalScore > 90) return 'EXCELLENT';
-    if (totalScore > 75) return 'GOOD';
-    if (totalScore > 60) return 'AVERAGE';
-    return 'POOR';
+    return determineKPIStatus(totalScore);
   }
 
   private evaluateStep(actual: number, step: StepRule): boolean {

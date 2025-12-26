@@ -89,15 +89,20 @@ model Company {
 // ============================================
 
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique // 用户名，用于登录
-  email        String? // 邮箱，可选联系方式
-  passwordHash String   @map("password_hash")
-  firstName    String?  @map("first_name")
-  lastName     String?  @map("last_name")
-  avatar       String? // 头像文件路径
-  role         UserRole @default(USER)
-  language     String   @default("en") // User preference: "en" | "zh"
+  id                   String   @id @default(uuid())
+  username             String   @unique // 用户名，用于登录
+  email                String? // 邮箱，可选联系方式
+  passwordHash         String   @map("password_hash")
+  firstName            String?  @map("first_name")
+  lastName             String?  @map("last_name")
+  phoneNumber          String?  @map("phone_number") // 手机号码
+  bio                  String?  @db.Text // 个人简介
+  avatar               String? // 头像文件路径
+  role                 UserRole @default(USER)
+  language             String   @default("en") // User preference: "en" | "zh"
+  notificationSettings Json?    @map("notification_settings") // 通知设置
+  kpiPreferences       Json?    @map("kpi_preferences") // KPI偏好设置
+  appearanceSettings   Json?    @map("appearance_settings") // 外观设置
 
   companyId String  @map("company_id")
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -122,12 +127,38 @@ model User {
   uploadedFiles UploadedFile[]
   kpiAnalyses   KPIAnalysis[]
   notifications Notification[]
+  loginHistory  LoginHistory[]
 
   @@index([companyId])
   @@index([departmentId])
   @@index([username])
   @@index([passwordResetToken])
   @@map("users")
+}
+
+// ============================================
+// Login History (登录历史)
+// ============================================
+
+model LoginHistory {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent") @db.Text
+  device    String?  // 解析后的设备信息
+  browser   String?  // 浏览器信息
+  os        String?  // 操作系统
+  location  String?  // 地理位置
+  
+  isCurrent Boolean  @default(false) @map("is_current") // 是否当前会话
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("login_history")
 }
 
 // ============================================
@@ -550,6 +581,7 @@ model KPIDataEntry {
   @@index([submissionId])
   @@index([assignmentId])
   @@index([employeeId])
+  @@index([submissionId, employeeId])
   @@map("kpi_data_entries")
 }
 
@@ -1067,6 +1099,8 @@ model ProgressCheckIn {
   @@index([assignmentId])
   @@index([employeeId])
   @@index([checkInDate])
+  @@index([riskLevel])
+  @@index([companyId, riskLevel])
   @@map("progress_check_ins")
 }
 

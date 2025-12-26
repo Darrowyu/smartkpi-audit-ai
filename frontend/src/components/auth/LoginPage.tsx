@@ -6,7 +6,7 @@ import { Language } from '../../types';
 import { Eye, EyeOff, LayoutDashboard, BarChart3, ShieldCheck, Languages } from 'lucide-react';
 import logoImage from '../../assets/images/Makrite_KPI_logo.png';
 
-const REMEMBER_KEY = 'smartkpi_remember_credentials';
+const REMEMBER_KEY = 'smartkpi_remember_username'; // 仅记住用户名，不存储密码
 
 interface Props {
   language: Language;
@@ -26,11 +26,9 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(REMEMBER_KEY);
-      if (saved) {
-        const { username: savedUser, password: savedPass } = JSON.parse(atob(saved));
-        setUsername(savedUser || '');
-        setPassword(savedPass || '');
+      const savedUsername = localStorage.getItem(REMEMBER_KEY);
+      if (savedUsername) {
+        setUsername(savedUsername);
         setRememberMe(true);
       }
     } catch { /* ignore */ }
@@ -49,7 +47,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
     try {
       await login(username, password);
       if (rememberMe) {
-        localStorage.setItem(REMEMBER_KEY, btoa(JSON.stringify({ username, password })));
+        localStorage.setItem(REMEMBER_KEY, username); // 仅存储用户名
       } else {
         localStorage.removeItem(REMEMBER_KEY);
       }

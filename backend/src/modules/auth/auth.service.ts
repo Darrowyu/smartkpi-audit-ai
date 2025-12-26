@@ -32,7 +32,7 @@ export class AuthService {
   ) {}
 
   /** 用户名登录 */
-  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
+  async login(loginDto: LoginDto, ipAddress?: string, userAgent?: string): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findUnique({
       // 按用户名查找用户
       where: { username: loginDto.username },
@@ -73,6 +73,13 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
 
+    await this.prisma.loginHistory.updateMany({ where: { userId: user.id }, data: { isCurrent: false } }); // 清除旧的当前会话标记
+    const { device, browser, os } = this.parseUserAgent(userAgent || '');
+    const location = await this.getLocationFromIp(ipAddress || '');
+    await this.prisma.loginHistory.create({
+      data: { userId: user.id, ipAddress, userAgent, device, browser, os, location, isCurrent: true },
+    });
+
     const accessToken = await this.generateToken(user); // 生成JWT令牌
 
     const { passwordHash, company, ...userWithoutPassword } = user; // 从响应中移除密码哈希
@@ -81,6 +88,46 @@ export class AuthService {
       accessToken,
       user: userWithoutPassword,
     };
+  }
+
+  /** 解析 User-Agent */
+  private parseUserAgent(ua: string): { device: string; browser: string; os: string } {
+    let device = 'Unknown Device';
+    let browser = 'Unknown';
+    let os = 'Unknown';
+
+    if (/iPhone/.test(ua)) { device = 'iPhone'; os = 'iOS'; }
+    else if (/iPad/.test(ua)) { device = 'iPad'; os = 'iOS'; }
+    else if (/Android/.test(ua)) { device = 'Android Device'; os = 'Android'; }
+    else if (/Macintosh/.test(ua)) { device = 'Mac'; os = 'macOS'; }
+    else if (/Windows/.test(ua)) { device = 'Windows PC'; os = 'Windows'; }
+    else if (/Linux/.test(ua)) { device = 'Linux PC'; os = 'Linux'; }
+
+    if (/Edg\//.test(ua)) browser = 'Edge';
+    else if (/Chrome\//.test(ua)) browser = 'Chrome';
+    else if (/Safari\//.test(ua) && !/Chrome/.test(ua)) browser = 'Safari';
+    else if (/Firefox\//.test(ua)) browser = 'Firefox';
+
+    return { device: `${device} - ${browser}`, browser, os };
+  }
+
+  /** 通过IP获取地理位置 */
+  private async getLocationFromIp(ip: string): Promise<string | null> {
+    if (!ip || ip === '::1' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+      return '本地网络';
+    }
+    try {
+      const cleanIp = ip.replace(/^::ffff:/, '');
+      const res = await fetch(`http://ip-api.com/json/${cleanIp}?lang=zh-CN&fields=status,country,regionName,city`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        return data.city ? `${data.city}, ${data.country}` : data.country || null;
+      }
+      return null;
+    } catch {
+      this.logger.warn(`Failed to get location for IP: ${ip}`);
+      return null;
+    }
   }
 
   /** 获取当前用户信息 */

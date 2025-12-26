@@ -5,8 +5,11 @@ import {
   IsEnum,
   IsUUID,
   IsBoolean,
+  IsNumber,
   MaxLength,
   MinLength,
+  Min,
+  Max,
 } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
@@ -123,6 +126,16 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(20)
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
   language?: string;
 }
 
@@ -134,4 +147,92 @@ export class ChangePasswordDto {
   @IsString()
   @MinLength(6)
   newPassword: string;
+}
+
+export class UpdateNotificationSettingsDto {
+  @IsOptional()
+  @IsBoolean()
+  emailNotify?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  pushNotify?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  smsNotify?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  kpiReminder?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  weeklyReport?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  teamUpdates?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  achievements?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  deadlineAlert?: boolean;
+}
+
+export class UpdateKpiPreferencesDto {
+  @IsOptional()
+  @IsString()
+  defaultView?: 'month' | 'week' | 'year';
+
+  @IsOptional()
+  @IsString()
+  reminderFrequency?: 'daily' | 'weekly' | 'monthly';
+
+  @IsOptional()
+  @IsBoolean()
+  showProgressBar?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  showTrendChart?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  autoCalculate?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(50)
+  @Max(100)
+  warningThreshold?: number;
+
+  @IsOptional()
+  @IsString()
+  selectedQuarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+}
+
+export class UpdateAppearanceSettingsDto {
+  @IsOptional()
+  @IsString()
+  theme?: 'light' | 'dark' | 'system';
+
+  @IsOptional()
+  @IsString()
+  accentColor?: 'blue' | 'teal' | 'purple' | 'orange';
+
+  @IsOptional()
+  @IsString()
+  fontSize?: 'small' | 'medium' | 'large';
+
+  @IsOptional()
+  @IsBoolean()
+  compactMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  animations?: boolean;
 }

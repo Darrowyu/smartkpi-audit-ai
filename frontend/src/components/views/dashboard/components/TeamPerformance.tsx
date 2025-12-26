@@ -14,6 +14,7 @@ interface TeamMember {
 interface TeamPerformanceProps {
   members: TeamMember[];
   teamName?: string;
+  showProgressBar?: boolean;
 }
 
 const getProgressColor = (progress: number): string => {
@@ -40,7 +41,7 @@ const getAvatarBg = (name: string): string => {
   return colors[index];
 };
 
-export const TeamPerformance: React.FC<TeamPerformanceProps> = ({ members, teamName = '管理团队' }) => {
+export const TeamPerformance: React.FC<TeamPerformanceProps> = ({ members, teamName = '管理团队', showProgressBar = true }) => {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm h-full">
       <div className="flex items-center justify-between mb-6">
@@ -68,17 +69,19 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({ members, teamN
                   {member.progress}%
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${getProgressColor(member.progress)} rounded-full transition-all duration-300`}
-                    style={{ width: `${member.progress}%` }}
-                  />
+              {showProgressBar && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${getProgressColor(member.progress)} rounded-full transition-all duration-300`}
+                      style={{ width: `${member.progress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-slate-400 whitespace-nowrap">
+                    {member.completed}/{member.total}
+                  </span>
                 </div>
-                <span className="text-xs text-slate-400 whitespace-nowrap">
-                  {member.completed}/{member.total}
-                </span>
-              </div>
+              )}
             </div>
           </div>
         ))}

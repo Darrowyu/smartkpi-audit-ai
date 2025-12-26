@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Key, Eye, EyeOff, Smartphone, History, RefreshCw } from 'lucide-react';
-import { usersApi, ChangePasswordData } from '@/api/users.api';
+import { Key, Eye, EyeOff, Smartphone, History, RefreshCw, Loader2 } from 'lucide-react';
+import { usersApi, ChangePasswordData, LoginHistoryItem } from '@/api/users.api';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,15 @@ export const SecurityTab: React.FC = () => {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
-  const loginHistory = [
-    { device: 'Windows PC - Chrome', location: '北京', time: '2024-01-15 14:30', current: true },
-    { device: 'iPhone 14 Pro', location: '北京', time: '2024-01-15 09:15', current: false },
-    { device: 'MacBook Pro - Safari', location: '上海', time: '2024-01-14 18:45', current: false },
-  ];
+  useEffect(() => {
+    usersApi.getLoginHistory()
+      .then(setLoginHistory)
+      .catch(() => toast({ title: t('settings.security.loadHistoryFailed', '加载登录历史失败'), variant: 'destructive' }))
+      .finally(() => setHistoryLoading(false));
+  }, [t, toast]);
 
   const handleChangePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -108,23 +111,31 @@ export const SecurityTab: React.FC = () => {
 
       {/* 登录历史 */}
       <SectionCard icon={<History className="w-5 h-5" />} title={t('settings.security.loginHistory', '登录历史')} description={t('settings.security.loginHistoryDesc', '查看您的账户登录记录')}>
-        <div className="space-y-4">
-          {loginHistory.map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${item.current ? 'bg-green-500' : 'bg-slate-300'}`} />
-                <div>
-                  <div className="font-medium text-slate-800">{item.device}</div>
-                  <div className="text-sm text-slate-500">{item.location}</div>
+        {historyLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-[#1E4B8E]" />
+          </div>
+        ) : loginHistory.length === 0 ? (
+          <div className="text-center py-8 text-slate-400">{t('settings.security.noLoginHistory', '暂无登录记录')}</div>
+        ) : (
+          <div className="space-y-4">
+            {loginHistory.map((item) => (
+              <div key={item.id} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${item.isCurrent ? 'bg-green-500' : 'bg-slate-300'}`} />
+                  <div>
+                    <div className="font-medium text-slate-800">{item.device || t('settings.security.unknownDevice', '未知设备')}</div>
+                    <div className="text-sm text-slate-500">{item.location || item.ipAddress || '-'}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-slate-600">{new Date(item.createdAt).toLocaleString()}</div>
+                  {item.isCurrent && <div className="text-xs text-[#1E4B8E]">{t('settings.security.currentDevice', '当前设备')}</div>}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-slate-600">{item.time}</div>
-                {item.current && <div className="text-xs text-[#1E4B8E]">{t('settings.security.currentDevice', '当前设备')}</div>}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </SectionCard>
     </div>
   );

@@ -12,6 +12,9 @@ import {
   UpdateUserDto,
   UpdateProfileDto,
   ChangePasswordDto,
+  UpdateNotificationSettingsDto,
+  UpdateKpiPreferencesDto,
+  UpdateAppearanceSettingsDto,
 } from './dto/user.dto';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -179,6 +182,8 @@ export class UsersService {
         email: true,
         firstName: true,
         lastName: true,
+        phoneNumber: true,
+        bio: true,
         role: true,
         language: true,
         isActive: true,
@@ -255,5 +260,103 @@ export class UsersService {
       png: 'image/png',
     };
     return { buffer, mimeType: mimeMap[ext || ''] || 'image/jpeg' };
+  }
+
+  async getNotificationSettings(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notificationSettings: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const defaults = {
+      emailNotify: true,
+      pushNotify: true,
+      smsNotify: false,
+      kpiReminder: true,
+      weeklyReport: true,
+      teamUpdates: true,
+      achievements: true,
+      deadlineAlert: true,
+    };
+    return { ...(defaults), ...(user.notificationSettings as object || {}) };
+  }
+
+  async updateNotificationSettings(userId: string, dto: UpdateNotificationSettingsDto) {
+    const current = await this.getNotificationSettings(userId);
+    const updated = { ...current, ...dto };
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { notificationSettings: updated },
+    });
+    return updated;
+  }
+
+  async getLoginHistory(userId: string, limit = 10) {
+    return this.prisma.loginHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: { id: true, device: true, browser: true, os: true, ipAddress: true, location: true, isCurrent: true, createdAt: true },
+    });
+  }
+
+  async getKpiPreferences(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { kpiPreferences: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const defaults = {
+      defaultView: 'month',
+      reminderFrequency: 'weekly',
+      showProgressBar: true,
+      showTrendChart: true,
+      autoCalculate: true,
+      warningThreshold: 80,
+      selectedQuarter: 'Q1',
+    };
+    return { ...defaults, ...(user.kpiPreferences as object || {}) };
+  }
+
+  async updateKpiPreferences(userId: string, dto: UpdateKpiPreferencesDto) {
+    const current = await this.getKpiPreferences(userId);
+    const updated = { ...current, ...dto };
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { kpiPreferences: updated },
+    });
+    return updated;
+  }
+
+  async getAppearanceSettings(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { appearanceSettings: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const defaults = {
+      theme: 'light',
+      accentColor: 'blue',
+      fontSize: 'medium',
+      compactMode: false,
+      animations: true,
+    };
+    return { ...defaults, ...(user.appearanceSettings as object || {}) };
+  }
+
+  async updateAppearanceSettings(userId: string, dto: UpdateAppearanceSettingsDto) {
+    const current = await this.getAppearanceSettings(userId);
+    const updated = { ...current, ...dto };
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { appearanceSettings: updated },
+    });
+    return updated;
   }
 }

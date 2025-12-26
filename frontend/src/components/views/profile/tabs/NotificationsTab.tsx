@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Mail, Bell, Smartphone, Target, FileText, Users, Trophy, AlertTriangle } from 'lucide-react';
+import { Mail, Bell, Smartphone, Target, FileText, Users, Trophy, AlertTriangle, Loader2 } from 'lucide-react';
 import { SectionCard } from '../components/SectionCard';
 import { Toggle } from '../components/Toggle';
+import { usersApi, NotificationSettings } from '@/api/users.api';
+import { useToast } from '@/components/ui/use-toast';
 
 interface NotifyItemProps {
   icon: React.ElementType;
@@ -30,7 +32,9 @@ const NotifyItem: React.FC<NotifyItemProps> = ({ icon: Icon, title, desc, checke
 
 export const NotificationsTab: React.FC = () => {
   const { t } = useTranslation();
-  const [notifications, setNotifications] = useState({
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<NotificationSettings>({
     emailNotify: true,
     pushNotify: true,
     smsNotify: false,
@@ -40,6 +44,36 @@ export const NotificationsTab: React.FC = () => {
     achievements: true,
     deadlineAlert: true,
   });
+  const pendingRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    usersApi.getNotificationSettings()
+      .then(setNotifications)
+      .catch(() => toast({ title: t('settings.notifications.loadFailed', '加载设置失败'), variant: 'destructive' }))
+      .finally(() => setLoading(false));
+  }, [t, toast]);
+
+  const handleChange = useCallback(async (key: keyof NotificationSettings, value: boolean) => {
+    if (pendingRef.current.has(key)) return;
+    pendingRef.current.add(key);
+    setNotifications(p => ({ ...p, [key]: value }));
+    try {
+      await usersApi.updateNotificationSettings({ [key]: value });
+    } catch {
+      setNotifications(p => ({ ...p, [key]: !value }));
+      toast({ title: t('settings.notifications.saveFailed', '保存失败'), variant: 'destructive' });
+    } finally {
+      pendingRef.current.delete(key);
+    }
+  }, [t, toast]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E4B8E]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -55,21 +89,21 @@ export const NotificationsTab: React.FC = () => {
             title={t('settings.notifications.email', '邮件通知')}
             desc={t('settings.notifications.emailDesc', '通过邮件接收重要通知')}
             checked={notifications.emailNotify}
-            onChange={(v) => setNotifications(p => ({ ...p, emailNotify: v }))}
+            onChange={(v) => handleChange('emailNotify', v)}
           />
           <NotifyItem
             icon={Bell}
             title={t('settings.notifications.push', '推送通知')}
             desc={t('settings.notifications.pushDesc', '接收浏览器推送通知')}
             checked={notifications.pushNotify}
-            onChange={(v) => setNotifications(p => ({ ...p, pushNotify: v }))}
+            onChange={(v) => handleChange('pushNotify', v)}
           />
           <NotifyItem
             icon={Smartphone}
             title={t('settings.notifications.sms', '短信通知')}
             desc={t('settings.notifications.smsDesc', '接收重要短信提醒')}
             checked={notifications.smsNotify}
-            onChange={(v) => setNotifications(p => ({ ...p, smsNotify: v }))}
+            onChange={(v) => handleChange('smsNotify', v)}
           />
         </div>
       </SectionCard>
@@ -81,7 +115,7 @@ export const NotificationsTab: React.FC = () => {
             title={t('settings.notifications.kpiReminder', 'KPI提醒')}
             desc={t('settings.notifications.kpiReminderDesc', '定期提醒您更新KPI进度')}
             checked={notifications.kpiReminder}
-            onChange={(v) => setNotifications(p => ({ ...p, kpiReminder: v }))}
+            onChange={(v) => handleChange('kpiReminder', v)}
             iconBg="bg-amber-50 text-amber-600"
           />
           <NotifyItem
@@ -89,7 +123,7 @@ export const NotificationsTab: React.FC = () => {
             title={t('settings.notifications.weeklyReport', '每周报告')}
             desc={t('settings.notifications.weeklyReportDesc', '每周发送KPI进度汇总')}
             checked={notifications.weeklyReport}
-            onChange={(v) => setNotifications(p => ({ ...p, weeklyReport: v }))}
+            onChange={(v) => handleChange('weeklyReport', v)}
             iconBg="bg-blue-50 text-blue-600"
           />
           <NotifyItem
@@ -97,7 +131,7 @@ export const NotificationsTab: React.FC = () => {
             title={t('settings.notifications.teamUpdates', '团队动态')}
             desc={t('settings.notifications.teamUpdatesDesc', '接收团队成员的KPI更新')}
             checked={notifications.teamUpdates}
-            onChange={(v) => setNotifications(p => ({ ...p, teamUpdates: v }))}
+            onChange={(v) => handleChange('teamUpdates', v)}
             iconBg="bg-green-50 text-green-600"
           />
           <NotifyItem
@@ -105,7 +139,7 @@ export const NotificationsTab: React.FC = () => {
             title={t('settings.notifications.achievements', '成就提醒')}
             desc={t('settings.notifications.achievementsDesc', '当您达成KPI目标时通知')}
             checked={notifications.achievements}
-            onChange={(v) => setNotifications(p => ({ ...p, achievements: v }))}
+            onChange={(v) => handleChange('achievements', v)}
             iconBg="bg-purple-50 text-purple-600"
           />
           <NotifyItem
@@ -113,7 +147,7 @@ export const NotificationsTab: React.FC = () => {
             title={t('settings.notifications.deadlineAlert', '截止日期预警')}
             desc={t('settings.notifications.deadlineAlertDesc', 'KPI截止日期前提醒')}
             checked={notifications.deadlineAlert}
-            onChange={(v) => setNotifications(p => ({ ...p, deadlineAlert: v }))}
+            onChange={(v) => handleChange('deadlineAlert', v)}
             iconBg="bg-red-50 text-red-600"
           />
         </div>

@@ -24,6 +24,8 @@ export const ProfileTab: React.FC = () => {
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     email: user?.email || '',
+    phoneNumber: (user as any)?.phoneNumber || '',
+    bio: (user as any)?.bio || '',
   });
 
   const avatarLetter = useMemo(() => (user?.firstName?.[0] || user?.username?.[0] || 'U').toUpperCase(), [user]);
@@ -64,6 +66,8 @@ export const ProfileTab: React.FC = () => {
         firstName: profileForm.firstName || undefined,
         lastName: profileForm.lastName || undefined,
         email: profileForm.email || undefined,
+        phoneNumber: profileForm.phoneNumber || undefined,
+        bio: profileForm.bio || undefined,
       };
       await usersApi.updateProfile(data);
       await refreshUser();
@@ -156,7 +160,11 @@ export const ProfileTab: React.FC = () => {
             <Label className="text-slate-500 text-sm flex items-center gap-1.5">
               <Phone className="w-4 h-4" /> {t('settings.profile.phone', '手机号码')}
             </Label>
-            <div className="px-4 py-2.5 bg-slate-50 rounded-lg text-slate-400">{t('settings.profile.notSet', '未设置')}</div>
+            {isEditing ? (
+              <Input value={profileForm.phoneNumber} onChange={(e) => setProfileForm(p => ({ ...p, phoneNumber: e.target.value }))} placeholder={t('settings.profile.phonePlaceholder', '请输入手机号码')} />
+            ) : (
+              <div className="px-4 py-2.5 bg-slate-50 rounded-lg text-slate-400">{(user as any)?.phoneNumber || t('settings.profile.notSet', '未设置')}</div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -177,9 +185,19 @@ export const ProfileTab: React.FC = () => {
             <Label className="text-slate-500 text-sm flex items-center gap-1.5">
               <FileText className="w-4 h-4" /> {t('settings.profile.bio', '个人简介')}
             </Label>
-            <div className="px-4 py-3 bg-slate-50 rounded-lg text-slate-400 min-h-[80px]">
-              {t('settings.profile.bioPlaceholder', '专注于企业级产品设计与用户体验优化，拥有8年产品管理经验。')}
-            </div>
+            {isEditing ? (
+              <textarea
+                value={profileForm.bio}
+                onChange={(e) => setProfileForm(p => ({ ...p, bio: e.target.value }))}
+                placeholder={t('settings.profile.bioPlaceholder', '请输入个人简介...')}
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-700 min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+                maxLength={500}
+              />
+            ) : (
+              <div className="px-4 py-3 bg-slate-50 rounded-lg text-slate-400 min-h-[80px]">
+                {(user as any)?.bio || t('settings.profile.noBio', '暂无简介')}
+              </div>
+            )}
           </div>
         </div>
       </SectionCard>

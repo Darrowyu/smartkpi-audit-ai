@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BarChart3, TrendingUp, Settings, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, Settings, Calendar, Loader2 } from 'lucide-react';
 import { SectionCard } from '../components/SectionCard';
 import { Toggle } from '../components/Toggle';
+import { usersApi, KpiPreferences } from '@/api/users.api';
+import { useToast } from '@/components/ui/use-toast';
 
 type ViewType = 'month' | 'week' | 'year';
 type FrequencyType = 'daily' | 'weekly' | 'monthly';
@@ -51,20 +53,41 @@ const QUARTERS: { key: Quarter; label: string; range: string }[] = [
 
 export const KpiTab: React.FC = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const pendingRef = useRef<Set<string>>(new Set());
 
-  const [displaySettings, setDisplaySettings] = useState({
-    defaultView: 'month' as ViewType,
-    reminderFrequency: 'weekly' as FrequencyType,
+  const [preferences, setPreferences] = useState<KpiPreferences>({
+    defaultView: 'month',
+    reminderFrequency: 'weekly',
     showProgressBar: true,
     showTrendChart: true,
-  });
-
-  const [calcSettings, setCalcSettings] = useState({
     autoCalculate: true,
     warningThreshold: 80,
+    selectedQuarter: 'Q1',
   });
 
-  const [selectedQuarter, setSelectedQuarter] = useState<Quarter>('Q1');
+  useEffect(() => {
+    usersApi.getKpiPreferences()
+      .then(setPreferences)
+      .catch(() => toast({ title: t('settings.kpi.loadFailed', '加载设置失败'), variant: 'destructive' }))
+      .finally(() => setLoading(false));
+  }, [t, toast]);
+
+  const updatePreference = useCallback(async <K extends keyof KpiPreferences>(key: K, value: KpiPreferences[K]) => {
+    if (pendingRef.current.has(key)) return;
+    pendingRef.current.add(key);
+    const prev = preferences[key];
+    setPreferences(p => ({ ...p, [key]: value }));
+    try {
+      await usersApi.updateKpiPreferences({ [key]: value });
+    } catch {
+      setPreferences(p => ({ ...p, [key]: prev }));
+      toast({ title: t('settings.kpi.saveFailed', '保存失败'), variant: 'destructive' });
+    } finally {
+      pendingRef.current.delete(key);
+    }
+  }, [preferences, t, toast]);
 
   const viewOptions = [
     { value: 'month', label: t('settings.kpi.monthView', '月视图') },
@@ -78,6 +101,14 @@ export const KpiTab: React.FC = () => {
     { value: 'monthly', label: t('settings.kpi.monthly', '每月') },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E4B8E]" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -90,24 +121,24 @@ export const KpiTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#1E4B8E]">{t('settings.kpi.defaultView', '默认视图')}</label>
-            <Select value={displaySettings.defaultView} onChange={(v) => setDisplaySettings(p => ({ ...p, defaultView: v as ViewType }))} options={viewOptions} />
+            <Select value={preferences.defaultView} onChange={(v) => updatePreference('defaultView', v as ViewType)} options={viewOptions} />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#1E4B8E]">{t('settings.kpi.reminderFrequency', '提醒频率')}</label>
-            <Select value={displaySettings.reminderFrequency} onChange={(v) => setDisplaySettings(p => ({ ...p, reminderFrequency: v as FrequencyType }))} options={frequencyOptions} />
+            <Select value={preferences.reminderFrequency} onChange={(v) => updatePreference('reminderFrequency', v as FrequencyType)} options={frequencyOptions} />
           </div>
         </div>
         <SettingRow
           label={t('settings.kpi.showProgressBar', '显示进度条')}
           description={t('settings.kpi.showProgressBarDesc', '在KPI卡片上显示进度指示器')}
-          checked={displaySettings.showProgressBar}
-          onChange={(v) => setDisplaySettings(p => ({ ...p, showProgressBar: v }))}
+          checked={preferences.showProgressBar}
+          onChange={(v) => updatePreference('showProgressBar', v)}
         />
         <SettingRow
           label={t('settings.kpi.showTrendChart', '显示趋势图')}
           description={t('settings.kpi.showTrendChartDesc', '在仪表盘显示KPI趋势变化')}
-          checked={displaySettings.showTrendChart}
-          onChange={(v) => setDisplaySettings(p => ({ ...p, showTrendChart: v }))}
+          checked={preferences.showTrendChart}
+          onChange={(v) => updatePreference('showTrendChart', v)}
         />
       </SectionCard>
 
@@ -116,8 +147,8 @@ export const KpiTab: React.FC = () => {
         <SettingRow
           label={t('settings.kpi.autoCalculate', '自动计算完成率')}
           description={t('settings.kpi.autoCalculateDesc', '根据子任务自动计算KPI完成进度')}
-          checked={calcSettings.autoCalculate}
-          onChange={(v) => setCalcSettings(p => ({ ...p, autoCalculate: v }))}
+          checked={preferences.autoCalculate}
+          onChange={(v) => updatePreference('autoCalculate', v)}
         />
         <div className="pt-4 border-t border-slate-100">
           <div className="flex items-center justify-between mb-2">
@@ -125,15 +156,15 @@ export const KpiTab: React.FC = () => {
               <div className="font-medium text-[#1E4B8E]">{t('settings.kpi.warningThreshold', '预警阈值')}</div>
               <div className="text-sm text-slate-500">{t('settings.kpi.warningThresholdDesc', '当KPI完成率低于此值时发出预警')}</div>
             </div>
-            <span className="text-lg font-semibold text-[#1E4B8E]">{calcSettings.warningThreshold}%</span>
+            <span className="text-lg font-semibold text-[#1E4B8E]">{preferences.warningThreshold}%</span>
           </div>
           <div className="mt-4">
             <input
               type="range"
               min="50"
               max="100"
-              value={calcSettings.warningThreshold}
-              onChange={(e) => setCalcSettings(p => ({ ...p, warningThreshold: Number(e.target.value) }))}
+              value={preferences.warningThreshold}
+              onChange={(e) => updatePreference('warningThreshold', Number(e.target.value))}
               className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#1E4B8E]"
             />
             <div className="flex justify-between text-xs text-slate-400 mt-1">
@@ -150,15 +181,15 @@ export const KpiTab: React.FC = () => {
           {QUARTERS.map(q => (
             <button
               key={q.key}
-              onClick={() => setSelectedQuarter(q.key)}
+              onClick={() => updatePreference('selectedQuarter', q.key)}
               className={`p-4 rounded-xl border-2 text-center transition-all ${
-                selectedQuarter === q.key
+                preferences.selectedQuarter === q.key
                   ? 'border-[#1E4B8E] bg-[#1E4B8E]/5'
                   : 'border-slate-200 hover:border-slate-300'
               }`}
             >
-              <Calendar className={`w-5 h-5 mx-auto mb-2 ${selectedQuarter === q.key ? 'text-[#1E4B8E]' : 'text-slate-400'}`} />
-              <div className={`font-semibold ${selectedQuarter === q.key ? 'text-[#1E4B8E]' : 'text-slate-700'}`}>{q.label}</div>
+              <Calendar className={`w-5 h-5 mx-auto mb-2 ${preferences.selectedQuarter === q.key ? 'text-[#1E4B8E]' : 'text-slate-400'}`} />
+              <div className={`font-semibold ${preferences.selectedQuarter === q.key ? 'text-[#1E4B8E]' : 'text-slate-700'}`}>{q.label}</div>
               <div className="text-xs text-slate-500 mt-0.5">{q.range}</div>
             </button>
           ))}

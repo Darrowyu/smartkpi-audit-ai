@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TenantGuard } from '../../common/guards/tenant.guard';
 import { DistributionService } from './distribution.service';
 
 @Controller('distribution')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantGuard)
 export class DistributionController {
   constructor(private readonly service: DistributionService) {}
 

@@ -142,6 +142,18 @@ export class AssignmentService {
       throw new BadRequestException('考核周期已锁定，无法修改分配');
     }
 
+    if (dto.weight !== undefined && dto.weight !== assignment.weight) {
+      const weightDiff = dto.weight - assignment.weight; // 计算权重差值
+      await this.validateWeightSum(
+        assignment.periodId,
+        assignment.departmentId || undefined,
+        assignment.employeeId || undefined,
+        weightDiff,
+        companyId,
+        id,
+      );
+    }
+
     return this.prisma.kPIAssignment.update({
       where: { id },
       data: dto,

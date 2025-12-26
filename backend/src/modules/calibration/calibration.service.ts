@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { PerformanceGrade } from '@prisma/client';
+import { PerformanceGrade, KPIStatusEnum } from '@prisma/client';
+import { determinePerformanceGrade, determineKPIStatus } from '../../common/constants/grade-boundaries';
 
 @Injectable()
 export class CalibrationService {
@@ -106,12 +107,40 @@ export class CalibrationService {
   }
 
   async batchAdjust(sessionId: string, userId: string, adjustments: Array<{ employeeId: string; adjustedScore: number; reason?: string }>) {
-    const results: any[] = [];
-    for (const adj of adjustments) {
-      const result = await this.adjustScore(sessionId, userId, adj.employeeId, adj.adjustedScore, adj.reason);
-      results.push(result);
-    }
-    return results;
+    const session = await this.prisma.calibrationSession.findUnique({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('会话不存在');
+    if (session.status === 'completed') throw new BadRequestException('会话已完成，无法调整');
+
+    const employeeIds = adjustments.map(a => a.employeeId); // 批量获取绩效数据
+    const performances = await this.prisma.employeePerformance.findMany({
+      where: { periodId: session.periodId, employeeId: { in: employeeIds } },
+    });
+    const perfMap = new Map(performances.map(p => [p.employeeId, p.totalScore]));
+
+    const operations = adjustments.map(adj => {
+      const originalScore = perfMap.get(adj.employeeId) || 0;
+      return this.prisma.calibrationAdjustment.upsert({
+        where: { sessionId_employeeId: { sessionId, employeeId: adj.employeeId } },
+        create: {
+          sessionId,
+          employeeId: adj.employeeId,
+          originalScore,
+          adjustedScore: adj.adjustedScore,
+          originalGrade: this.determineGrade(originalScore),
+          adjustedGrade: this.determineGrade(adj.adjustedScore),
+          reason: adj.reason,
+          adjustedById: userId,
+        },
+        update: {
+          adjustedScore: adj.adjustedScore,
+          adjustedGrade: this.determineGrade(adj.adjustedScore),
+          reason: adj.reason,
+          adjustedById: userId,
+        },
+      });
+    });
+
+    return this.prisma.$transaction(operations); // 使用事务批量执行
   }
 
   async startSession(sessionId: string) {
@@ -132,7 +161,10 @@ export class CalibrationService {
     for (const adj of session.adjustments) {
       await this.prisma.employeePerformance.updateMany({
         where: { periodId: session.periodId, employeeId: adj.employeeId },
-        data: { totalScore: adj.adjustedScore },
+        data: {
+          totalScore: adj.adjustedScore,
+          status: this.determineStatus(adj.adjustedScore), // 同步更新绩效状态
+        },
       });
     }
 
@@ -161,10 +193,10 @@ export class CalibrationService {
   }
 
   private determineGrade(score: number): PerformanceGrade {
-    if (score >= 95) return PerformanceGrade.S;
-    if (score >= 85) return PerformanceGrade.A;
-    if (score >= 70) return PerformanceGrade.B;
-    if (score >= 60) return PerformanceGrade.C;
-    return PerformanceGrade.D;
+    return determinePerformanceGrade(score); // 使用统一边界配置
+  }
+
+  private determineStatus(score: number): KPIStatusEnum {
+    return determineKPIStatus(score); // 使用统一边界配置
   }
 }

@@ -105,6 +105,10 @@ export class AssessmentService {
       throw new BadRequestException('已锁定的周期不可修改');
     }
 
+    if (dto.status && dto.status !== period.status) {
+      await this.validateStatusTransition(id, period.status, dto.status, companyId);
+    }
+
     const result = await this.prisma.assessmentPeriod.update({
       where: { id },
       data: {
@@ -377,6 +381,21 @@ export class AssessmentService {
     remark?: string,
     companyId?: string,
   ) {
+    const entry = await this.prisma.kPIDataEntry.findFirst({
+      where: { id: entryId },
+      include: { submission: true },
+    });
+
+    if (!entry) throw new NotFoundException('数据条目不存在');
+
+    if (companyId && entry.submission.companyId !== companyId) {
+      throw new BadRequestException('无权修改此数据'); // 租户隔离验证
+    }
+
+    if (entry.submission.status !== SubmissionStatus.DRAFT) {
+      throw new BadRequestException('仅可修改草稿状态的数据');
+    }
+
     return this.prisma.kPIDataEntry.update({
       where: { id: entryId },
       data: { actualValue, remark },
@@ -394,5 +413,35 @@ export class AssessmentService {
         period: true,
       },
     });
+  }
+
+  /** 验证周期状态转换是否合法 */
+  private async validateStatusTransition(
+    periodId: string,
+    currentStatus: PeriodStatus,
+    newStatus: PeriodStatus,
+    companyId: string,
+  ) {
+    if (currentStatus === PeriodStatus.DRAFT && newStatus === PeriodStatus.ACTIVE) {
+      const assignmentCount = await this.prisma.kPIAssignment.count({
+        where: { periodId, companyId },
+      });
+      if (assignmentCount === 0) {
+        throw new BadRequestException('无法激活：该周期尚未分配任何KPI指标');
+      }
+    }
+
+    if (currentStatus === PeriodStatus.ACTIVE && newStatus === PeriodStatus.LOCKED) {
+      const approvedCount = await this.prisma.dataSubmission.count({
+        where: { periodId, companyId, status: SubmissionStatus.APPROVED },
+      });
+      if (approvedCount === 0) {
+        throw new BadRequestException('无法锁定：该周期尚无已审批的数据提交');
+      }
+    }
+
+    if (newStatus === PeriodStatus.ARCHIVED && currentStatus !== PeriodStatus.LOCKED) {
+      throw new BadRequestException('仅可归档已锁定的周期');
+    }
   }
 }

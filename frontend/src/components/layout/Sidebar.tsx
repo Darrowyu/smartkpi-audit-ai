@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight, Globe, Building, User, ListChecks, PenLine, X, CheckSquare, Scale, PieChart, MessageSquare, Grid3X3, DollarSign, ClipboardCheck, Database } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Target, Users, FileText, Settings, LogOut, Home, Calendar, FileSpreadsheet, Shield, ClipboardList, Building2, ChevronDown, ChevronRight, Globe, Building, User, ListChecks, PenLine, X, CheckSquare, Scale, PieChart, MessageSquare, Grid3X3, DollarSign, ClipboardCheck, Database, Palette, Bell, Lock } from 'lucide-react';
 import { Language } from '../../types';
 import { SimpleAvatar as Avatar } from '../ui/avatar';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +13,7 @@ interface SidebarProps {
   setLanguage: (lang: Language) => void;
   onLogout: () => void;
   onClose?: () => void;
+  collapsed?: boolean;
 }
 
 interface NavItem {
@@ -41,8 +42,11 @@ const userPersonalNavItems: NavItem[] = [
   { path: '/app/self-evaluation', icon: PenLine, labelKey: 'sidebar.selfEvaluation' },
 ];
 
-const commonPersonalNavItems: NavItem[] = [
+const userMenuItems: NavItem[] = [
   { path: '/app/settings', icon: Settings, labelKey: 'sidebar.mySettings' },
+  { path: '/app/settings?tab=appearance', icon: Palette, labelKey: 'sidebar.appearance' },
+  { path: '/app/settings?tab=notifications', icon: Bell, labelKey: 'sidebar.notifications' },
+  { path: '/app/settings?tab=security', icon: Lock, labelKey: 'sidebar.security' },
 ];
 
 const adminNavItems: NavItem[] = [
@@ -61,7 +65,7 @@ const performanceAdminNavItems: NavItem[] = [
   { path: '/app/datasource', icon: Database, labelKey: 'sidebar.datasource' },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed = false }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -74,8 +78,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
 
   const isAdminViewActive = adminNavItems.some(item => location.pathname === item.path);
   const isPerfViewActive = performanceAdminNavItems.some(item => location.pathname === item.path);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const avatarUrl = useMemo(() => user?.avatar ? getAvatarUrl(user.id) : undefined, [user]);
+
+  // 点击外部关闭用户菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   const businessNavItems = useMemo(() => {
     if (isUser) return userPersonalNavItems;
@@ -105,44 +124,46 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
     return (
       <button
         onClick={() => handleNavClick(item.path)}
-        className={`group relative w-full flex items-center gap-3 px-3 py-3 sm:py-2.5 text-sm font-medium transition-all duration-200 touch-target
-          ${isActive
-            ? 'text-white bg-[#163a6e]'
-            : 'text-white/70 hover:text-white hover:bg-[#163a6e]/50'
-          }
-          ${compact ? 'py-2.5 sm:py-2 pl-6' : ''}
+        title={collapsed ? t(item.labelKey) : undefined}
+        className={`group relative w-full flex items-center py-2.5 text-sm font-medium transition-colors duration-200 touch-target
+          ${isActive ? 'text-white bg-[#163a6e]' : 'text-white/70 hover:text-white hover:bg-[#163a6e]/50'}
+          ${compact ? 'py-1.5 pl-7 text-xs' : 'pl-[22px]'}
         `}
       >
         {isActive && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#5B9BD5] rounded-r-full" />
+          <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] bg-[#5B9BD5] rounded-r-full ${compact ? 'h-4' : 'h-5'}`} />
         )}
-        <Icon className={`w-5 h-5 sm:w-[18px] sm:h-[18px] flex-shrink-0 ${isActive ? 'text-[#5B9BD5]' : ''}`} />
-        <span className="truncate">{t(item.labelKey)}</span>
+        <Icon className={`flex-shrink-0 ${compact ? 'w-4 h-4' : 'w-5 h-5'} ${isActive ? 'text-[#5B9BD5]' : ''}`} />
+        <span className={`ml-2 truncate whitespace-nowrap transition-all duration-300 overflow-hidden ${collapsed ? 'w-0 ml-0 opacity-0' : 'opacity-100'}`}>
+          {t(item.labelKey)}
+        </span>
       </button>
     );
   };
 
   const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="px-3 py-2 mt-4 first:mt-0">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+    <div className={`pl-[22px] py-2 mt-4 first:mt-0 overflow-hidden transition-all duration-300 ${collapsed ? 'h-0 opacity-0 mt-0 py-0' : 'h-auto opacity-100'}`}>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40 whitespace-nowrap">
         {children}
       </span>
     </div>
   );
 
   return (
-    <div className="w-72 sm:w-64 bg-[#1E4B8E] text-white flex flex-col h-full border-r border-[#163a6e]">
+    <div className={`${collapsed ? 'w-16 overflow-visible' : 'w-72 sm:w-64'} bg-[#1E4B8E] text-white flex flex-col h-full border-r border-[#163a6e] transition-all duration-300 ease-in-out`}>
       {/* Logo 区域 */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-            <img src={logoImage} alt="Makrite KPI" className="h-5 w-auto" />
+      <div className="h-14 flex items-center justify-between border-b border-white/10">
+        <div className="flex items-center pl-4">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+            <img src={logoImage} alt="Makrite KPI" className="h-4 w-auto" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">Makrite KPI</span>
+          <span className={`ml-2 text-base font-semibold tracking-tight whitespace-nowrap transition-all duration-300 overflow-hidden ${collapsed ? 'w-0 ml-0 opacity-0' : 'opacity-100'}`}>
+            Makrite KPI
+          </span>
         </div>
 
         {/* 移动端关闭按钮 */}
-        {onClose && (
+        {onClose && !collapsed && (
           <button
             onClick={onClose}
             className="lg:hidden p-2 -mr-2 text-white/70 hover:text-white hover:bg-[#163a6e] rounded-lg transition-colors touch-target"
@@ -154,7 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
       </div>
 
       {/* 导航区域 - 可滚动 */}
-      <nav className="flex-1 overflow-y-auto py-2 scrollbar-hide">
+      <nav className={`flex-1 py-2 scrollbar-hide ${collapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
         {/* 业务/个人区块 */}
         <SectionLabel>
           {isUser ? t('sidebar.mySection', '我的') : t('sidebar.businessSection', '业务功能')}
@@ -165,79 +186,186 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose }) => {
           ))}
         </div>
 
-        {/* 通用设置区块 */}
-        <SectionLabel>{t('sidebar.personalSection', '个人')}</SectionLabel>
-        <div className="space-y-0.5">
-          {commonPersonalNavItems.map((item) => (
-            <NavButton key={item.path} item={item} />
-          ))}
-        </div>
-
         {/* 管理员区块 */}
         {isAdmin && (
           <>
             <SectionLabel>{t('sidebar.adminSection', '系统管理')}</SectionLabel>
             <div className="space-y-0.5">
               {/* 组织管理折叠组 */}
-              <button
-                onClick={() => setAdminExpanded(!adminExpanded)}
-                className="group relative w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm font-medium transition-all duration-200 touch-target text-white/70 hover:text-white hover:bg-[#163a6e]/50"
-              >
-                <div className="flex items-center gap-3">
-                  <Building2 className="w-5 h-5 sm:w-[18px] sm:h-[18px]" />
-                  <span>{t('sidebar.orgAdmin', '组织管理')}</span>
+              {collapsed ? (
+                <div className="group relative">
+                  <button
+                    className="w-full flex items-center pl-[22px] py-2.5 text-white/70 hover:text-white hover:bg-[#163a6e]/50 transition-colors duration-200"
+                  >
+                    <Building2 className="w-5 h-5" />
+                  </button>
+                  <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
+                    <div className="absolute left-0 top-0 w-2 h-full" />
+                    <div className="bg-[#1E4B8E] rounded-lg shadow-xl border border-[#163a6e] py-2 min-w-[180px]">
+                      <div className="px-3 py-1.5 text-xs font-semibold text-white/50 uppercase">{t('sidebar.orgAdmin', '组织管理')}</div>
+                      {adminNavItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = location.pathname === item.path;
+                        return (
+                          <button
+                            key={item.path}
+                            onClick={() => handleNavClick(item.path)}
+                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors ${isActive ? 'text-white bg-[#163a6e]' : 'text-white/70 hover:text-white hover:bg-[#163a6e]/50'}`}
+                          >
+                            <Icon className={`w-5 h-5 ${isActive ? 'text-[#5B9BD5]' : ''}`} />
+                            <span className="ml-2">{t(item.labelKey)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-                {adminExpanded
-                  ? <ChevronDown className="w-4 h-4 text-white/50" />
-                  : <ChevronRight className="w-4 h-4 text-white/50" />
-                }
-              </button>
-              <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-60' : 'max-h-0'}`}>
-                {adminNavItems.map((item) => (
-                  <NavButton key={item.path} item={item} compact />
-                ))}
-              </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setAdminExpanded(!adminExpanded)}
+                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors duration-200 touch-target text-white/70 hover:text-white hover:bg-[#163a6e]/50"
+                  >
+                    <div className="flex items-center">
+                      <Building2 className="w-5 h-5 flex-shrink-0" />
+                      <span className="ml-2 whitespace-nowrap">
+                        {t('sidebar.orgAdmin', '组织管理')}
+                      </span>
+                    </div>
+                    <div>
+                      {adminExpanded ? <ChevronDown className="w-4 h-4 text-white/50" /> : <ChevronRight className="w-4 h-4 text-white/50" />}
+                    </div>
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-60' : 'max-h-0'}`}>
+                    {adminNavItems.map((item) => (
+                      <NavButton key={item.path} item={item} compact />
+                    ))}
+                  </div>
+                </>
+              )}
 
               {/* 绩效管理折叠组 */}
-              <button
-                onClick={() => setPerfExpanded(!perfExpanded)}
-                className="group relative w-full flex items-center justify-between px-3 py-3 sm:py-2.5 text-sm font-medium transition-all duration-200 touch-target text-white/70 hover:text-white hover:bg-[#163a6e]/50"
-              >
-                <div className="flex items-center gap-3">
-                  <Scale className="w-5 h-5 sm:w-[18px] sm:h-[18px]" />
-                  <span>{t('sidebar.perfAdmin', '绩效管理')}</span>
+              {collapsed ? (
+                <div className="group relative">
+                  <button
+                    className="w-full flex items-center pl-[22px] py-2.5 text-white/70 hover:text-white hover:bg-[#163a6e]/50 transition-colors duration-200"
+                  >
+                    <Scale className="w-5 h-5" />
+                  </button>
+                  <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
+                    <div className="absolute left-0 top-0 w-2 h-full" />
+                    <div className="bg-[#1E4B8E] rounded-lg shadow-xl border border-[#163a6e] py-2 min-w-[180px]">
+                      <div className="px-3 py-1.5 text-xs font-semibold text-white/50 uppercase">{t('sidebar.perfAdmin', '绩效管理')}</div>
+                      {performanceAdminNavItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = location.pathname === item.path;
+                        return (
+                          <button
+                            key={item.path}
+                            onClick={() => handleNavClick(item.path)}
+                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors ${isActive ? 'text-white bg-[#163a6e]' : 'text-white/70 hover:text-white hover:bg-[#163a6e]/50'}`}
+                          >
+                            <Icon className={`w-5 h-5 ${isActive ? 'text-[#5B9BD5]' : ''}`} />
+                            <span className="ml-2">{t(item.labelKey)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-                {perfExpanded
-                  ? <ChevronDown className="w-4 h-4 text-white/50" />
-                  : <ChevronRight className="w-4 h-4 text-white/50" />
-                }
-              </button>
-              <div className={`overflow-hidden transition-all duration-200 ${perfExpanded ? 'max-h-60' : 'max-h-0'}`}>
-                {performanceAdminNavItems.map((item) => (
-                  <NavButton key={item.path} item={item} compact />
-                ))}
-              </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setPerfExpanded(!perfExpanded)}
+                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors duration-200 touch-target text-white/70 hover:text-white hover:bg-[#163a6e]/50"
+                  >
+                    <div className="flex items-center">
+                      <Scale className="w-5 h-5 flex-shrink-0" />
+                      <span className="ml-2 whitespace-nowrap">
+                        {t('sidebar.perfAdmin', '绩效管理')}
+                      </span>
+                    </div>
+                    <div>
+                      {perfExpanded ? <ChevronDown className="w-4 h-4 text-white/50" /> : <ChevronRight className="w-4 h-4 text-white/50" />}
+                    </div>
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-200 ${perfExpanded ? 'max-h-60' : 'max-h-0'}`}>
+                    {performanceAdminNavItems.map((item) => (
+                      <NavButton key={item.path} item={item} compact />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}
       </nav>
 
       {/* 用户信息区域 */}
-      <div className="border-t border-white/10 p-3 safe-area-bottom">
-        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#163a6e]/50 transition-colors">
-          <Avatar name={user?.username || 'User'} email={user?.email || ''} avatarUrl={avatarUrl} size="sm" />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-white truncate">{user?.username || 'User'}</div>
-            <div className="text-[10px] text-white/50 uppercase tracking-wide">{user?.role || 'USER'}</div>
+      <div className="border-t border-white/10 py-2 safe-area-bottom relative" ref={userMenuRef}>
+        {/* 用户菜单弹出层 */}
+        {userMenuOpen && (
+          <div className={`absolute ${collapsed ? 'left-full ml-2' : 'left-3 right-3'} bottom-full mb-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50`}>
+            {/* 用户信息头部 */}
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <Avatar name={user?.username || 'User'} email={user?.email || ''} avatarUrl={avatarUrl} size="md" />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">{user?.username || 'User'}</div>
+                  <div className="text-xs text-gray-500 truncate">{user?.email || ''}</div>
+                </div>
+              </div>
+            </div>
+            {/* 菜单项 */}
+            <div className="py-1">
+              {userMenuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => {
+                      navigate(item.path);
+                      setUserMenuOpen(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    <Icon className="w-4 h-4 mr-3 text-gray-400" />
+                    {t(item.labelKey)}
+                  </button>
+                );
+              })}
+            </div>
+            {/* 退出登录 */}
+            <div className="border-t border-gray-100 pt-1">
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setUserMenuOpen(false);
+                }}
+                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-3 text-gray-400" />
+                {t('sidebar.logout', '退出登录')}
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 text-white/50 hover:text-red-300 hover:bg-[#163a6e] rounded-md transition-colors touch-target"
-            title={t('sidebar.logout')}
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
+        )}
+
+        {/* 用户头像按钮 */}
+        <button
+          onClick={() => setUserMenuOpen(!userMenuOpen)}
+          className="w-full flex items-center pl-4 py-2 hover:bg-[#163a6e]/50 transition-colors duration-200"
+        >
+          <Avatar name={user?.username || 'User'} email={user?.email || ''} avatarUrl={avatarUrl} size="sm" />
+          <div className={`ml-2 text-left transition-all duration-300 overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'opacity-100'}`}>
+            <div className="text-sm font-medium text-white truncate whitespace-nowrap">
+              {user?.username || 'User'}
+            </div>
+            <div className="text-[10px] text-white/50 uppercase tracking-wide whitespace-nowrap">
+              {user?.role || 'USER'}
+            </div>
+          </div>
+        </button>
       </div>
     </div>
   );

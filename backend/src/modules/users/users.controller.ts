@@ -28,6 +28,9 @@ import {
   UserQueryDto,
   UpdateProfileDto,
   ChangePasswordDto,
+  UpdateNotificationSettingsDto,
+  UpdateKpiPreferencesDto,
+  UpdateAppearanceSettingsDto,
 } from './dto/user.dto';
 import { UserRole } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
@@ -51,6 +54,50 @@ export class UsersController {
     @CurrentUser('userId') userId: string,
   ) {
     return this.service.changePassword(userId, dto);
+  }
+
+  @Get('me/notification-settings')
+  getNotificationSettings(@CurrentUser('userId') userId: string) {
+    return this.service.getNotificationSettings(userId);
+  }
+
+  @Patch('me/notification-settings')
+  updateNotificationSettings(
+    @Body() dto: UpdateNotificationSettingsDto,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.service.updateNotificationSettings(userId, dto);
+  }
+
+  @Get('me/login-history')
+  getLoginHistory(@CurrentUser('userId') userId: string) {
+    return this.service.getLoginHistory(userId);
+  }
+
+  @Get('me/kpi-preferences')
+  getKpiPreferences(@CurrentUser('userId') userId: string) {
+    return this.service.getKpiPreferences(userId);
+  }
+
+  @Patch('me/kpi-preferences')
+  updateKpiPreferences(
+    @Body() dto: UpdateKpiPreferencesDto,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.service.updateKpiPreferences(userId, dto);
+  }
+
+  @Get('me/appearance-settings')
+  getAppearanceSettings(@CurrentUser('userId') userId: string) {
+    return this.service.getAppearanceSettings(userId);
+  }
+
+  @Patch('me/appearance-settings')
+  updateAppearanceSettings(
+    @Body() dto: UpdateAppearanceSettingsDto,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.service.updateAppearanceSettings(userId, dto);
   }
 
   @Post('me/avatar') // POST /api/users/me/avatar - 上传头像

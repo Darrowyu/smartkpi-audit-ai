@@ -12,6 +12,7 @@ interface StatsData {
     inProgress: number;
     atRisk: number;
   };
+  warningThreshold?: number;
 }
 
 interface StatsCardsProps {
@@ -28,7 +29,8 @@ interface StatItemProps {
 
 const StatItem: React.FC<StatItemProps> = ({ title, value, trend, icon, iconBg }) => {
   const isPositive = trend >= 0;
-  const trendColor = title === '有风险' 
+  const isRiskCard = title.startsWith('有风险');
+  const trendColor = isRiskCard 
     ? (trend > 0 ? 'text-red-500' : 'text-emerald-600')
     : (isPositive ? 'text-emerald-600' : 'text-red-500');
 
@@ -51,6 +53,7 @@ const StatItem: React.FC<StatItemProps> = ({ title, value, trend, icon, iconBg }
 };
 
 export const StatsCards: React.FC<StatsCardsProps> = ({ data }) => {
+  const warningLabel = data.warningThreshold ? `有风险 (<${data.warningThreshold}%)` : '有风险';
   const stats = [
     {
       title: '总KPI数',
@@ -74,7 +77,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ data }) => {
       iconBg: 'bg-slate-100',
     },
     {
-      title: '有风险',
+      title: warningLabel,
       value: data.atRisk,
       trend: data.trends.atRisk,
       icon: <AlertTriangle className="w-6 h-6 text-red-500" />,

@@ -5,6 +5,7 @@ import { Plus, FileText, Users, Calendar, RefreshCw, Calculator, Loader2 } from 
 import { assessmentApi } from '@/api/assessment.api';
 import { reportsApi, DepartmentRanking, TrendData, EmployeeRanking } from '@/api/reports.api';
 import { calculationApi } from '@/api/calculation.api';
+import { usersApi, KpiPreferences } from '@/api/users.api';
 import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsManager } from '@/hooks/usePermission';
@@ -31,6 +32,16 @@ interface OverviewData {
   poor: number;
 }
 
+const defaultPreferences: KpiPreferences = {
+  defaultView: 'month',
+  reminderFrequency: 'weekly',
+  showProgressBar: true,
+  showTrendChart: true,
+  autoCalculate: true,
+  warningThreshold: 80,
+  selectedQuarter: 'Q1',
+};
+
 export const DashboardView: React.FC = () => {
   const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
@@ -39,12 +50,14 @@ export const DashboardView: React.FC = () => {
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [employeeRanking, setEmployeeRanking] = useState<EmployeeRanking[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [kpiPrefs, setKpiPrefs] = useState<KpiPreferences>(defaultPreferences);
   const { toast } = useToast();
   const isManager = useIsManager();
 
   useEffect(() => {
     loadPeriods();
     loadTrend();
+    usersApi.getKpiPreferences().then(setKpiPrefs).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -133,7 +146,8 @@ export const DashboardView: React.FC = () => {
     if (!overview) {
       return {
         totalKPIs: 24, completed: 18, inProgress: 4, atRisk: 2,
-        trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 }
+        trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 },
+        warningThreshold: kpiPrefs.warningThreshold,
       };
     }
     return {
@@ -141,9 +155,10 @@ export const DashboardView: React.FC = () => {
       completed: overview.excellent + overview.good || 18,
       inProgress: overview.average || 4,
       atRisk: overview.poor || 2,
-      trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 }
+      trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 },
+      warningThreshold: kpiPrefs.warningThreshold,
     };
-  }, [overview]);
+  }, [overview, kpiPrefs.warningThreshold]);
 
   const chartData: TrendDataPoint[] = useMemo(() => {
     if (trendData.length === 0) return [];
@@ -231,11 +246,13 @@ export const DashboardView: React.FC = () => {
 
       {/* 趋势图 + 团队表现 - 响应式网格 */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-        <div className="xl:col-span-2">
-          <TrendChart data={chartData} />
-        </div>
-        <div className="xl:col-span-1">
-          <TeamPerformance members={teamMembers} teamName="管理团队" />
+        {kpiPrefs.showTrendChart && (
+          <div className="xl:col-span-2">
+            <TrendChart data={chartData} />
+          </div>
+        )}
+        <div className={kpiPrefs.showTrendChart ? 'xl:col-span-1' : 'xl:col-span-3'}>
+          <TeamPerformance members={teamMembers} teamName="管理团队" showProgressBar={kpiPrefs.showProgressBar} />
         </div>
       </div>
 

@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Body, Query, UseGuards, Request, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TenantGuard } from '../../common/guards/tenant.guard';
 import { SalaryService } from './salary.service';
 
 @Controller('salary')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantGuard)
 export class SalaryController {
   constructor(private readonly service: SalaryService) {}
 

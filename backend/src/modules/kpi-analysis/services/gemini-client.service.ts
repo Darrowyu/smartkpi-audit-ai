@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI, Type } from '@google/genai';
 
@@ -168,6 +168,7 @@ const kpiSchema = {
 
 @Injectable()
 export class GeminiClientService {
+  private readonly logger = new Logger(GeminiClientService.name);
   private ai: GoogleGenAI;
 
   constructor(private configService: ConfigService) {
@@ -260,7 +261,7 @@ export class GeminiClientService {
 
       return JSON.parse(jsonText) as KPIAnalysisResult;
     } catch (error) {
-      console.error('Gemini Analysis Error:', error);
+      this.logger.error('Gemini Analysis Error', error instanceof Error ? error.stack : error);
       throw new InternalServerErrorException('Failed to analyze KPI data');
     }
   }

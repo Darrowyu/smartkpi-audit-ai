@@ -1,12 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sun, Moon, Monitor, Palette, Type, LayoutGrid } from 'lucide-react';
+import { Sun, Moon, Monitor, Palette, Type, LayoutGrid, Loader2 } from 'lucide-react';
 import { SectionCard } from '../components/SectionCard';
 import { Toggle } from '../components/Toggle';
+import { usersApi, AppearanceSettings } from '@/api/users.api';
+import { useToast } from '@/components/ui/use-toast';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 type AccentColor = 'blue' | 'teal' | 'purple' | 'orange';
 type FontSize = 'small' | 'medium' | 'large';
+
+const ACCENT_COLOR_MAP: Record<AccentColor, string> = {
+  blue: '#1E4B8E',
+  teal: '#0D9488',
+  purple: '#7C3AED',
+  orange: '#EA580C',
+};
+
+const FONT_SIZE_MAP: Record<FontSize, string> = {
+  small: '14px',
+  medium: '16px',
+  large: '18px',
+};
+
+/** 应用主题设置到 DOM */
+const applyTheme = (settings: AppearanceSettings) => {
+  const root = document.documentElement;
+
+  // 主题模式
+  let isDark = settings.theme === 'dark';
+  if (settings.theme === 'system') {
+    isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  root.classList.toggle('dark', isDark);
+
+  // 强调色
+  root.style.setProperty('--accent-color', ACCENT_COLOR_MAP[settings.accentColor]);
+
+  // 字体大小
+  root.style.setProperty('--base-font-size', FONT_SIZE_MAP[settings.fontSize]);
+
+  // 紧凑模式
+  root.classList.toggle('compact', settings.compactMode);
+
+  // 动画效果
+  root.classList.toggle('no-animations', !settings.animations);
+};
 
 const THEME_OPTIONS: { key: ThemeMode; icon: React.ElementType; labelKey: string; defaultLabel: string }[] = [
   { key: 'light', icon: Sun, labelKey: 'settings.appearance.themeLight', defaultLabel: '浅色' },
@@ -29,11 +68,54 @@ const FONT_SIZES: { key: FontSize; labelKey: string; defaultLabel: string }[] = 
 
 export const AppearanceTab: React.FC = () => {
   const { t } = useTranslation();
-  const [theme, setTheme] = useState<ThemeMode>('light');
-  const [accentColor, setAccentColor] = useState<AccentColor>('blue');
-  const [fontSize, setFontSize] = useState<FontSize>('medium');
-  const [compactMode, setCompactMode] = useState(false);
-  const [animations, setAnimations] = useState(true);
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const pendingRef = useRef<Set<string>>(new Set());
+
+  const [settings, setSettings] = useState<AppearanceSettings>({
+    theme: 'light',
+    accentColor: 'blue',
+    fontSize: 'medium',
+    compactMode: false,
+    animations: true,
+  });
+
+  useEffect(() => {
+    usersApi.getAppearanceSettings()
+      .then(data => {
+        setSettings(data);
+        applyTheme(data);
+      })
+      .catch(() => toast({ title: t('settings.appearance.loadFailed', '加载设置失败'), variant: 'destructive' }))
+      .finally(() => setLoading(false));
+  }, [t, toast]);
+
+  const updateSetting = useCallback(async <K extends keyof AppearanceSettings>(key: K, value: AppearanceSettings[K]) => {
+    if (pendingRef.current.has(key)) return;
+    pendingRef.current.add(key);
+    const prev = settings[key];
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+    applyTheme(newSettings);
+    try {
+      await usersApi.updateAppearanceSettings({ [key]: value });
+    } catch {
+      const rollback = { ...settings, [key]: prev };
+      setSettings(rollback);
+      applyTheme(rollback);
+      toast({ title: t('settings.appearance.saveFailed', '保存失败'), variant: 'destructive' });
+    } finally {
+      pendingRef.current.delete(key);
+    }
+  }, [settings, t, toast]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E4B8E]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -47,11 +129,11 @@ export const AppearanceTab: React.FC = () => {
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {THEME_OPTIONS.map(option => {
             const Icon = option.icon;
-            const isActive = theme === option.key;
+            const isActive = settings.theme === option.key;
             return (
               <button
                 key={option.key}
-                onClick={() => setTheme(option.key)}
+                onClick={() => updateSetting('theme', option.key)}
                 className={`flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all ${
                   isActive ? 'border-[#1E4B8E] bg-[#1E4B8E]/5' : 'border-slate-200 hover:border-slate-300'
                 }`}
@@ -70,11 +152,11 @@ export const AppearanceTab: React.FC = () => {
       <SectionCard icon={<Palette className="w-5 h-5" />} title={t('settings.appearance.accentTitle', '强调色')} description={t('settings.appearance.accentDesc', '选择界面的主要强调颜色')}>
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
           {ACCENT_COLORS.map(option => {
-            const isActive = accentColor === option.key;
+            const isActive = settings.accentColor === option.key;
             return (
               <button
                 key={option.key}
-                onClick={() => setAccentColor(option.key)}
+                onClick={() => updateSetting('accentColor', option.key)}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border-2 transition-all ${
                   isActive ? 'border-slate-400 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
                 }`}
@@ -90,8 +172,8 @@ export const AppearanceTab: React.FC = () => {
       {/* 字体大小 */}
       <SectionCard icon={<Type className="w-5 h-5" />} title={t('settings.appearance.fontSizeTitle', '字体大小')} description={t('settings.appearance.fontSizeDesc', '调整界面的文字大小')}>
         <select
-          value={fontSize}
-          onChange={(e) => setFontSize(e.target.value as FontSize)}
+          value={settings.fontSize}
+          onChange={(e) => updateSetting('fontSize', e.target.value as FontSize)}
           className="w-full sm:w-64 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
         >
           {FONT_SIZES.map(option => (
@@ -110,14 +192,14 @@ export const AppearanceTab: React.FC = () => {
               <div className="font-medium text-slate-800">{t('settings.appearance.compactMode', '紧凑模式')}</div>
               <div className="text-sm text-slate-500">{t('settings.appearance.compactModeDesc', '减少界面元素的间距')}</div>
             </div>
-            <Toggle checked={compactMode} onChange={setCompactMode} />
+            <Toggle checked={settings.compactMode} onChange={(v) => updateSetting('compactMode', v)} />
           </div>
           <div className="flex items-center justify-between py-2">
             <div>
               <div className="font-medium text-slate-800">{t('settings.appearance.animations', '动画效果')}</div>
               <div className="text-sm text-slate-500">{t('settings.appearance.animationsDesc', '启用界面过渡动画')}</div>
             </div>
-            <Toggle checked={animations} onChange={setAnimations} />
+            <Toggle checked={settings.animations} onChange={(v) => updateSetting('animations', v)} />
           </div>
         </div>
       </SectionCard>

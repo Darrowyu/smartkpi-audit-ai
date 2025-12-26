@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PerformanceGrade } from '@prisma/client';
+import { determinePerformanceGrade } from '../../common/constants/grade-boundaries';
 
 const DEFAULT_COEFFICIENTS = { S: 1.5, A: 1.2, B: 1.0, C: 0.8, D: 0.5 };
 
@@ -124,10 +125,6 @@ export class SalaryService {
   }
 
   private getGradeFromScore(score: number): PerformanceGrade {
-    if (score >= 95) return PerformanceGrade.S;
-    if (score >= 85) return PerformanceGrade.A;
-    if (score >= 70) return PerformanceGrade.B;
-    if (score >= 60) return PerformanceGrade.C;
-    return PerformanceGrade.D;
+    return determinePerformanceGrade(score); // 使用统一边界配置
   }
 }

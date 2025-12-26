@@ -6,13 +6,54 @@ import { NotificationDropdown } from '@/components/notifications/NotificationDro
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
-import { Languages, Menu, X } from 'lucide-react';
+import { Languages, Menu, X, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { usersApi, AppearanceSettings } from '@/api/users.api';
+
+const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
+
+const ACCENT_COLOR_MAP: Record<string, string> = {
+    blue: '#1E4B8E',
+    teal: '#0D9488',
+    purple: '#7C3AED',
+    orange: '#EA580C',
+};
+
+const FONT_SIZE_MAP: Record<string, string> = {
+    small: '14px',
+    medium: '16px',
+    large: '18px',
+};
+
+const applyAppearance = (settings: AppearanceSettings) => {
+    const root = document.documentElement;
+    let isDark = settings.theme === 'dark';
+    if (settings.theme === 'system') {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    root.classList.toggle('dark', isDark);
+    root.style.setProperty('--accent-color', ACCENT_COLOR_MAP[settings.accentColor] || '#1E4B8E');
+    root.style.setProperty('--base-font-size', FONT_SIZE_MAP[settings.fontSize] || '16px');
+    root.classList.toggle('compact', settings.compactMode);
+    root.classList.toggle('no-animations', !settings.animations);
+};
 
 export const MainLayout: React.FC = () => {
     const { isLoading, isAuthenticated, logout } = useAuth();
     const { i18n } = useTranslation();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+        return stored === 'true';
+    });
+
+    const toggleSidebarCollapsed = () => {
+        setSidebarCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+            return next;
+        });
+    };
 
     // 路由变化时关闭移动端侧边栏
     useEffect(() => {
@@ -38,6 +79,13 @@ export const MainLayout: React.FC = () => {
         window.addEventListener('keydown', handleEsc);
         return () => window.removeEventListener('keydown', handleEsc);
     }, []);
+
+    // 加载并应用外观设置
+    useEffect(() => {
+        if (isAuthenticated) {
+            usersApi.getAppearanceSettings().then(applyAppearance).catch(() => {});
+        }
+    }, [isAuthenticated]);
 
     const handleLanguageChange = (lang: Language) => {
         i18n.changeLanguage(lang);
@@ -73,7 +121,7 @@ export const MainLayout: React.FC = () => {
             <aside className={`
                 fixed inset-y-0 left-0 z-50
                 lg:relative lg:z-auto
-                sidebar-transition flex-shrink-0
+                transition-all duration-300 ease-in-out flex-shrink-0
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 <Sidebar
@@ -81,6 +129,7 @@ export const MainLayout: React.FC = () => {
                     setLanguage={handleLanguageChange}
                     onLogout={logout}
                     onClose={() => setSidebarOpen(false)}
+                    collapsed={sidebarCollapsed}
                 />
             </aside>
 
@@ -106,6 +155,15 @@ export const MainLayout: React.FC = () => {
                         <div className="lg:hidden flex-1 text-center">
                             <span className="text-lg font-semibold text-slate-900">Makrite KPI</span>
                         </div>
+
+                        {/* 桌面端折叠按钮 */}
+                        <button
+                            onClick={toggleSidebarCollapsed}
+                            className="hidden lg:flex items-center justify-center p-2 text-slate-500 hover:text-[#1E4B8E] hover:bg-slate-100 rounded-lg transition-colors"
+                            title={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
+                        >
+                            {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+                        </button>
 
                         {/* 占位区域 - 桌面端将右侧工具栏推到最右边 */}
                         <div className="hidden lg:block flex-1" />

@@ -20,7 +20,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange, options }) => (
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full px-4 py-2.5 bg-brand-primary/5 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary appearance-none cursor-pointer"
+    className="w-full px-4 py-2.5 bg-primary/5 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary appearance-none cursor-pointer"
     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
   >
     {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
@@ -184,7 +184,7 @@ export const KpiTab: React.FC = () => {
               onClick={() => updatePreference('selectedQuarter', q.key)}
               className={`p-4 rounded-xl border-2 text-center transition-all ${
                 preferences.selectedQuarter === q.key
-                  ? 'border-brand-primary bg-brand-primary/5'
+                  ? 'border-brand-primary bg-primary/5'
                   : 'border-slate-200 hover:border-slate-300'
               }`}
             >

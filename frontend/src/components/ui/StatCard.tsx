@@ -17,7 +17,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   title, 
   value, 
   icon: Icon, 
-  iconColor = 'text-indigo-600',
+  iconColor = 'text-primary',
   trend,
   className = '' 
 }) => {

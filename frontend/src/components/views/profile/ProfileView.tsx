@@ -61,7 +61,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ language, setLanguage }) => {
     <div className="space-y-6">
       {/* 页面头部 */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Settings className="w-5 h-5 text-brand-primary" />
         </div>
         <div>
@@ -84,7 +84,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ language, setLanguage }) => {
                   className={cn(
                     'flex items-center gap-2 px-4 sm:px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors',
                     isActive
-                      ? 'text-brand-primary border-brand-primary bg-brand-primary/5'
+                      ? 'text-brand-primary border-brand-primary bg-primary/5'
                       : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50'
                   )}
                 >

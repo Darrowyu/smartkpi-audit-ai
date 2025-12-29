@@ -35,7 +35,7 @@ export const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> =
             title: t('reports.totalParticipants', '参与人数'),
             value: data.totalEmployees,
             icon: Users,
-            iconColor: 'text-blue-500',
+            iconColor: 'text-primary',
             desc: data.periodName,
         },
         {

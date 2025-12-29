@@ -47,7 +47,7 @@ const RoleCard: React.FC<{
     const roleConfig: Record<UserRole, { name: string; color: string; bg: string; desc: string }> = {
         [UserRole.SUPER_ADMIN]: { name: '超级管理员', color: 'text-red-600', bg: 'bg-red-50', desc: '拥有所有权限' },
         [UserRole.GROUP_ADMIN]: { name: '集团管理员', color: 'text-purple-600', bg: 'bg-purple-50', desc: '管理集团内所有公司' },
-        [UserRole.MANAGER]: { name: '部门经理', color: 'text-blue-600', bg: 'bg-blue-50', desc: '管理部门绩效' },
+        [UserRole.MANAGER]: { name: '部门经理', color: 'text-primary', bg: 'bg-primary/10', desc: '管理部门绩效' },
         [UserRole.USER]: { name: '普通用户', color: 'text-slate-600', bg: 'bg-slate-50', desc: '查看个人绩效' },
     };
     const config = roleConfig[role];
@@ -57,7 +57,7 @@ const RoleCard: React.FC<{
         <div
             className={cn(
                 'p-3 lg:p-4 rounded-xl border-2 cursor-pointer transition-all flex-shrink-0 w-[160px] lg:w-auto',
-                isSelected ? 'border-brand-primary bg-blue-50/50' : 'border-slate-200 hover:border-slate-300'
+                isSelected ? 'border-brand-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'
             )}
             onClick={onClick}
         >
@@ -82,7 +82,7 @@ export const PermissionsView: React.FC = () => {
 
     // 模块定义
     const allModules: Module[] = useMemo(() => [
-        { id: 'kpi-library', name: '指标库', icon: Target, color: 'text-blue-600' },
+        { id: 'kpi-library', name: '指标库', icon: Target, color: 'text-primary' },
         { id: 'assessment', name: '考核周期', icon: Calendar, color: 'text-purple-600' },
         { id: 'assignment', name: '指标分配', icon: ClipboardList, color: 'text-indigo-600' },
         { id: 'data-entry', name: '数据填报', icon: FileSpreadsheet, color: 'text-emerald-600' },
@@ -416,7 +416,7 @@ export const PermissionsView: React.FC = () => {
                                                             onClick={() => setSelectedModule(mod.id)}
                                                             className={cn(
                                                                 'w-full flex items-center justify-between px-4 py-2.5 pl-10 transition-colors',
-                                                                isSelected ? 'bg-blue-50 border-r-2 border-brand-primary' : 'hover:bg-slate-100'
+                                                                isSelected ? 'bg-primary/5 border-r-2 border-brand-primary' : 'hover:bg-slate-100'
                                                             )}
                                                         >
                                                             <div className="flex items-center gap-2">

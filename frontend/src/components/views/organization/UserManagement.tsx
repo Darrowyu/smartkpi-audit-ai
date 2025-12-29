@@ -141,11 +141,11 @@ const UserManagement: React.FC<Props> = ({ language }) => {
     <div className="max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <Users className="w-6 h-6 text-blue-600" />
+          <Users className="w-6 h-6 text-primary" />
           {t('userManagement')}
         </h2>
         <button onClick={() => { setEditingUser(null); setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: UserRole.USER, language: 'zh' }); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark">
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" />{t('addUser')}
         </button>
       </div>
@@ -156,10 +156,10 @@ const UserManagement: React.FC<Props> = ({ language }) => {
           <div className="flex-1 relative">
             <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input type="text" placeholder={t('searchUsers')} value={search} onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary" />
           </div>
           <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+            className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary">
             <option value="">{t('allRoles')}</option>
             <option value="USER">{roleLabels.USER}</option>
             <option value="MANAGER">{roleLabels.MANAGER}</option>
@@ -217,7 +217,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => handleEdit(user)} className="p-1 text-slate-400 hover:text-blue-600"><Edit className="w-4 h-4" /></button>
+                        <button onClick={() => handleEdit(user)} className="p-1 text-slate-400 hover:text-primary"><Edit className="w-4 h-4" /></button>
                         {user.id !== currentUser?.id && (
                           <button onClick={() => handleDelete(user)} className="p-1 text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
                         )}
@@ -245,30 +245,30 @@ const UserManagement: React.FC<Props> = ({ language }) => {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('username')} *</label>
                 <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} required disabled={!!editingUser} minLength={2}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 disabled:bg-slate-100" />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary disabled:bg-slate-100" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('firstName')}</label>
                   <input type="text" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('lastName')}</label>
                   <input type="text" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('email')}</label>
                 <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary" />
               </div>
               {!editingUser && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('password')} *</label>
                   <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required minLength={6}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500" />
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary" />
                 </div>
               )}
               {isGroupAdmin && (
@@ -278,7 +278,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                     value={formData.companyId || ''}
                     onChange={(e) => setFormData({ ...formData, companyId: e.target.value || undefined })}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary"
                   >
                     <option value="">{t('selectCompany')}</option>
                     {companies.map(company => (
@@ -292,7 +292,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                 <select
                   value={formData.departmentId || ''}
                   onChange={(e) => setFormData({ ...formData, departmentId: e.target.value || undefined })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary"
                 >
                   <option value="">{t('noDepartment')}</option>
                   {departments.map(dept => (
@@ -303,7 +303,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('role')}</label>
                 <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary">
                   <option value="USER">{roleLabels.USER}</option>
                   <option value="MANAGER">{roleLabels.MANAGER}</option>
                   <option value="GROUP_ADMIN">{roleLabels.GROUP_ADMIN}</option>
@@ -313,7 +313,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50">
                   {t('cancel')}
                 </button>
-                <button type="submit" className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark">
+                <button type="submit" className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity">
                   {editingUser ? t('update') : t('create')}
                 </button>
               </div>

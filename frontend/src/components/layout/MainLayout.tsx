@@ -11,6 +11,7 @@ import { usersApi, AppearanceSettings } from '@/api/users.api';
 import { hexToHsl, darkenColor, lightenColor, isValidHex, isLightColor } from '@/utils/color';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
+const APPEARANCE_STORAGE_KEY = 'user_appearance';
 
 const ACCENT_COLOR_MAP: Record<string, { hex: string; hsl: string }> = {
     blue: { hex: '#1E4B8E', hsl: '213 65% 34%' },
@@ -62,6 +63,10 @@ const applyAppearance = (settings: AppearanceSettings) => {
     root.style.setProperty('--base-font-size', FONT_SIZE_MAP[settings.fontSize] || '16px');
     root.classList.toggle('compact', settings.compactMode);
     root.classList.toggle('no-animations', !settings.animations);
+
+    try {
+        localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(settings));
+    } catch {}
 };
 
 export const MainLayout: React.FC = () => {
@@ -168,7 +173,7 @@ export const MainLayout: React.FC = () => {
                         {/* 移动端汉堡菜单按钮 */}
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-brand-primary hover:bg-slate-100 rounded-lg transition-colors touch-target"
+                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors touch-target"
                             aria-label="Toggle menu"
                         >
                             {sidebarOpen ? (
@@ -186,7 +191,7 @@ export const MainLayout: React.FC = () => {
                         {/* 桌面端折叠按钮 */}
                         <button
                             onClick={toggleSidebarCollapsed}
-                            className="hidden lg:flex items-center justify-center p-2 text-slate-500 hover:text-brand-primary hover:bg-slate-100 rounded-lg transition-colors"
+                            className="hidden lg:flex items-center justify-center p-2 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors"
                             title={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
                         >
                             {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
@@ -199,7 +204,7 @@ export const MainLayout: React.FC = () => {
                         <div className="flex items-center gap-2 sm:gap-3">
                             <button
                                 onClick={toggleLanguage}
-                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-primary hover:bg-slate-100 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors"
                             >
                                 <Languages className="w-4 h-4" />
                                 <span className="hidden sm:inline">{i18n.language === 'en' ? '中文' : 'EN'}</span>

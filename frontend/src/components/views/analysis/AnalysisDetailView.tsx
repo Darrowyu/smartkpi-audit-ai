@@ -109,7 +109,7 @@ export const AnalysisDetailView: React.FC = memo(() => {
         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     }).format(new Date(dateStr));
 
-    if (loading) return (<div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>);
+    if (loading) return (<div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>);
 
     if (!analysis) {
         return (
@@ -149,10 +149,10 @@ export const AnalysisDetailView: React.FC = memo(() => {
             </div>
 
             <div ref={reportRef} className="space-y-6 bg-white p-6 rounded-xl">
-                <Card className="bg-gradient-to-r from-indigo-50 via-blue-50 to-cyan-50 border-0 shadow-sm">
+                <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 border-0 shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-start gap-3 mb-3">
-                            <Badge className="bg-indigo-600 text-white"><Sparkles className="h-3 w-3 mr-1" />AI Insights</Badge>
+                            <Badge className="bg-brand-primary text-brand-text"><Sparkles className="h-3 w-3 mr-1" />AI Insights</Badge>
                             <span className="font-semibold text-lg text-slate-800">Executive Summary</span>
                         </div>
                         <p className="text-slate-700 leading-relaxed">{analysis.summary || result?.summary}</p>
@@ -180,7 +180,7 @@ export const AnalysisDetailView: React.FC = memo(() => {
                                 return (
                                     <div key={idx} onClick={() => setSelectedEmployee(emp)} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors cursor-pointer">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center text-white font-semibold">{emp.name.charAt(0)}</div>
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-teal-500 flex items-center justify-center text-white font-semibold">{emp.name.charAt(0)}</div>
                                             <div><p className="font-semibold text-slate-900">{emp.name}</p><p className="text-xs text-slate-500">{emp.role}</p></div>
                                         </div>
                                         <div className="text-sm text-slate-500">{emp.department}</div>
@@ -202,10 +202,10 @@ export const AnalysisDetailView: React.FC = memo(() => {
             {selectedEmployee && createPortal(
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" style={{ zIndex: 9999 }} onClick={() => setSelectedEmployee(null)}>
                     <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <CardHeader className="border-b bg-gradient-to-r from-indigo-50 to-cyan-50">
+                        <CardHeader className="border-b bg-gradient-to-r from-primary/10 to-secondary/10">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center text-white text-2xl font-bold">{selectedEmployee.name.charAt(0)}</div>
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-primary to-teal-500 flex items-center justify-center text-white text-2xl font-bold">{selectedEmployee.name.charAt(0)}</div>
                                     <div>
                                         <CardTitle className="text-2xl">{selectedEmployee.name}</CardTitle>
                                         <CardDescription className="text-base">{selectedEmployee.department} · {selectedEmployee.role}</CardDescription>
@@ -220,7 +220,7 @@ export const AnalysisDetailView: React.FC = memo(() => {
                         <CardContent className="p-6 space-y-6">
                             {selectedEmployee.aiAnalysis && (
                                 <Card className="bg-slate-50 border-slate-200">
-                                    <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-indigo-500" />AI 绩效分析</CardTitle></CardHeader>
+                                    <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />AI 绩效分析</CardTitle></CardHeader>
                                     <CardContent><p className="text-slate-700 leading-relaxed">{selectedEmployee.aiAnalysis}</p></CardContent>
                                 </Card>
                             )}
@@ -248,7 +248,7 @@ export const AnalysisDetailView: React.FC = memo(() => {
                                             <ResponsiveContainer width="100%" height={250}>
                                                 <RadarChart data={selectedEmployee.metrics.map(m => ({ subject: m.name, score: m.score, fullMark: 120 }))}>
                                                     <PolarGrid /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} /><PolarRadiusAxis angle={30} domain={[0, 120]} />
-                                                    <Radar name="得分" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.5} />
+                                                    <Radar name="得分" dataKey="score" stroke="var(--brand-primary)" fill="var(--brand-primary)" fillOpacity={0.5} />
                                                 </RadarChart>
                                             </ResponsiveContainer>
                                         </CardContent>

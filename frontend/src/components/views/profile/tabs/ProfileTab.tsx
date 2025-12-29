@@ -92,10 +92,10 @@ export const ProfileTab: React.FC = () => {
         <div className="flex items-center gap-5">
           <input ref={fileInputRef} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleAvatarChange} />
           <button onClick={handleAvatarClick} disabled={avatarUploading} className="relative group">
-            <div className="w-20 h-20 rounded-full bg-brand-primary/10 flex items-center justify-center text-2xl font-bold text-brand-primary overflow-hidden">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-brand-primary overflow-hidden">
               {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" onError={() => setAvatarError(true)} /> : avatarLetter}
             </div>
-            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-primary rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:bg-brand-dark transition-colors">
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-primary rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:opacity-90 transition-opacity">
               {avatarUploading ? <RefreshCw className="w-3.5 h-3.5 text-white animate-spin" /> : <Camera className="w-3.5 h-3.5 text-white" />}
             </div>
           </button>
@@ -119,7 +119,7 @@ export const ProfileTab: React.FC = () => {
           ) : (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>{t('common.cancel', '取消')}</Button>
-              <Button size="sm" onClick={handleSaveProfile} disabled={profileSaving} className="bg-brand-primary hover:bg-brand-dark">
+              <Button size="sm" onClick={handleSaveProfile} disabled={profileSaving} className="bg-brand-primary hover:opacity-90">
                 {profileSaving && <RefreshCw className="w-4 h-4 mr-1.5 animate-spin" />}
                 {t('common.save', '保存')}
               </Button>
@@ -190,7 +190,7 @@ export const ProfileTab: React.FC = () => {
                 value={profileForm.bio}
                 onChange={(e) => setProfileForm(p => ({ ...p, bio: e.target.value }))}
                 placeholder={t('settings.profile.bioPlaceholder', '请输入个人简介...')}
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-700 min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-700 min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
                 maxLength={500}
               />
             ) : (

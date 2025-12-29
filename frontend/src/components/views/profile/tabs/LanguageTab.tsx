@@ -75,7 +75,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border-2 text-left transition-all ${
-                  isActive ? 'border-brand-primary bg-brand-primary/5' : 'border-slate-200 hover:border-slate-300'
+                  isActive ? 'border-brand-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
                 <span className={`text-xs sm:text-sm font-medium ${isActive ? 'text-brand-primary' : 'text-slate-500'}`}>{lang.label}</span>
@@ -91,7 +91,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          className="w-full sm:w-80 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+          className="w-full sm:w-80 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
         >
           {TIMEZONES.map(tz => (
             <option key={tz.value} value={tz.value}>{tz.label}</option>
@@ -108,7 +108,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               <select
                 value={dateFormat}
                 onChange={(e) => setDateFormat(e.target.value as DateFormat)}
-                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
               >
                 {DATE_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -120,7 +120,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               <select
                 value={timeFormat}
                 onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
-                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
               >
                 {TIME_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>

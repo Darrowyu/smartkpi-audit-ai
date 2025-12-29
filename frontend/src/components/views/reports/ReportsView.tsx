@@ -235,7 +235,7 @@ export const ReportsView: React.FC = () => {
                             title="参与人数"
                             value={overview.totalEmployees}
                             icon={<Users className="w-4 h-4 text-brand-primary" />}
-                            iconBg="bg-blue-50"
+                            iconBg="bg-primary/10"
                         />
                         <StatCard
                             title="平均得分"
@@ -408,7 +408,7 @@ export const ReportsView: React.FC = () => {
                                     className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-brand-primary hover:bg-slate-50 transition-colors cursor-pointer"
                                     onClick={() => navigate('/upload')}
                                 >
-                                    <div className="w-12 h-12 bg-brand-primary/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
                                         <FileText className="w-6 h-6 text-brand-primary" />
                                     </div>
                                     <p className="text-slate-600 mb-1">点击或拖拽文件到此处</p>
@@ -464,7 +464,7 @@ export const ReportsView: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {[
                                     { icon: TrendingUp, title: '趋势分析', desc: '识别绩效变化趋势和规律', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                    { icon: Users, title: '团队对比', desc: '部门和团队绩效横向对比', color: 'text-blue-600', bg: 'bg-blue-50' },
+                                    { icon: Users, title: '团队对比', desc: '部门和团队绩效横向对比', color: 'text-primary', bg: 'bg-primary/10' },
                                     { icon: AlertTriangle, title: '风险预警', desc: '识别低绩效和异常情况', color: 'text-amber-600', bg: 'bg-amber-50' },
                                     { icon: Target, title: '改进建议', desc: 'AI生成针对性改进建议', color: 'text-purple-600', bg: 'bg-purple-50' },
                                 ].map((item, index) => (

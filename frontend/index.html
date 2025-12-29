@@ -19,7 +19,11 @@
                 var color = '#1E4B8E'; // 默认蓝色
                 if (stored) {
                     var settings = JSON.parse(stored);
-                    color = settings.customColor || PRESETS[settings.accentColor] || color;
+                    if (settings && settings.accentColor === 'custom' && settings.customColor) {
+                        color = settings.customColor;
+                    } else {
+                        color = PRESETS[settings && settings.accentColor] || color;
+                    }
                 }
                 if (color && /^#[0-9A-Fa-f]{6}$/.test(color)) {
                     var hex = color.replace('#', '');
@@ -51,7 +55,7 @@
                         return '#' + lr.toString(16).padStart(2, '0') + lg.toString(16).padStart(2, '0') + lb.toString(16).padStart(2, '0');
                     };
                     var darkColor = darken(color, 15);
-                    var secondaryColor = lighten(color, 20);
+                    var secondaryColor = lighten(color, 25);
                     var lum = (parseInt(hex.substring(0, 2), 16) * 299 + parseInt(hex.substring(2, 4), 16) * 587 + parseInt(hex.substring(4, 6), 16) * 114) / 1000;
                     var textColor = lum > 128 ? '#1e293b' : '#ffffff';
                     var textMuted = lum > 128 ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.7)';

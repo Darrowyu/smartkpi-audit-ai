@@ -125,8 +125,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
       <button
         onClick={() => handleNavClick(item.path)}
         title={collapsed ? t(item.labelKey) : undefined}
-        className={`group relative w-full flex items-center py-2.5 text-sm font-medium transition-colors duration-200 touch-target
-          ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-dark/50'}
+        className={`group relative w-full flex items-center py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target
+          ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10'}
           ${compact ? 'py-1.5 pl-7 text-xs' : 'pl-[22px]'}
         `}
       >
@@ -143,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
 
   const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className={`pl-[22px] py-2 mt-4 first:mt-0 overflow-hidden transition-all duration-300 ${collapsed ? 'h-0 opacity-0 mt-0 py-0' : 'h-auto opacity-100'}`}>
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-text-muted/60 whitespace-nowrap">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-text opacity-60 whitespace-nowrap">
         {children}
       </span>
     </div>
@@ -166,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
         {onClose && !collapsed && (
           <button
             onClick={onClose}
-            className="lg:hidden p-2 -mr-2 text-brand-text-muted hover:text-brand-text hover:bg-brand-dark rounded-lg transition-colors touch-target"
+            className="lg:hidden p-2 -mr-2 text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10 rounded-lg transition-colors transition-opacity touch-target"
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5" />
@@ -195,14 +195,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
               {collapsed ? (
                 <div className="group relative">
                   <button
-                    className="w-full flex items-center pl-[22px] py-2.5 text-brand-text-muted hover:text-brand-text hover:bg-brand-dark/50 transition-colors duration-200"
+                    className="w-full flex items-center pl-[22px] py-2.5 text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10 transition-colors transition-opacity duration-200"
                   >
                     <Building2 className="w-5 h-5" />
                   </button>
                   <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
                     <div className="absolute left-0 top-0 w-2 h-full" />
                     <div className="bg-brand-primary rounded-lg shadow-xl border border-brand-dark py-2 min-w-[180px]">
-                      <div className="px-3 py-1.5 text-xs font-semibold text-brand-text-muted/70 uppercase">{t('sidebar.orgAdmin', '组织管理')}</div>
+                      <div className="px-3 py-1.5 text-xs font-semibold text-brand-text opacity-70 uppercase">{t('sidebar.orgAdmin', '组织管理')}</div>
                       {adminNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -210,7 +210,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                           <button
                             key={item.path}
                             onClick={() => handleNavClick(item.path)}
-                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-dark/50'}`}
+                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
                           >
                             <Icon className={`w-5 h-5 ${isActive ? 'text-brand-secondary' : ''}`} />
                             <span className="ml-2">{t(item.labelKey)}</span>
@@ -224,7 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                 <>
                   <button
                     onClick={() => setAdminExpanded(!adminExpanded)}
-                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors duration-200 touch-target text-brand-text-muted hover:text-brand-text hover:bg-brand-dark/50"
+                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10"
                   >
                     <div className="flex items-center">
                       <Building2 className="w-5 h-5 flex-shrink-0" />
@@ -233,7 +233,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                       </span>
                     </div>
                     <div>
-                      {adminExpanded ? <ChevronDown className="w-4 h-4 text-brand-text-muted/70" /> : <ChevronRight className="w-4 h-4 text-brand-text-muted/70" />}
+                      {adminExpanded ? <ChevronDown className="w-4 h-4 text-brand-text opacity-70" /> : <ChevronRight className="w-4 h-4 text-brand-text opacity-70" />}
                     </div>
                   </button>
                   <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-60' : 'max-h-0'}`}>
@@ -248,14 +248,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
               {collapsed ? (
                 <div className="group relative">
                   <button
-                    className="w-full flex items-center pl-[22px] py-2.5 text-brand-text-muted hover:text-brand-text hover:bg-brand-dark/50 transition-colors duration-200"
+                    className="w-full flex items-center pl-[22px] py-2.5 text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10 transition-colors transition-opacity duration-200"
                   >
                     <Scale className="w-5 h-5" />
                   </button>
                   <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
                     <div className="absolute left-0 top-0 w-2 h-full" />
                     <div className="bg-brand-primary rounded-lg shadow-xl border border-brand-dark py-2 min-w-[180px]">
-                      <div className="px-3 py-1.5 text-xs font-semibold text-brand-text-muted/70 uppercase">{t('sidebar.perfAdmin', '绩效管理')}</div>
+                      <div className="px-3 py-1.5 text-xs font-semibold text-brand-text opacity-70 uppercase">{t('sidebar.perfAdmin', '绩效管理')}</div>
                       {performanceAdminNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -263,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                           <button
                             key={item.path}
                             onClick={() => handleNavClick(item.path)}
-                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-dark/50'}`}
+                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
                           >
                             <Icon className={`w-5 h-5 ${isActive ? 'text-brand-secondary' : ''}`} />
                             <span className="ml-2">{t(item.labelKey)}</span>
@@ -277,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                 <>
                   <button
                     onClick={() => setPerfExpanded(!perfExpanded)}
-                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors duration-200 touch-target text-brand-text-muted hover:text-brand-text hover:bg-brand-dark/50"
+                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10"
                   >
                     <div className="flex items-center">
                       <Scale className="w-5 h-5 flex-shrink-0" />
@@ -286,7 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                       </span>
                     </div>
                     <div>
-                      {perfExpanded ? <ChevronDown className="w-4 h-4 text-brand-text-muted/70" /> : <ChevronRight className="w-4 h-4 text-brand-text-muted/70" />}
+                      {perfExpanded ? <ChevronDown className="w-4 h-4 text-brand-text opacity-70" /> : <ChevronRight className="w-4 h-4 text-brand-text opacity-70" />}
                     </div>
                   </button>
                   <div className={`overflow-hidden transition-all duration-200 ${perfExpanded ? 'max-h-60' : 'max-h-0'}`}>
@@ -354,14 +354,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
         {/* 用户头像按钮 */}
         <button
           onClick={() => setUserMenuOpen(!userMenuOpen)}
-          className="w-full flex items-center pl-4 py-2 hover:bg-brand-dark/50 transition-colors duration-200"
+          className="w-full flex items-center pl-4 py-2 hover:bg-black/10 transition-colors duration-200"
         >
           <Avatar name={user?.username || 'User'} email={user?.email || ''} avatarUrl={avatarUrl} size="sm" />
           <div className={`ml-2 text-left transition-all duration-300 overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'opacity-100'}`}>
             <div className="text-sm font-medium text-brand-text truncate whitespace-nowrap">
               {user?.username || 'User'}
             </div>
-            <div className="text-[10px] text-brand-text-muted/70 uppercase tracking-wide whitespace-nowrap">
+            <div className="text-[10px] text-brand-text opacity-70 uppercase tracking-wide whitespace-nowrap">
               {user?.role || 'USER'}
             </div>
           </div>

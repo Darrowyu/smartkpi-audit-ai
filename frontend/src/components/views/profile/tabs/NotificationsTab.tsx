@@ -15,7 +15,7 @@ interface NotifyItemProps {
   iconBg?: string;
 }
 
-const NotifyItem: React.FC<NotifyItemProps> = ({ icon: Icon, title, desc, checked, onChange, iconBg = 'bg-brand-primary/10 text-brand-primary' }) => (
+const NotifyItem: React.FC<NotifyItemProps> = ({ icon: Icon, title, desc, checked, onChange, iconBg = 'bg-primary/10 text-primary' }) => (
   <div className="flex items-center justify-between py-4">
     <div className="flex items-center gap-4">
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg}`}>
@@ -124,7 +124,7 @@ export const NotificationsTab: React.FC = () => {
             desc={t('settings.notifications.weeklyReportDesc', '每周发送KPI进度汇总')}
             checked={notifications.weeklyReport}
             onChange={(v) => handleChange('weeklyReport', v)}
-            iconBg="bg-blue-50 text-blue-600"
+            iconBg="bg-primary/10 text-primary"
           />
           <NotifyItem
             icon={Users}

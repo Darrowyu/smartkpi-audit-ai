@@ -122,7 +122,7 @@ export const SalaryView: React.FC = memo(() => {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-blue-600">{calculations.length}</div><p className="text-sm text-slate-500">计算人数</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-primary">{calculations.length}</div><p className="text-sm text-slate-500">计算人数</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-emerald-600">{avgCoefficient}</div><p className="text-sm text-slate-500">平均系数</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-amber-600">¥{totalBonus.toLocaleString()}</div><p className="text-sm text-slate-500">奖金总额</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-slate-600">{Object.keys(GRADE_COLORS).length}</div><p className="text-sm text-slate-500">等级数</p></CardContent></Card>

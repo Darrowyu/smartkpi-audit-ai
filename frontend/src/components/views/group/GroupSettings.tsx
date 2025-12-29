@@ -130,7 +130,7 @@ const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
                     title="集团名称"
                     value={group.name}
                     icon={<Globe className="w-4 h-4 text-brand-primary" />}
-                    iconBg="bg-blue-50"
+                    iconBg="bg-primary/10"
                 />
                 <StatCard
                     title="子公司数量"

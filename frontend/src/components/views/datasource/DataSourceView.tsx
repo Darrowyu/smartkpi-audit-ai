@@ -23,7 +23,7 @@ const TYPE_OPTIONS = [
 const SYNC_STATUS: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   success: { label: '成功', color: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle className="w-3 h-3" /> },
   failed: { label: '失败', color: 'bg-red-100 text-red-700', icon: <XCircle className="w-3 h-3" /> },
-  running: { label: '运行中', color: 'bg-blue-100 text-blue-700', icon: <RefreshCw className="w-3 h-3 animate-spin" /> },
+  running: { label: '运行中', color: 'bg-primary/10 text-primary', icon: <RefreshCw className="w-3 h-3 animate-spin" /> },
 };
 
 export const DataSourceView: React.FC = memo(() => {
@@ -129,7 +129,7 @@ export const DataSourceView: React.FC = memo(() => {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-blue-600">{dataSources.length}</div><p className="text-sm text-slate-500">数据源总数</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-primary">{dataSources.length}</div><p className="text-sm text-slate-500">数据源总数</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-emerald-600">{activeCount}</div><p className="text-sm text-slate-500">已启用</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-amber-600">{syncLogs.filter(l => l.status === 'running').length}</div><p className="text-sm text-slate-500">同步中</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-red-600">{syncLogs.filter(l => l.status === 'failed').length}</div><p className="text-sm text-slate-500">失败任务</p></CardContent></Card>

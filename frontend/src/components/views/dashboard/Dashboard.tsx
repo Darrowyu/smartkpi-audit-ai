@@ -57,7 +57,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">{t('reportTitle')}</h2>
-          <p className="text-slate-500">{t('period')}: <span className="font-semibold text-indigo-600">{data.period}</span></p>
+          <p className="text-slate-500">{t('period')}: <span className="font-semibold text-primary">{data.period}</span></p>
         </div>
         <div className="flex gap-3">
           <button onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-sm disabled:opacity-50">
@@ -67,15 +67,15 @@ const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-6 shadow-sm">
-        <h3 className="text-indigo-900 font-semibold mb-2 flex items-center gap-2">
-          <span className="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full">{t('aiInsight')}</span>{t('execSummary')}
+      <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6 shadow-sm">
+        <h3 className="text-slate-900 font-semibold mb-2 flex items-center gap-2">
+          <span className="bg-brand-primary text-brand-text text-xs px-2 py-0.5 rounded-full">{t('aiInsight')}</span>{t('execSummary')}
         </h3>
         <p className="text-slate-700 leading-relaxed">{data.summary}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title={t('teamAvg')} value={avgScore.toFixed(1)} suffix="%" icon={<TrendingUp className="w-5 h-5 text-blue-600" />} color="bg-blue-50 border-blue-100" />
+        <StatCard title={t('teamAvg')} value={avgScore.toFixed(1)} suffix="%" icon={<TrendingUp className="w-5 h-5 text-primary" />} color="bg-primary/10 border-primary/20" />
         <StatCard title={t('totalEmp')} value={totalEmployees} icon={<Users className="w-5 h-5 text-slate-600" />} color="bg-slate-50 border-slate-100" />
         <StatCard title={t('topPerf')} value={topPerformer?.name || "N/A"} subValue={`${topPerformer?.totalScore}%`} icon={<Trophy className="w-5 h-5 text-emerald-600" />} color="bg-emerald-50 border-emerald-100" />
         <StatCard title={t('lowPerf')} value={lowPerformer?.name || "N/A"} subValue={`${lowPerformer?.totalScore}%`} icon={<AlertTriangle className="w-5 h-5 text-amber-600" />} color="bg-amber-50 border-amber-100" />
@@ -129,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, onReset }) => {
                       <p className="text-sm text-slate-500 mb-2">{metric.comment}</p>
                       <div className="flex gap-4 text-sm"><div className="flex flex-col"><span className="text-slate-400 text-xs uppercase">{t('target')}</span><span className="font-medium text-slate-700">{metric.targetValue}</span></div><div className="flex flex-col"><span className="text-slate-400 text-xs uppercase">{t('actual')}</span><span className="font-medium text-slate-900">{metric.actualValue}</span></div></div>
                     </div>
-                    <div className="sm:w-24 flex flex-col items-center justify-center border-l border-slate-100 sm:pl-4"><span className="text-xs text-slate-400 uppercase">{t('score')}</span><span className={`text-2xl font-bold ${metric.score >= 100 ? 'text-emerald-600' : metric.score >= 80 ? 'text-blue-600' : metric.score >= 60 ? 'text-amber-600' : 'text-red-600'}`}>{metric.score}</span></div>
+                    <div className="sm:w-24 flex flex-col items-center justify-center border-l border-slate-100 sm:pl-4"><span className="text-xs text-slate-400 uppercase">{t('score')}</span><span className={`text-2xl font-bold ${metric.score >= 100 ? 'text-emerald-600' : metric.score >= 80 ? 'text-primary' : metric.score >= 60 ? 'text-amber-600' : 'text-red-600'}`}>{metric.score}</span></div>
                   </div>
                 ))}</div>
               </div>

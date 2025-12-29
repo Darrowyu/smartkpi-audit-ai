@@ -141,7 +141,7 @@ export const CalibrationView: React.FC = memo(() => {
                     <div
                       key={session.id}
                       onClick={() => loadSessionDetail(session)}
-                      className={cn('p-3 rounded-lg border cursor-pointer transition-colors', selectedSession?.id === session.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-slate-50')}
+                      className={cn('p-3 rounded-lg border cursor-pointer transition-colors', selectedSession?.id === session.id ? 'border-primary bg-primary/5' : 'hover:bg-slate-50')}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{session.name}</span>

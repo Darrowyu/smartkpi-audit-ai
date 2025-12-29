@@ -15,7 +15,7 @@ interface EmployeeRankingTableProps {
 
 const statusConfig: Record<string, { label: string; className: string }> = {
     EXCELLENT: { label: '优秀', className: 'bg-green-100 text-green-800 border-green-200' },
-    GOOD: { label: '良好', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+    GOOD: { label: '良好', className: 'bg-primary/10 text-primary border-primary/20' },
     AVERAGE: { label: '合格', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
     POOR: { label: '待改进', className: 'bg-red-100 text-red-800 border-red-200' },
 };

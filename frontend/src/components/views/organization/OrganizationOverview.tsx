@@ -112,7 +112,7 @@ const OrganizationOverview: React.FC<Props> = ({ language }) => {
     const hasChildren = node.children && node.children.length > 0;
 
     const getIcon = () => {
-      if (node.type === 'group') return <Folder className="w-5 h-5 text-blue-600" />;
+      if (node.type === 'group') return <Folder className="w-5 h-5 text-primary" />;
       if (node.type === 'company') return <Building2 className="w-5 h-5 text-green-600" />;
       if (node.type === 'department') return <Briefcase className="w-5 h-5 text-purple-600" />;
       return <Users className="w-5 h-5 text-orange-600" />;

@@ -156,7 +156,7 @@ const CompanySettings: React.FC<Props> = () => {
                     title="公司名称"
                     value={company.name}
                     icon={<Building2 className="w-4 h-4 text-brand-primary" />}
-                    iconBg="bg-blue-50"
+                    iconBg="bg-primary/10"
                 />
                 <StatCard
                     title="公司代码"

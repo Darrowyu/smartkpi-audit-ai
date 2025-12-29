@@ -11,7 +11,7 @@ interface KPITableProps {
 
 const statusStyles = {
   [KPIStatus.EXCELLENT]: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  [KPIStatus.GOOD]: "bg-blue-100 text-blue-700 border-blue-200",
+  [KPIStatus.GOOD]: "bg-primary/10 text-primary border-primary/20",
   [KPIStatus.AVERAGE]: "bg-amber-100 text-amber-700 border-amber-200",
   [KPIStatus.POOR]: "bg-red-100 text-red-700 border-red-200",
 };
@@ -58,7 +58,7 @@ const KPITable: React.FC<KPITableProps> = ({ employees, onSelectEmployee }) => {
               <td className="px-6 py-4">
                 <div className="flex items-center gap-2">
                   <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${emp.totalScore >= 90 ? 'bg-emerald-500' : emp.totalScore >= 75 ? 'bg-blue-500' : emp.totalScore >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${Math.min(emp.totalScore, 100)}%` }}></div>
+                    <div className={`h-full rounded-full ${emp.totalScore >= 90 ? 'bg-emerald-500' : emp.totalScore >= 75 ? 'bg-brand-primary' : emp.totalScore >= 60 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${Math.min(emp.totalScore, 100)}%` }}></div>
                   </div>
                   <span className="text-sm font-semibold text-slate-700">{emp.totalScore}%</span>
                 </div>
@@ -69,7 +69,7 @@ const KPITable: React.FC<KPITableProps> = ({ employees, onSelectEmployee }) => {
                 </span>
               </td>
               <td className="px-6 py-4 text-right">
-                <button className="text-slate-400 hover:text-indigo-600 transition-colors"><ChevronRight className="w-5 h-5" /></button>
+                <button className="text-slate-400 hover:text-primary transition-colors"><ChevronRight className="w-5 h-5" /></button>
               </td>
             </tr>
           ))}

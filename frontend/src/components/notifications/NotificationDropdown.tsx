@@ -16,7 +16,7 @@ const typeColorMap: Record<NotificationType, string> = {
   [NotificationType.SUBMISSION_PENDING]: 'bg-yellow-500',
   [NotificationType.SUBMISSION_APPROVED]: 'bg-green-500',
   [NotificationType.SUBMISSION_REJECTED]: 'bg-red-500',
-  [NotificationType.CALCULATION_COMPLETE]: 'bg-blue-500',
+  [NotificationType.CALCULATION_COMPLETE]: 'bg-brand-primary',
   [NotificationType.PERIOD_ACTIVATED]: 'bg-purple-500',
   [NotificationType.PERIOD_LOCKED]: 'bg-gray-500',
   [NotificationType.LOW_PERFORMANCE_ALERT]: 'bg-orange-500',
@@ -156,7 +156,7 @@ export function NotificationDropdown() {
               {notifications.map(n => (
                 <div
                   key={n.id}
-                  className={`p-3 hover:bg-muted/50 ${!n.isRead ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}
+                  className={`p-3 hover:bg-muted/50 ${!n.isRead ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
                 >
                   <div className="flex items-start gap-2">
                     <div

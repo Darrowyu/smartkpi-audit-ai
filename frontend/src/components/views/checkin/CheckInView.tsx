@@ -118,7 +118,7 @@ export const CheckInView: React.FC = memo(() => {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-blue-600">{checkIns.length}</div><p className="text-sm text-slate-500">检查点数</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-primary">{checkIns.length}</div><p className="text-sm text-slate-500">检查点数</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-emerald-600">{avgProgress}%</div><p className="text-sm text-slate-500">平均进度</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-red-600">{highRiskCount}</div><p className="text-sm text-slate-500">高风险</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-amber-600">{riskAlerts.length}</div><p className="text-sm text-slate-500">风险预警</p></CardContent></Card>

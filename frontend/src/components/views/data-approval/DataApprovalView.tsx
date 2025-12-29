@@ -41,7 +41,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: React.Rea
 };
 
 const STAGE_MAP: Record<string, { label: string; color: string; step: number }> = {
-    SELF_EVAL: { label: '自评提交', color: 'bg-blue-100 text-blue-700', step: 1 },
+    SELF_EVAL: { label: '自评提交', color: 'bg-primary/10 text-primary', step: 1 },
     MANAGER_REVIEW: { label: '主管审核', color: 'bg-amber-100 text-amber-700', step: 2 },
     SKIP_LEVEL: { label: '隔级审核', color: 'bg-purple-100 text-purple-700', step: 3 },
     HR_CONFIRM: { label: 'HR确认', color: 'bg-cyan-100 text-cyan-700', step: 4 },
@@ -172,7 +172,7 @@ export const DataApprovalView: React.FC = memo(() => {
                         <div className={cn(
                             'w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium',
                             currentStep > info.step ? 'bg-emerald-500 text-white' :
-                            currentStep === info.step ? 'bg-blue-500 text-white' :
+                            currentStep === info.step ? 'bg-brand-primary text-brand-text' :
                             'bg-slate-200 text-slate-500'
                         )}>
                             {currentStep > info.step ? <CheckCircle className="w-4 h-4" /> : info.step}
@@ -314,7 +314,7 @@ export const DataApprovalView: React.FC = memo(() => {
                                                                 size="sm"
                                                                 variant="outline"
                                                                 onClick={() => openDetailDialog(sub)}
-                                                                className="text-blue-600 hover:text-blue-700"
+                                                                className="text-primary hover:opacity-80"
                                                             >
                                                                 <Eye className="w-4 h-4 mr-1" /> 审批
                                                             </Button>
@@ -358,12 +358,12 @@ export const DataApprovalView: React.FC = memo(() => {
                                                     <div className={cn(
                                                         'w-10 h-10 rounded-full flex items-center justify-center',
                                                         isCompleted ? 'bg-emerald-500 text-white' :
-                                                        isCurrent ? 'bg-blue-500 text-white' :
+                                                        isCurrent ? 'bg-brand-primary text-brand-text' :
                                                         'bg-slate-200 text-slate-500'
                                                     )}>
                                                         {isCompleted ? <CheckCircle className="w-5 h-5" /> : info.step}
                                                     </div>
-                                                    <span className={cn('text-xs', isCurrent ? 'text-blue-600 font-medium' : 'text-slate-500')}>{info.label}</span>
+                                                    <span className={cn('text-xs', isCurrent ? 'text-primary font-medium' : 'text-slate-500')}>{info.label}</span>
                                                 </div>
                                                 {idx < 3 && <ChevronRight className="w-5 h-5 text-slate-300" />}
                                             </React.Fragment>

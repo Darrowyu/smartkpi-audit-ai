@@ -76,8 +76,8 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
         {/* 集团/公司信息卡片 */}
         <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Building2 className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Building2 className="w-5 h-5 text-primary" />
             </div>
             <div>
               <p className="text-sm text-slate-500">{isGroupAdmin ? t('group') : t('company')}</p>
@@ -131,7 +131,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
         {breadcrumbs.map((crumb, index) => (
           <React.Fragment key={index}>
             {index > 0 && <ChevronRight className="w-4 h-4" />}
-            <span className={crumb.active ? 'text-blue-600 font-medium' : ''}>{crumb.label}</span>
+            <span className={crumb.active ? 'text-primary font-medium' : ''}>{crumb.label}</span>
           </React.Fragment>
         ))}
       </div>
@@ -149,7 +149,7 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
                   key={item.id}
                   onClick={() => setCurrentView(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${isActive
-                    ? 'bg-blue-50 text-blue-700 font-medium'
+                    ? 'bg-primary/10 text-primary font-medium'
                     : 'text-slate-600 hover:bg-slate-50'
                     }`}
                 >

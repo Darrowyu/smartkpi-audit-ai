@@ -28,7 +28,7 @@ export const Notifications: React.FC<NotificationsProps> = ({ notifications, onV
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-lg font-semibold text-slate-800">最新通知</h3>
         {onViewAll && (
-          <button onClick={onViewAll} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          <button onClick={onViewAll} className="text-sm text-primary hover:opacity-80 font-medium transition-opacity">
             查看全部
           </button>
         )}

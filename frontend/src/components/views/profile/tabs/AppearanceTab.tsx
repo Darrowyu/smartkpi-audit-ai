@@ -11,6 +11,8 @@ type ThemeMode = 'light' | 'dark' | 'system';
 type AccentColor = 'blue' | 'teal' | 'purple' | 'orange' | 'custom';
 type FontSize = 'small' | 'medium' | 'large';
 
+const APPEARANCE_STORAGE_KEY = 'user_appearance';
+
 const ACCENT_COLOR_MAP: Record<Exclude<AccentColor, 'custom'>, { hex: string; hsl: string }> = {
   blue: { hex: '#1E4B8E', hsl: '213 65% 34%' },
   teal: { hex: '#0D9488', hsl: '175 85% 29%' },
@@ -71,6 +73,10 @@ const applyTheme = (settings: AppearanceSettings) => {
 
   // 动画效果
   root.classList.toggle('no-animations', !settings.animations);
+
+  try {
+    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(settings));
+  } catch {}
 };
 
 const THEME_OPTIONS: { key: ThemeMode; icon: React.ElementType; labelKey: string; defaultLabel: string }[] = [
@@ -163,7 +169,7 @@ export const AppearanceTab: React.FC = () => {
                 key={option.key}
                 onClick={() => updateSetting('theme', option.key)}
                 className={`flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all ${
-                  isActive ? 'border-brand-primary bg-brand-primary/5' : 'border-slate-200 hover:border-slate-300'
+                  isActive ? 'border-brand-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
                 <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'text-brand-primary' : 'text-slate-400'}`} />
@@ -238,7 +244,7 @@ export const AppearanceTab: React.FC = () => {
         <select
           value={settings.fontSize}
           onChange={(e) => updateSetting('fontSize', e.target.value as FontSize)}
-          className="w-full sm:w-64 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+          className="w-full sm:w-64 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
         >
           {FONT_SIZES.map(option => (
             <option key={option.key} value={option.key}>

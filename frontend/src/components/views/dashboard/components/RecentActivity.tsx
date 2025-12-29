@@ -27,7 +27,7 @@ const getActivityIcon = (type: ActivityType) => {
     },
     milestone: { 
       icon: <Trophy className="w-4 h-4 text-brand-primary" />, 
-      bg: 'bg-blue-50' 
+      bg: 'bg-primary/10' 
     },
     team: { 
       icon: <Users className="w-4 h-4 text-purple-600" />, 
@@ -39,7 +39,7 @@ const getActivityIcon = (type: ActivityType) => {
     },
     update: { 
       icon: <TrendingUp className="w-4 h-4 text-brand-primary" />, 
-      bg: 'bg-blue-50' 
+      bg: 'bg-primary/10' 
     },
     kpi: { 
       icon: <Target className="w-4 h-4 text-slate-600" />, 

@@ -151,7 +151,7 @@ export const GroupDashboardView: React.FC = () => {
                     value={groupStats?.totalCompanies || companyPerformances.length}
                     subtitle="活跃运营中"
                     icon={<Building2 className="w-4 h-4 text-brand-primary" />}
-                    iconBg="bg-blue-50"
+                    iconBg="bg-primary/10"
                 />
                 <StatCard
                     title="总员工数"
@@ -267,7 +267,7 @@ export const GroupDashboardView: React.FC = () => {
                                                 <TableCell>
                                                     <div className="flex items-center justify-center gap-2">
                                                         <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">{company.excellent}</Badge>
-                                                        <Badge variant="secondary" className="bg-blue-100 text-blue-700">{company.good}</Badge>
+                                                        <Badge variant="secondary" className="bg-primary/10 text-primary">{company.good}</Badge>
                                                         <Badge variant="secondary" className="bg-amber-100 text-amber-700">{company.average}</Badge>
                                                         <Badge variant="secondary" className="bg-red-100 text-red-700">{company.poor}</Badge>
                                                     </div>

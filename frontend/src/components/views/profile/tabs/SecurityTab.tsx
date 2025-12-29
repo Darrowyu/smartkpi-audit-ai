@@ -86,7 +86,7 @@ export const SecurityTab: React.FC = () => {
               </button>
             </div>
           </div>
-          <Button onClick={handleChangePassword} disabled={passwordSaving} className="bg-brand-primary hover:bg-brand-dark">
+          <Button onClick={handleChangePassword} disabled={passwordSaving} className="bg-brand-primary hover:opacity-90">
             {passwordSaving && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
             {t('profile.updatePassword', '更新密码')}
           </Button>
@@ -97,7 +97,7 @@ export const SecurityTab: React.FC = () => {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Smartphone className="w-5 h-5 text-brand-primary" />
             </div>
             <div>

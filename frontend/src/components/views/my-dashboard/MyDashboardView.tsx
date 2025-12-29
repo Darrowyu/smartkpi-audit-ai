@@ -111,7 +111,7 @@ export const MyDashboardView: React.FC = memo(() => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'excellent': return 'text-green-600';
-      case 'good': return 'text-blue-600';
+      case 'good': return 'text-primary';
       case 'average': return 'text-yellow-600';
       case 'poor': return 'text-red-600';
       default: return 'text-gray-600';
@@ -121,7 +121,7 @@ export const MyDashboardView: React.FC = memo(() => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'excellent': return <Trophy className="h-5 w-5 text-green-600" />;
-      case 'good': return <Medal className="h-5 w-5 text-blue-600" />;
+      case 'good': return <Medal className="h-5 w-5 text-primary" />;
       case 'average': return <Target className="h-5 w-5 text-yellow-600" />;
       case 'poor': return <AlertTriangle className="h-5 w-5 text-red-600" />;
       default: return <Target className="h-5 w-5" />;

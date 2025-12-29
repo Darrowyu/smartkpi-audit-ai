@@ -88,7 +88,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
       {/* 头部 */}
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-blue-600" />
+          <Building2 className="w-5 h-5 text-primary" />
           {t('companyManagement')}
         </h3>
         <button
@@ -97,7 +97,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
             setFormData({ name: '', code: '', domain: '', settings: {} });
             setShowModal(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4" />
           {t('addCompany')}
@@ -113,7 +113,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
             placeholder={t('searchCompanies')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary"
           />
         </div>
       </div>
@@ -144,7 +144,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                   <td className="px-6 py-4 text-sm text-slate-500">{company._count?.departments || 0}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => handleEdit(company)} className="p-1 text-slate-400 hover:text-blue-600">
+                      <button onClick={() => handleEdit(company)} className="p-1 text-slate-400 hover:text-primary">
                         <Edit className="w-4 h-4" />
                       </button>
                       <button onClick={() => handleDelete(company)} className="p-1 text-slate-400 hover:text-red-600">
@@ -176,7 +176,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary"
                 />
               </div>
               <div>
@@ -187,7 +187,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                   required
                   placeholder="DG001"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary font-mono"
                 />
                 <p className="text-xs text-slate-500 mt-1">{t('companyCodeHint')}</p>
               </div>
@@ -198,7 +198,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                   value={formData.domain}
                   onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                   placeholder="dongguan.makrite.com"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary"
                 />
                 <p className="text-xs text-slate-500 mt-1">{t('domainHintOptional')}</p>
               </div>
@@ -210,7 +210,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                 >
                   {t('cancel')}
                 </button>
-                <button type="submit" className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark">
+                <button type="submit" className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity">
                   {editingCompany ? t('update') : t('create')}
                 </button>
               </div>

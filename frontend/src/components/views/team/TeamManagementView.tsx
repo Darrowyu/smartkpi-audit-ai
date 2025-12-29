@@ -227,7 +227,7 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                     value={users.length}
                     subtitle="系统注册用户"
                     icon={<Users className="w-6 h-6 text-brand-primary" />}
-                    iconBg="bg-blue-50"
+                    iconBg="bg-primary/10"
                 />
                 <StatCard
                     title="活跃用户"
@@ -300,7 +300,7 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar className="h-9 w-9">
-                                                        <AvatarFallback className="bg-brand-primary/10 text-brand-primary text-sm">
+                                                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
                                                             {user.username.substring(0, 2).toUpperCase()}
                                                         </AvatarFallback>
                                                     </Avatar>

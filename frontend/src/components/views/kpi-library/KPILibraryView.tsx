@@ -390,7 +390,7 @@ export const KPILibraryView: React.FC = () => {
                     title="指标总数"
                     value={stats.total}
                     icon={<BarChart3 className="w-6 h-6 text-brand-primary" />}
-                    iconBg="bg-blue-50"
+                    iconBg="bg-primary/10"
                 />
                 <StatCard
                     title="已开指标"

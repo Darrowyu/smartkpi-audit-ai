@@ -76,7 +76,7 @@ const LandingPage: React.FC = () => {
   const performanceMetrics: PerformanceMetric[] = useMemo(() => {
     const rate = overview ? Math.round(((overview.excellent + overview.good) / (overview.totalEmployees || 1)) * 100) : 87;
     return [
-      { id: '1', label: '目标达成率', value: rate, color: 'bg-blue-500' },
+      { id: '1', label: '目标达成率', value: rate, color: 'bg-brand-primary' },
       { id: '2', label: '团队协作', value: 92, color: 'bg-emerald-500' },
       { id: '3', label: '任务完成', value: 78, color: 'bg-emerald-500' },
     ];

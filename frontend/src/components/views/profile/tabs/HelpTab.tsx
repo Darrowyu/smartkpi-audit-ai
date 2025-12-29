@@ -17,7 +17,7 @@ const FAQ_ITEMS: FAQItem[] = [
 ];
 
 const RESOURCES = [
-  { icon: FileText, title: '使用手册', desc: '详细的功能使用说明', color: 'bg-blue-50 text-blue-600' },
+  { icon: FileText, title: '使用手册', desc: '详细的功能使用说明', color: 'bg-primary/10 text-primary' },
   { icon: Video, title: '视频教程', desc: '观看操作演示视频', color: 'bg-purple-50 text-purple-600' },
   { icon: MessageCircle, title: '在线客服', desc: '实时在线咨询', color: 'bg-green-50 text-green-600' },
   { icon: Mail, title: '邮件支持', desc: '发送邮件获取帮助', color: 'bg-amber-50 text-amber-600' },
@@ -48,9 +48,9 @@ export const HelpTab: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('settings.help.searchPlaceholder', '输入关键词搜索帮助...')}
-            className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+            className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
           />
-          <button className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
             <Search className="w-4 h-4" />
             {t('settings.help.search', '搜索')}
           </button>
@@ -103,7 +103,7 @@ export const HelpTab: React.FC = () => {
           <h3 className="font-semibold text-slate-800">{t('settings.help.needMore', '需要更多帮助？')}</h3>
           <p className="text-sm text-slate-500">{t('settings.help.needMoreDesc', '我们的支持团队随时为您提供帮助')}</p>
         </div>
-        <button className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark transition-colors">
+        <button className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity">
           {t('settings.help.contactSupport', '联系管理员')}
         </button>
       </div>

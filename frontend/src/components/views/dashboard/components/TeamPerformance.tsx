@@ -46,7 +46,7 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({ members, teamN
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm h-full">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-slate-800">团队表现</h3>
-        <span className="px-3 py-1 text-xs font-medium text-brand-primary bg-blue-50 rounded-full">
+        <span className="px-3 py-1 text-xs font-medium text-brand-primary bg-primary/10 rounded-full">
           {teamName}
         </span>
       </div>

@@ -106,7 +106,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
             />
           </div>
 
-          <div className="pt-8 border-t border-brand-text/20 text-brand-text-muted text-sm">
+          <div className="pt-8 border-t border-white/20 text-brand-text-muted text-sm">
             &copy; 2025 SmartKPI Audit AI. {t('allRightsReserved')}.
           </div>
         </div>
@@ -160,7 +160,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-ring/20 transition-all outline-none"
                 placeholder={currentLang === 'zh' ? '请输入用户名' : 'Enter your username'}
                 required
               />
@@ -172,7 +172,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
                 <label className="text-sm font-medium text-slate-700">
                   {t('password')}
                 </label>
-                <Link to="/forgot-password" className="text-sm text-slate-500 hover:text-brand-primary transition-colors">
+                <Link to="/forgot-password" className="text-sm text-slate-500 hover:text-primary transition-colors">
                   {t('forgotPassword')}
                 </Link>
               </div>
@@ -181,7 +181,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-11 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+                  className="w-full px-4 py-3 pr-11 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-ring/20 transition-all outline-none"
                   placeholder="********"
                   required
                 />
@@ -202,7 +202,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-brand-primary border-slate-300 rounded focus:ring-brand-primary/20 cursor-pointer"
+                className="w-4 h-4 text-brand-primary border-slate-300 rounded focus:ring-2 focus:ring-ring/20 cursor-pointer"
               />
               <label htmlFor="rememberMe" className="ml-2 text-sm text-slate-600 cursor-pointer select-none">
                 {t('rememberMe', '记住我')}
@@ -213,7 +213,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-brand-primary hover:bg-brand-dark text-brand-text font-medium rounded-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full py-3 px-4 bg-brand-primary hover:opacity-90 text-brand-text font-medium rounded-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -231,7 +231,7 @@ export const LoginPage: React.FC<Props> = ({ language, onSuccess }) => {
 
 const FeatureItem = ({ icon: Icon, title, desc }: { icon: React.ElementType, title: string, desc: string }) => (
   <div className="flex gap-4 items-start group">
-    <div className="p-2 rounded-lg bg-brand-text/10 text-brand-secondary mt-1 group-hover:bg-brand-text/20 group-hover:text-brand-text transition-colors">
+    <div className="p-2 rounded-lg bg-white/10 text-brand-secondary mt-1 group-hover:bg-white/20 transition-colors">
       <Icon className="w-5 h-5" />
     </div>
     <div>

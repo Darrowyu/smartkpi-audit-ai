@@ -236,11 +236,11 @@ export const SelfEvaluationView: React.FC = memo(() => {
       </div>
 
       {submissionStatus?.submitted && (
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-primary/20 bg-primary/5">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-blue-600" />
+                <FileText className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">{t('selfEvaluation.alreadySubmitted')}</p>
                   <p className="text-sm text-muted-foreground">

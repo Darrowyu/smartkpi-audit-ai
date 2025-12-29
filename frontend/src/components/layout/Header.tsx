@@ -19,16 +19,16 @@ const Header: React.FC<HeaderProps> = ({ language, setLanguage, currentView, set
   const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
 
   const navClass = (view: View) => `text-sm font-medium transition-colors pb-1 border-b-2
-    ${currentView === view ? 'text-blue-600 border-blue-600' : 'text-slate-600 border-transparent hover:text-blue-600'}`;
+    ${currentView === view ? 'text-primary border-primary' : 'text-slate-600 border-transparent hover:text-primary'}`;
 
   return (
     <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setCurrentView('landing')}>
-          <div className="bg-blue-600 p-2 rounded-lg group-hover:bg-blue-700 transition-colors shadow-sm">
+          <div className="bg-brand-primary p-2 rounded-lg group-hover:opacity-90 transition-opacity shadow-sm">
             <BarChart3 className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">SmartKPI<span className="text-blue-600">.AI</span></h1>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">SmartKPI<span className="text-primary">.AI</span></h1>
         </div>
 
         <div className="flex items-center gap-6">

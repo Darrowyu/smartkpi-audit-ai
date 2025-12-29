@@ -88,14 +88,14 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-100 rounded-xl">
-            <Building2 className="w-6 h-6 text-blue-600" />
+          <div className="p-3 bg-primary/10 rounded-xl">
+            <Building2 className="w-6 h-6 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">{t('departmentManagement')}</h1>
         </div>
         <button
           onClick={() => { setShowModal(true); setEditingDept(null); setFormData({ name: '', code: '', description: '' }); }}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-5 h-5" />
           {t('addDepartment')}
@@ -111,7 +111,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
             placeholder={t('searchDepartments')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring/20 focus:border-primary"
           />
         </div>
       </div>
@@ -139,7 +139,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500">{dept.code || '-'}</td>
                   <td className="px-6 py-4 text-gray-500">{dept.description || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button onClick={() => handleEdit(dept)} className="text-blue-600 hover:text-blue-800 mr-4">
+                    <button onClick={() => handleEdit(dept)} className="text-primary hover:opacity-80 mr-4">
                       <Edit2 className="w-4 h-4 inline" />
                     </button>
                     <button onClick={() => handleDelete(dept.id)} className="text-red-600 hover:text-red-800">
@@ -172,7 +172,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring/20 focus:border-primary"
                   />
                 </div>
                 <div>
@@ -181,7 +181,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
                     type="text"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring/20 focus:border-primary"
                   />
                 </div>
                 <div>
@@ -190,7 +190,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ring/20 focus:border-primary"
                   />
                 </div>
               </div>
@@ -198,7 +198,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
                 >
                   {submitting ? '...' : t('save')}
                 </button>

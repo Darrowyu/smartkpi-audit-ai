@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { TableRowSkeleton } from '@/components/ui/skeleton';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  scheduled: { label: '已安排', color: 'bg-blue-100 text-blue-700', icon: <Clock className="w-3 h-3" /> },
+  scheduled: { label: '已安排', color: 'bg-primary/10 text-primary', icon: <Clock className="w-3 h-3" /> },
   completed: { label: '已完成', color: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle className="w-3 h-3" /> },
   cancelled: { label: '已取消', color: 'bg-slate-100 text-slate-600', icon: <XCircle className="w-3 h-3" /> },
 };
@@ -117,7 +117,7 @@ export const InterviewView: React.FC = memo(() => {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-blue-600">{scheduledCount}</div><p className="text-sm text-slate-500">待进行</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-primary">{scheduledCount}</div><p className="text-sm text-slate-500">待进行</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-emerald-600">{completedCount}</div><p className="text-sm text-slate-500">已完成</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-amber-600">{interviews.filter(i => i.status === 'completed' && !i.employeeConfirmed).length}</div><p className="text-sm text-slate-500">待确认</p></CardContent></Card>
         <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-slate-600">{interviews.length}</div><p className="text-sm text-slate-500">总数</p></CardContent></Card>

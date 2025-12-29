@@ -113,14 +113,14 @@ export const MyKPIsView: React.FC = memo(() => {
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600';
-    if (score >= 80) return 'text-blue-600';
+    if (score >= 80) return 'text-primary';
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getScoreBadge = (score: number) => {
     if (score >= 90) return <Badge className="bg-green-100 text-green-700">{t('statusExcellent')}</Badge>;
-    if (score >= 80) return <Badge className="bg-blue-100 text-blue-700">{t('statusGood')}</Badge>;
+    if (score >= 80) return <Badge className="bg-primary/10 text-primary">{t('statusGood')}</Badge>;
     if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-700">{t('statusAverage')}</Badge>;
     return <Badge className="bg-red-100 text-red-700">{t('statusPoor')}</Badge>;
   };
@@ -280,7 +280,7 @@ export const MyKPIsView: React.FC = memo(() => {
               <h4 className="font-medium">{t('myKPIs.scoreRanges')}</h4>
               <ul className="text-sm space-y-1">
                 <li className="flex items-center gap-2"><Badge className="bg-green-100 text-green-700">{t('statusExcellent')}</Badge> 90-100{t('dashboardView.avgScoreUnit')}</li>
-                <li className="flex items-center gap-2"><Badge className="bg-blue-100 text-blue-700">{t('statusGood')}</Badge> 80-89{t('dashboardView.avgScoreUnit')}</li>
+                <li className="flex items-center gap-2"><Badge className="bg-primary/10 text-primary">{t('statusGood')}</Badge> 80-89{t('dashboardView.avgScoreUnit')}</li>
                 <li className="flex items-center gap-2"><Badge className="bg-yellow-100 text-yellow-700">{t('statusAverage')}</Badge> 60-79{t('dashboardView.avgScoreUnit')}</li>
                 <li className="flex items-center gap-2"><Badge className="bg-red-100 text-red-700">{t('statusPoor')}</Badge> &lt;60{t('dashboardView.avgScoreUnit')}</li>
               </ul>

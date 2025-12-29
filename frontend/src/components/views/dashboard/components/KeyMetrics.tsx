@@ -56,7 +56,7 @@ export const KeyMetrics: React.FC<KeyMetricsProps> = ({ metrics, onViewAll }) =>
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-slate-800">关键指标进度</h3>
         {onViewAll && (
-          <button onClick={onViewAll} className="text-sm text-brand-primary hover:text-brand-dark font-medium">
+          <button onClick={onViewAll} className="text-sm text-primary hover:opacity-90 font-medium transition-opacity">
             查看全部
           </button>
         )}

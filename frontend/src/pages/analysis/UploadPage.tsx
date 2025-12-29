@@ -33,7 +33,7 @@ const UploadPage: React.FC = () => {
             <div className="w-full max-w-2xl">
                 <button
                     onClick={() => navigate('/')}
-                    className="mb-6 text-slate-500 hover:text-indigo-600 flex items-center gap-1 text-sm"
+                    className="mb-6 text-slate-500 hover:text-primary flex items-center gap-1 text-sm"
                 >
                     <ArrowLeft className="w-4 h-4" />{t('backToHome')}
                 </button>

@@ -10,6 +10,7 @@ import {
   MinLength,
   Min,
   Max,
+  Matches,
 } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
@@ -222,7 +223,12 @@ export class UpdateAppearanceSettingsDto {
 
   @IsOptional()
   @IsString()
-  accentColor?: 'blue' | 'teal' | 'purple' | 'orange';
+  accentColor?: 'blue' | 'teal' | 'purple' | 'orange' | 'custom';
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'customColor must be a valid HEX color (e.g., #FF5733)' })
+  customColor?: string;
 
   @IsOptional()
   @IsString()

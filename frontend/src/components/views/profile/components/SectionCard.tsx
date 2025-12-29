@@ -16,7 +16,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({ icon, title, descripti
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <div className="flex items-center gap-3">
           {icon && (
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#1E4B8E]/10 flex items-center justify-center text-[#1E4B8E] flex-shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary flex-shrink-0">
               {icon}
             </div>
           )}

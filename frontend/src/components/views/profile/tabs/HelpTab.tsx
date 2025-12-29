@@ -48,9 +48,9 @@ export const HelpTab: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('settings.help.searchPlaceholder', '输入关键词搜索帮助...')}
-            className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+            className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
           />
-          <button className="px-4 py-2 bg-[#1E4B8E] text-white rounded-lg hover:bg-[#163a6e] transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark transition-colors flex items-center gap-2">
             <Search className="w-4 h-4" />
             {t('settings.help.search', '搜索')}
           </button>
@@ -66,7 +66,7 @@ export const HelpTab: React.FC = () => {
                 onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
                 className="w-full flex items-center justify-between text-left"
               >
-                <span className="text-[#1E4B8E] font-medium hover:underline">{item.question}</span>
+                <span className="text-brand-primary font-medium hover:underline">{item.question}</span>
                 <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${expandedFAQ === index ? 'rotate-180' : ''}`} />
               </button>
               {expandedFAQ === index && (
@@ -88,7 +88,7 @@ export const HelpTab: React.FC = () => {
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="font-medium text-[#1E4B8E]">{item.title}</div>
+                  <div className="font-medium text-brand-primary">{item.title}</div>
                   <div className="text-sm text-slate-500">{item.desc}</div>
                 </div>
               </button>
@@ -103,14 +103,14 @@ export const HelpTab: React.FC = () => {
           <h3 className="font-semibold text-slate-800">{t('settings.help.needMore', '需要更多帮助？')}</h3>
           <p className="text-sm text-slate-500">{t('settings.help.needMoreDesc', '我们的支持团队随时为您提供帮助')}</p>
         </div>
-        <button className="px-4 py-2 bg-[#1E4B8E] text-white rounded-lg hover:bg-[#163a6e] transition-colors">
-          {t('settings.help.contactSupport', '联系客服')}
+        <button className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark transition-colors">
+          {t('settings.help.contactSupport', '联系管理员')}
         </button>
       </div>
 
       {/* 版本信息 */}
       <div className="text-center text-sm text-slate-400 py-4">
-        <p>KPI绩效管理系统 v2.0.1</p>
+        <p>KPI绩效管理系统 v{__APP_VERSION__}</p>
         <p>© 2025 Makrite. All rights reserved.</p>
       </div>
     </div>

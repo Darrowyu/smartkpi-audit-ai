@@ -60,7 +60,7 @@ export const SecurityTab: React.FC = () => {
       <SectionCard icon={<Key className="w-5 h-5" />} title={t('settings.security.changePassword', '修改密码')} description={t('settings.security.changePasswordDesc', '定期更换密码以保护账户安全')}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-[#1E4B8E]">{t('profile.currentPassword', '当前密码')}</Label>
+            <Label className="text-brand-primary">{t('profile.currentPassword', '当前密码')}</Label>
             <div className="relative">
               <Input type={showPasswords.current ? 'text' : 'password'} value={passwordForm.currentPassword} onChange={(e) => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))} />
               <button type="button" onClick={() => setShowPasswords(p => ({ ...p, current: !p.current }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -69,7 +69,7 @@ export const SecurityTab: React.FC = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-[#1E4B8E]">{t('profile.newPassword', '新密码')}</Label>
+            <Label className="text-brand-primary">{t('profile.newPassword', '新密码')}</Label>
             <div className="relative">
               <Input type={showPasswords.new ? 'text' : 'password'} value={passwordForm.newPassword} onChange={(e) => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))} />
               <button type="button" onClick={() => setShowPasswords(p => ({ ...p, new: !p.new }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -78,7 +78,7 @@ export const SecurityTab: React.FC = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-[#1E4B8E]">{t('profile.confirmPassword', '确认新密码')}</Label>
+            <Label className="text-brand-primary">{t('profile.confirmPassword', '确认新密码')}</Label>
             <div className="relative">
               <Input type={showPasswords.confirm ? 'text' : 'password'} value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))} />
               <button type="button" onClick={() => setShowPasswords(p => ({ ...p, confirm: !p.confirm }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -86,7 +86,7 @@ export const SecurityTab: React.FC = () => {
               </button>
             </div>
           </div>
-          <Button onClick={handleChangePassword} disabled={passwordSaving} className="bg-[#1E4B8E] hover:bg-[#163a6e]">
+          <Button onClick={handleChangePassword} disabled={passwordSaving} className="bg-brand-primary hover:bg-brand-dark">
             {passwordSaving && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
             {t('profile.updatePassword', '更新密码')}
           </Button>
@@ -97,8 +97,8 @@ export const SecurityTab: React.FC = () => {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#1E4B8E]/10 flex items-center justify-center">
-              <Smartphone className="w-5 h-5 text-[#1E4B8E]" />
+            <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+              <Smartphone className="w-5 h-5 text-brand-primary" />
             </div>
             <div>
               <h3 className="font-semibold text-slate-800">{t('settings.security.twoFactor', '双因素认证')}</h3>
@@ -113,7 +113,7 @@ export const SecurityTab: React.FC = () => {
       <SectionCard icon={<History className="w-5 h-5" />} title={t('settings.security.loginHistory', '登录历史')} description={t('settings.security.loginHistoryDesc', '查看您的账户登录记录')}>
         {historyLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-[#1E4B8E]" />
+            <Loader2 className="w-6 h-6 animate-spin text-brand-primary" />
           </div>
         ) : loginHistory.length === 0 ? (
           <div className="text-center py-8 text-slate-400">{t('settings.security.noLoginHistory', '暂无登录记录')}</div>
@@ -130,7 +130,7 @@ export const SecurityTab: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-slate-600">{new Date(item.createdAt).toLocaleString()}</div>
-                  {item.isCurrent && <div className="text-xs text-[#1E4B8E]">{t('settings.security.currentDevice', '当前设备')}</div>}
+                  {item.isCurrent && <div className="text-xs text-brand-primary">{t('settings.security.currentDevice', '当前设备')}</div>}
                 </div>
               </div>
             ))}

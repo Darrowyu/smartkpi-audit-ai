@@ -389,13 +389,13 @@ export const KPILibraryView: React.FC = () => {
                 <StatCard
                     title="指标总数"
                     value={stats.total}
-                    icon={<BarChart3 className="w-6 h-6 text-[#1E4B8E]" />}
+                    icon={<BarChart3 className="w-6 h-6 text-brand-primary" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard
                     title="已开指标"
                     value={stats.active}
-                    icon={<Target className="w-6 h-6 text-[#5B9BD5]" />}
+                    icon={<Target className="w-6 h-6 text-brand-secondary" />}
                     iconBg="bg-sky-50"
                     trend={12}
                 />
@@ -420,7 +420,7 @@ export const KPILibraryView: React.FC = () => {
                     variant={selectedCategory === 'all' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedCategory('all')}
-                    className={selectedCategory === 'all' ? 'bg-[#1E4B8E]' : ''}
+                    className={selectedCategory === 'all' ? 'bg-brand-primary' : ''}
                 >
                     全部 {categoryStats.all || 0}
                 </Button>
@@ -430,7 +430,7 @@ export const KPILibraryView: React.FC = () => {
                         variant={selectedCategory === key ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setSelectedCategory(key)}
-                        className={selectedCategory === key ? 'bg-[#1E4B8E]' : ''}
+                        className={selectedCategory === key ? 'bg-brand-primary' : ''}
                     >
                         {label} {categoryStats[key] || 0}
                     </Button>

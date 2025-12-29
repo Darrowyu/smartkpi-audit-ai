@@ -58,7 +58,7 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#1E4B8E] rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center">
               <img src={logoImage} alt="Makrite KPI" className="h-6 w-auto" />
             </div>
             <span className="text-xl font-semibold text-slate-900">Makrite KPI</span>
@@ -81,7 +81,7 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
               </p>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 text-[#1E4B8E] font-medium hover:text-[#163a6e] transition-colors"
+                className="inline-flex items-center gap-2 text-brand-primary font-medium hover:text-brand-dark transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 {t('forgotPasswordPage.backToLogin')}
@@ -116,7 +116,7 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-[#1E4B8E] focus:ring-2 focus:ring-[#1E4B8E]/20 transition-all outline-none"
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
                       placeholder={t('forgotPasswordPage.usernamePlaceholder', '请输入用户名')}
                       required
                     />
@@ -133,7 +133,7 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-[#1E4B8E] focus:ring-2 focus:ring-[#1E4B8E]/20 transition-all outline-none"
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
                       placeholder={t('forgotPasswordPage.emailPlaceholder')}
                       required
                     />
@@ -143,7 +143,7 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 px-4 bg-[#1E4B8E] hover:bg-[#163a6e] text-white font-medium rounded-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full py-3 px-4 bg-brand-primary hover:bg-brand-dark text-brand-text font-medium rounded-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -156,7 +156,7 @@ export const ForgotPasswordPage: React.FC<Props> = ({ language }) => {
               <div className="mt-6 text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-2 text-slate-500 hover:text-[#1E4B8E] transition-colors text-sm"
+                  className="inline-flex items-center gap-2 text-slate-500 hover:text-brand-primary transition-colors text-sm"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   {t('forgotPasswordPage.backToLogin')}

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { User, Bell, Lock, Target, Palette, Globe, HelpCircle, Settings } from 'lucide-react';
 import { Language } from '@/types';
 import { ProfileTab, SecurityTab, NotificationsTab, LanguageTab, KpiTab, AppearanceTab, HelpTab } from './tabs';
@@ -22,9 +23,26 @@ const TABS: { key: TabKey; icon: React.ElementType; labelKey: string; defaultLab
   { key: 'help', icon: HelpCircle, labelKey: 'settings.tabs.help', defaultLabel: '帮助' },
 ];
 
+const VALID_TABS: TabKey[] = ['profile', 'notifications', 'security', 'kpi', 'appearance', 'language', 'help'];
+
 const ProfileView: React.FC<ProfileViewProps> = ({ language, setLanguage }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabKey>('profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab = VALID_TABS.includes(tabParam as TabKey) ? (tabParam as TabKey) : 'profile';
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && VALID_TABS.includes(tab as TabKey)) {
+      setActiveTab(tab as TabKey);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab);
+    setSearchParams(tab === 'profile' ? {} : { tab });
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -43,8 +61,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ language, setLanguage }) => {
     <div className="space-y-6">
       {/* 页面头部 */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#1E4B8E]/10 flex items-center justify-center">
-          <Settings className="w-5 h-5 text-[#1E4B8E]" />
+        <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+          <Settings className="w-5 h-5 text-brand-primary" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900">系统设置</h1>
@@ -62,15 +80,15 @@ const ProfileView: React.FC<ProfileViewProps> = ({ language, setLanguage }) => {
               return (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => handleTabChange(tab.key)}
                   className={cn(
                     'flex items-center gap-2 px-4 sm:px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors',
                     isActive
-                      ? 'text-[#1E4B8E] border-[#1E4B8E] bg-blue-50/50'
+                      ? 'text-brand-primary border-brand-primary bg-brand-primary/5'
                       : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50'
                   )}
                 >
-                  <Icon className={cn('w-4 h-4', isActive && 'text-[#1E4B8E]')} />
+                  <Icon className={cn('w-4 h-4', isActive && 'text-brand-primary')} />
                   <span>{t(tab.labelKey, tab.defaultLabel)}</span>
                 </button>
               );

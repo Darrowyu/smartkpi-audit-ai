@@ -59,7 +59,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ data }) => {
       title: '总KPI数',
       value: data.totalKPIs,
       trend: data.trends.totalKPIs,
-      icon: <Target className="w-6 h-6 text-[#1E4B8E]" />,
+      icon: <Target className="w-6 h-6 text-brand-primary" />,
       iconBg: 'bg-blue-50',
     },
     {

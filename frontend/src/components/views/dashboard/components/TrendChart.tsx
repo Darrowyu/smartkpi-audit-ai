@@ -18,7 +18,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
         <h3 className="text-lg font-semibold text-slate-800">KPI完成趋势</h3>
         <div className="flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#1E4B8E]"></span>
+            <span className="w-3 h-3 rounded-full bg-brand-primary"></span>
             <span className="text-slate-600">实际完成</span>
           </div>
           <div className="flex items-center gap-2">

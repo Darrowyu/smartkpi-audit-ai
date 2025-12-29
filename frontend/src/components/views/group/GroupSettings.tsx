@@ -94,7 +94,7 @@ const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E4B8E]" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary" />
             </div>
         );
     }
@@ -129,14 +129,14 @@ const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
                 <StatCard
                     title="集团名称"
                     value={group.name}
-                    icon={<Globe className="w-4 h-4 text-[#1E4B8E]" />}
+                    icon={<Globe className="w-4 h-4 text-brand-primary" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard
                     title="子公司数量"
                     value={group._count?.companies || 0}
                     subtitle="活跃运营中"
-                    icon={<Building2 className="w-4 h-4 text-[#5B9BD5]" />}
+                    icon={<Building2 className="w-4 h-4 text-brand-secondary" />}
                     iconBg="bg-sky-50"
                 />
                 <StatCard

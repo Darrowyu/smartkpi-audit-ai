@@ -37,14 +37,43 @@
 
     --radius: 0.5rem;
 
-    /* Custom brand colors */
+    /* Custom brand colors - 这些值会被 applyTheme 动态覆盖 */
     --brand-primary: #1E4B8E;
     --brand-secondary: #5B9BD5;
     --brand-dark: #163a6e;
+    --brand-dark-hover: #0f2d52;
+    --brand-text: #ffffff;
+    --brand-text-muted: rgba(255, 255, 255, 0.7);
 
     /* Appearance settings defaults */
     --accent-color: #1E4B8E;
     --base-font-size: 16px;
+  }
+
+  /* 主题色变体 - 根据 data-accent 属性自动计算 */
+  [data-accent="blue"] {
+    --brand-primary: #1E4B8E;
+    --brand-dark: #163a6e;
+    --brand-dark-hover: #0f2d52;
+    --brand-secondary: #5B9BD5;
+  }
+  [data-accent="teal"] {
+    --brand-primary: #0D9488;
+    --brand-dark: #0a7069;
+    --brand-dark-hover: #075652;
+    --brand-secondary: #2dd4bf;
+  }
+  [data-accent="purple"] {
+    --brand-primary: #7C3AED;
+    --brand-dark: #6025d1;
+    --brand-dark-hover: #4c1d9e;
+    --brand-secondary: #a78bfa;
+  }
+  [data-accent="orange"] {
+    --brand-primary: #EA580C;
+    --brand-dark: #c2410c;
+    --brand-dark-hover: #9a3412;
+    --brand-secondary: #fb923c;
   }
 
   .dark {
@@ -128,12 +157,43 @@
     background-color: var(--brand-dark);
   }
 
+  /* 渐变工具类 */
+  .from-brand-primary {
+    --tw-gradient-from: var(--brand-primary) var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .to-brand-dark {
+    --tw-gradient-to: var(--brand-dark) var(--tw-gradient-to-position);
+  }
+
+  .to-brand-primary {
+    --tw-gradient-to: var(--brand-primary) var(--tw-gradient-to-position);
+  }
+
   .text-brand-primary {
     color: var(--brand-primary);
   }
 
   .text-brand-secondary {
     color: var(--brand-secondary);
+  }
+
+  .text-brand-text {
+    color: var(--brand-text);
+  }
+
+  .text-brand-text-muted {
+    color: var(--brand-text-muted);
+  }
+
+  .bg-brand-text {
+    background-color: var(--brand-text);
+  }
+
+  .border-brand-text {
+    border-color: var(--brand-text);
   }
 
   .border-brand-primary {

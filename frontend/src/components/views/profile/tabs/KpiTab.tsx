@@ -20,7 +20,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange, options }) => (
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full px-4 py-2.5 bg-[#1E4B8E]/5 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E] appearance-none cursor-pointer"
+    className="w-full px-4 py-2.5 bg-brand-primary/5 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary appearance-none cursor-pointer"
     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
   >
     {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
@@ -37,7 +37,7 @@ interface SettingRowProps {
 const SettingRow: React.FC<SettingRowProps> = ({ label, description, checked, onChange }) => (
   <div className="flex items-center justify-between py-4 border-t border-slate-100 first:border-0 first:pt-0">
     <div>
-      <div className="font-medium text-[#1E4B8E]">{label}</div>
+      <div className="font-medium text-brand-primary">{label}</div>
       <div className="text-sm text-slate-500">{description}</div>
     </div>
     <Toggle checked={checked} onChange={onChange} />
@@ -104,7 +104,7 @@ export const KpiTab: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1E4B8E]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
       </div>
     );
   }
@@ -120,11 +120,11 @@ export const KpiTab: React.FC = () => {
       <SectionCard icon={<BarChart3 className="w-5 h-5" />} title={t('settings.kpi.displaySettings', '显示设置')} description={t('settings.kpi.displaySettingsDesc', '自定义KPI仪表盘的显示方式')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#1E4B8E]">{t('settings.kpi.defaultView', '默认视图')}</label>
+            <label className="text-sm font-medium text-brand-primary">{t('settings.kpi.defaultView', '默认视图')}</label>
             <Select value={preferences.defaultView} onChange={(v) => updatePreference('defaultView', v as ViewType)} options={viewOptions} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#1E4B8E]">{t('settings.kpi.reminderFrequency', '提醒频率')}</label>
+            <label className="text-sm font-medium text-brand-primary">{t('settings.kpi.reminderFrequency', '提醒频率')}</label>
             <Select value={preferences.reminderFrequency} onChange={(v) => updatePreference('reminderFrequency', v as FrequencyType)} options={frequencyOptions} />
           </div>
         </div>
@@ -153,10 +153,10 @@ export const KpiTab: React.FC = () => {
         <div className="pt-4 border-t border-slate-100">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <div className="font-medium text-[#1E4B8E]">{t('settings.kpi.warningThreshold', '预警阈值')}</div>
+              <div className="font-medium text-brand-primary">{t('settings.kpi.warningThreshold', '预警阈值')}</div>
               <div className="text-sm text-slate-500">{t('settings.kpi.warningThresholdDesc', '当KPI完成率低于此值时发出预警')}</div>
             </div>
-            <span className="text-lg font-semibold text-[#1E4B8E]">{preferences.warningThreshold}%</span>
+            <span className="text-lg font-semibold text-brand-primary">{preferences.warningThreshold}%</span>
           </div>
           <div className="mt-4">
             <input
@@ -165,7 +165,7 @@ export const KpiTab: React.FC = () => {
               max="100"
               value={preferences.warningThreshold}
               onChange={(e) => updatePreference('warningThreshold', Number(e.target.value))}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#1E4B8E]"
+              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
             />
             <div className="flex justify-between text-xs text-slate-400 mt-1">
               <span>50%</span>
@@ -184,12 +184,12 @@ export const KpiTab: React.FC = () => {
               onClick={() => updatePreference('selectedQuarter', q.key)}
               className={`p-4 rounded-xl border-2 text-center transition-all ${
                 preferences.selectedQuarter === q.key
-                  ? 'border-[#1E4B8E] bg-[#1E4B8E]/5'
+                  ? 'border-brand-primary bg-brand-primary/5'
                   : 'border-slate-200 hover:border-slate-300'
               }`}
             >
-              <Calendar className={`w-5 h-5 mx-auto mb-2 ${preferences.selectedQuarter === q.key ? 'text-[#1E4B8E]' : 'text-slate-400'}`} />
-              <div className={`font-semibold ${preferences.selectedQuarter === q.key ? 'text-[#1E4B8E]' : 'text-slate-700'}`}>{q.label}</div>
+              <Calendar className={`w-5 h-5 mx-auto mb-2 ${preferences.selectedQuarter === q.key ? 'text-brand-primary' : 'text-slate-400'}`} />
+              <div className={`font-semibold ${preferences.selectedQuarter === q.key ? 'text-brand-primary' : 'text-slate-700'}`}>{q.label}</div>
               <div className="text-xs text-slate-500 mt-0.5">{q.range}</div>
             </button>
           ))}

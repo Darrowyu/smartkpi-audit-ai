@@ -13,20 +13,24 @@ import {
 import { EmployeesService } from './employees.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import {
   CreateEmployeeDto,
   UpdateEmployeeDto,
   EmployeeQueryDto,
   BulkImportDto,
 } from './dto/employee.dto';
+import { UserRole } from '@prisma/client';
 
 @Controller('employees')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class EmployeesController {
   constructor(private readonly service: EmployeesService) {}
 
   @Post()
+  @Roles(UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   create(
     @Body() dto: CreateEmployeeDto,
     @CurrentUser('companyId') companyId: string,
@@ -35,6 +39,7 @@ export class EmployeesController {
   }
 
   @Post('import')
+  @Roles(UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   bulkImport(
     @Body() dto: BulkImportDto,
     @CurrentUser('companyId') companyId: string,
@@ -43,6 +48,7 @@ export class EmployeesController {
   }
 
   @Get()
+  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   findAll(
     @Query() query: EmployeeQueryDto,
     @CurrentUser('companyId') companyId: string,
@@ -59,6 +65,7 @@ export class EmployeesController {
   }
 
   @Get(':id')
+  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('companyId') companyId: string,
@@ -67,6 +74,7 @@ export class EmployeesController {
   }
 
   @Put(':id')
+  @Roles(UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEmployeeDto,
@@ -76,6 +84,7 @@ export class EmployeesController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('companyId') companyId: string,

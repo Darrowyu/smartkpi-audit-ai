@@ -95,7 +95,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
         </div>
         <button
           onClick={() => { setShowModal(true); setEditingDept(null); setFormData({ name: '', code: '', description: '' }); }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark transition-colors"
         >
           <Plus className="w-5 h-5" />
           {t('addDepartment')}
@@ -198,7 +198,7 @@ const DepartmentManagement: React.FC<Props> = ({ language }) => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark disabled:opacity-50"
                 >
                   {submitting ? '...' : t('save')}
                 </button>

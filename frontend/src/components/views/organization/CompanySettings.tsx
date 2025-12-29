@@ -120,7 +120,7 @@ const CompanySettings: React.FC<Props> = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E4B8E]" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary" />
             </div>
         );
     }
@@ -155,13 +155,13 @@ const CompanySettings: React.FC<Props> = () => {
                 <StatCard
                     title="公司名称"
                     value={company.name}
-                    icon={<Building2 className="w-4 h-4 text-[#1E4B8E]" />}
+                    icon={<Building2 className="w-4 h-4 text-brand-primary" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard
                     title="公司代码"
                     value={(company as any).code || '-'}
-                    icon={<Globe className="w-4 h-4 text-[#5B9BD5]" />}
+                    icon={<Globe className="w-4 h-4 text-brand-secondary" />}
                     iconBg="bg-sky-50"
                 />
                 <StatCard
@@ -191,13 +191,13 @@ const CompanySettings: React.FC<Props> = () => {
                                 title="用户数"
                                 value={stats.users}
                                 icon={<Users className="w-5 h-5 text-white" />}
-                                color="bg-[#1E4B8E]"
+                                color="bg-brand-primary"
                             />
                             <DataCard
                                 title="部门数"
                                 value={stats.departments}
                                 icon={<Briefcase className="w-5 h-5 text-white" />}
-                                color="bg-[#5B9BD5]"
+                                color="bg-brand-secondary"
                             />
                             <DataCard
                                 title="员工数"

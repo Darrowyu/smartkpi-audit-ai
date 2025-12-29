@@ -109,7 +109,8 @@ export interface KpiPreferences {
 
 export interface AppearanceSettings {
   theme: 'light' | 'dark' | 'system';
-  accentColor: 'blue' | 'teal' | 'purple' | 'orange';
+  accentColor: 'blue' | 'teal' | 'purple' | 'orange' | 'custom';
+  customColor?: string; // HEX 格式，如 #FF5733
   fontSize: 'small' | 'medium' | 'large';
   compactMode: boolean;
   animations: boolean;

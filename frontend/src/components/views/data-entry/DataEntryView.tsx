@@ -628,7 +628,7 @@ export const DataEntryView: React.FC = () => {
                     title="可用指标"
                     value={assignments.length}
                     subtitle={`${employees.length} 名员工`}
-                    icon={<Target className="w-5 h-5 text-[#1E4B8E]" />}
+                    icon={<Target className="w-5 h-5 text-brand-primary" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard
@@ -754,7 +754,7 @@ export const DataEntryView: React.FC = () => {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
-                                    <Download className="h-5 w-5 text-[#1E4B8E]" />
+                                    <Download className="h-5 w-5 text-brand-primary" />
                                     下载数据模板
                                 </CardTitle>
                             </CardHeader>
@@ -796,7 +796,7 @@ export const DataEntryView: React.FC = () => {
                                     onDrop={handleDrop}
                                     className={cn(
                                         'relative border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer',
-                                        isDragOver ? 'border-[#1E4B8E] bg-blue-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+                                        isDragOver ? 'border-brand-primary bg-blue-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
                                         uploading && 'pointer-events-none'
                                     )}
                                 >
@@ -811,7 +811,7 @@ export const DataEntryView: React.FC = () => {
                                     {uploading ? (
                                         <div className="space-y-3">
                                             <div className="w-12 h-12 mx-auto rounded-full bg-blue-100 flex items-center justify-center">
-                                                <FileUp className="w-6 h-6 text-[#1E4B8E] animate-pulse" />
+                                                <FileUp className="w-6 h-6 text-brand-primary animate-pulse" />
                                             </div>
                                             <p className="text-sm text-slate-600">正在上传...</p>
                                             <Progress value={uploadProgress} className="h-2 max-w-xs mx-auto" />
@@ -821,7 +821,7 @@ export const DataEntryView: React.FC = () => {
                                         <>
                                             <FileUp className={cn(
                                                 'w-10 h-10 mx-auto mb-3',
-                                                isDragOver ? 'text-[#1E4B8E]' : 'text-slate-400'
+                                                isDragOver ? 'text-brand-primary' : 'text-slate-400'
                                             )} />
                                             <p className="text-sm text-slate-600 mb-1">
                                                 {isDragOver ? '松开鼠标上传文件' : '拖拽文件到此处，或点击选择'}

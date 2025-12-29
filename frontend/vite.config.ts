@@ -1,11 +1,19 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const versionFile = resolve(__dirname, '..', 'version.json');
+const { version } = JSON.parse(readFileSync(versionFile, 'utf8'));
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
+    define: {
+      __APP_VERSION__: JSON.stringify(version),
+    },
     plugins: [react()],
     resolve: {
       alias: {

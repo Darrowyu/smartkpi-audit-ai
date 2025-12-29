@@ -221,7 +221,7 @@ export const DashboardView: React.FC = () => {
                 )}
                 <span className="hidden xs:inline">{isCalculating ? '计算中...' : '计算绩效'}</span>
               </Button>
-              <Button className="flex-1 sm:flex-none bg-[#1E4B8E] hover:bg-[#163a6e] text-white">
+              <Button className="flex-1 sm:flex-none bg-brand-primary hover:bg-brand-dark text-brand-text">
                 <Plus className="w-4 h-4 mr-1" /> <span className="hidden xs:inline">新建</span>KPI
               </Button>
               <Button variant="outline" onClick={handleExport} className="flex-1 sm:flex-none">

@@ -234,7 +234,7 @@ export const ReportsView: React.FC = () => {
                         <StatCard
                             title="参与人数"
                             value={overview.totalEmployees}
-                            icon={<Users className="w-4 h-4 text-[#1E4B8E]" />}
+                            icon={<Users className="w-4 h-4 text-brand-primary" />}
                             iconBg="bg-blue-50"
                         />
                         <StatCard
@@ -268,7 +268,7 @@ export const ReportsView: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <CardTitle className="flex items-center gap-2 text-base">
-                                            <Building2 className="h-5 w-5 text-[#1E4B8E]" />
+                                            <Building2 className="h-5 w-5 text-brand-primary" />
                                             部门绩效排名
                                         </CardTitle>
                                         <CardDescription>各部门平均绩效得分对比</CardDescription>
@@ -398,18 +398,18 @@ export const ReportsView: React.FC = () => {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Upload className="h-5 w-5 text-[#1E4B8E]" />
+                                    <Upload className="h-5 w-5 text-brand-primary" />
                                     上传文件分析
                                 </CardTitle>
                                 <CardDescription>上传Excel或CSV文件，AI将自动分析绩效数据</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div
-                                    className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-[#1E4B8E] hover:bg-slate-50 transition-colors cursor-pointer"
+                                    className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-brand-primary hover:bg-slate-50 transition-colors cursor-pointer"
                                     onClick={() => navigate('/upload')}
                                 >
-                                    <div className="w-12 h-12 bg-[#1E4B8E]/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
-                                        <FileText className="w-6 h-6 text-[#1E4B8E]" />
+                                    <div className="w-12 h-12 bg-brand-primary/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
+                                        <FileText className="w-6 h-6 text-brand-primary" />
                                     </div>
                                     <p className="text-slate-600 mb-1">点击或拖拽文件到此处</p>
                                     <p className="text-sm text-slate-400">支持 .xlsx, .csv 格式</p>
@@ -424,7 +424,7 @@ export const ReportsView: React.FC = () => {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <History className="h-5 w-5 text-[#5B9BD5]" />
+                                    <History className="h-5 w-5 text-brand-secondary" />
                                     历史分析记录
                                 </CardTitle>
                                 <CardDescription>查看之前的AI分析结果和报告</CardDescription>

@@ -8,14 +8,15 @@ import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
 import { Languages, Menu, X, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { usersApi, AppearanceSettings } from '@/api/users.api';
+import { hexToHsl, darkenColor, lightenColor, isValidHex, isLightColor } from '@/utils/color';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
-const ACCENT_COLOR_MAP: Record<string, string> = {
-    blue: '#1E4B8E',
-    teal: '#0D9488',
-    purple: '#7C3AED',
-    orange: '#EA580C',
+const ACCENT_COLOR_MAP: Record<string, { hex: string; hsl: string }> = {
+    blue: { hex: '#1E4B8E', hsl: '213 65% 34%' },
+    teal: { hex: '#0D9488', hsl: '175 85% 29%' },
+    purple: { hex: '#7C3AED', hsl: '262 83% 58%' },
+    orange: { hex: '#EA580C', hsl: '21 90% 48%' },
 };
 
 const FONT_SIZE_MAP: Record<string, string> = {
@@ -31,7 +32,33 @@ const applyAppearance = (settings: AppearanceSettings) => {
         isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     root.classList.toggle('dark', isDark);
-    root.style.setProperty('--accent-color', ACCENT_COLOR_MAP[settings.accentColor] || '#1E4B8E');
+    
+    let hex: string, hsl: string;
+    if (settings.accentColor === 'custom' && settings.customColor && isValidHex(settings.customColor)) {
+        hex = settings.customColor;
+        hsl = hexToHsl(hex);
+    } else if (settings.accentColor !== 'custom') {
+        const colorConfig = ACCENT_COLOR_MAP[settings.accentColor] || ACCENT_COLOR_MAP.blue;
+        hex = colorConfig.hex;
+        hsl = colorConfig.hsl;
+    } else {
+        hex = ACCENT_COLOR_MAP.blue.hex;
+        hsl = ACCENT_COLOR_MAP.blue.hsl;
+    }
+    
+    const darkHex = darkenColor(hex, 15);
+    const secondaryHex = lightenColor(hex, 25);
+    const isLight = isLightColor(hex);
+    
+    root.style.setProperty('--accent-color', hex);
+    root.style.setProperty('--primary', hsl);
+    root.style.setProperty('--ring', hsl);
+    root.style.setProperty('--brand-primary', hex);
+    root.style.setProperty('--brand-dark', darkHex);
+    root.style.setProperty('--brand-secondary', secondaryHex);
+    root.style.setProperty('--brand-text', isLight ? '#1e293b' : '#ffffff');
+    root.style.setProperty('--brand-text-muted', isLight ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)');
+    root.setAttribute('data-accent', settings.accentColor === 'custom' ? 'custom' : settings.accentColor);
     root.style.setProperty('--base-font-size', FONT_SIZE_MAP[settings.fontSize] || '16px');
     root.classList.toggle('compact', settings.compactMode);
     root.classList.toggle('no-animations', !settings.animations);
@@ -141,7 +168,7 @@ export const MainLayout: React.FC = () => {
                         {/* 移动端汉堡菜单按钮 */}
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-[#1E4B8E] hover:bg-slate-100 rounded-lg transition-colors touch-target"
+                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-brand-primary hover:bg-slate-100 rounded-lg transition-colors touch-target"
                             aria-label="Toggle menu"
                         >
                             {sidebarOpen ? (
@@ -159,7 +186,7 @@ export const MainLayout: React.FC = () => {
                         {/* 桌面端折叠按钮 */}
                         <button
                             onClick={toggleSidebarCollapsed}
-                            className="hidden lg:flex items-center justify-center p-2 text-slate-500 hover:text-[#1E4B8E] hover:bg-slate-100 rounded-lg transition-colors"
+                            className="hidden lg:flex items-center justify-center p-2 text-slate-500 hover:text-brand-primary hover:bg-slate-100 rounded-lg transition-colors"
                             title={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
                         >
                             {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
@@ -172,7 +199,7 @@ export const MainLayout: React.FC = () => {
                         <div className="flex items-center gap-2 sm:gap-3">
                             <button
                                 onClick={toggleLanguage}
-                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 hover:text-[#1E4B8E] hover:bg-slate-100 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-primary hover:bg-slate-100 rounded-lg transition-colors"
                             >
                                 <Languages className="w-4 h-4" />
                                 <span className="hidden sm:inline">{i18n.language === 'en' ? '中文' : 'EN'}</span>

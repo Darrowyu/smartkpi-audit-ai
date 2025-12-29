@@ -7,6 +7,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SmartKPI - Intelligent KPI Assessment Platform</title>
     <meta name="description" content="AI-powered enterprise KPI assessment and performance management platform" />
+    <style id="theme-preload-hide">body{visibility:hidden;}</style>
+    <script>
+        // 预加载主题色，防止页面闪烁
+        (function() {
+            var PRESETS = {
+                blue: '#1E4B8E', teal: '#0D9488', purple: '#7C3AED', orange: '#EA580C'
+            };
+            try {
+                var stored = localStorage.getItem('user_appearance');
+                var color = '#1E4B8E'; // 默认蓝色
+                if (stored) {
+                    var settings = JSON.parse(stored);
+                    color = settings.customColor || PRESETS[settings.accentColor] || color;
+                }
+                if (color && /^#[0-9A-Fa-f]{6}$/.test(color)) {
+                    var hex = color.replace('#', '');
+                    var r = parseInt(hex.substring(0, 2), 16) / 255;
+                    var g = parseInt(hex.substring(2, 4), 16) / 255;
+                    var b = parseInt(hex.substring(4, 6), 16) / 255;
+                    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+                    var h = 0, s = 0, l = (max + min) / 2;
+                    if (max !== min) {
+                        var d = max - min;
+                        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                        else if (max === g) h = ((b - r) / d + 2) / 6;
+                        else h = ((r - g) / d + 4) / 6;
+                    }
+                    var hsl = Math.round(h * 360) + ' ' + Math.round(s * 100) + '% ' + Math.round(l * 100) + '%';
+                    var darken = function(c, p) {
+                        c = c.replace('#', '');
+                        var dr = Math.max(0, parseInt(c.substring(0, 2), 16) - Math.round(255 * p / 100));
+                        var dg = Math.max(0, parseInt(c.substring(2, 4), 16) - Math.round(255 * p / 100));
+                        var db = Math.max(0, parseInt(c.substring(4, 6), 16) - Math.round(255 * p / 100));
+                        return '#' + dr.toString(16).padStart(2, '0') + dg.toString(16).padStart(2, '0') + db.toString(16).padStart(2, '0');
+                    };
+                    var lighten = function(c, p) {
+                        c = c.replace('#', '');
+                        var lr = Math.min(255, parseInt(c.substring(0, 2), 16) + Math.round(255 * p / 100));
+                        var lg = Math.min(255, parseInt(c.substring(2, 4), 16) + Math.round(255 * p / 100));
+                        var lb = Math.min(255, parseInt(c.substring(4, 6), 16) + Math.round(255 * p / 100));
+                        return '#' + lr.toString(16).padStart(2, '0') + lg.toString(16).padStart(2, '0') + lb.toString(16).padStart(2, '0');
+                    };
+                    var darkColor = darken(color, 15);
+                    var secondaryColor = lighten(color, 20);
+                    var lum = (parseInt(hex.substring(0, 2), 16) * 299 + parseInt(hex.substring(2, 4), 16) * 587 + parseInt(hex.substring(4, 6), 16) * 114) / 1000;
+                    var textColor = lum > 128 ? '#1e293b' : '#ffffff';
+                    var textMuted = lum > 128 ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.7)';
+                    // 设置 CSS 变量到 html 元素的 style 属性（最高优先级）
+                    document.documentElement.setAttribute('style',
+                        '--primary:' + hsl + ';--ring:' + hsl + ';--brand-primary:' + color + ';--brand-dark:' + darkColor + ';--brand-secondary:' + secondaryColor + ';--brand-text:' + textColor + ';--brand-text-muted:' + textMuted + ';'
+                    );
+                }
+            } catch (e) {}
+            // 显示页面
+            var hideStyle = document.getElementById('theme-preload-hide');
+            if (hideStyle) hideStyle.remove();
+        })();
+    </script>
 </head>
 
 <body>

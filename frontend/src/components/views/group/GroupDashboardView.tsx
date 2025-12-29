@@ -150,14 +150,14 @@ export const GroupDashboardView: React.FC = () => {
                     title="子公司数量"
                     value={groupStats?.totalCompanies || companyPerformances.length}
                     subtitle="活跃运营中"
-                    icon={<Building2 className="w-4 h-4 text-[#1E4B8E]" />}
+                    icon={<Building2 className="w-4 h-4 text-brand-primary" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard
                     title="总员工数"
                     value={totalEmployees}
                     subtitle="覆盖所有子公司"
-                    icon={<Users className="w-4 h-4 text-[#5B9BD5]" />}
+                    icon={<Users className="w-4 h-4 text-brand-secondary" />}
                     iconBg="bg-sky-50"
                 />
                 <StatCard
@@ -183,7 +183,7 @@ export const GroupDashboardView: React.FC = () => {
                 <Card className="lg:col-span-2">
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <Building2 className="h-5 w-5 text-[#1E4B8E]" />
+                            <Building2 className="h-5 w-5 text-brand-primary" />
                             子公司绩效排名
                         </CardTitle>
                         <CardDescription>各子公司平均绩效得分对比</CardDescription>

@@ -97,7 +97,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
             setFormData({ name: '', code: '', domain: '', settings: {} });
             setShowModal(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark"
         >
           <Plus className="w-4 h-4" />
           {t('addCompany')}
@@ -210,7 +210,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
                 >
                   {t('cancel')}
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button type="submit" className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:bg-brand-dark">
                   {editingCompany ? t('update') : t('create')}
                 </button>
               </div>

@@ -120,6 +120,7 @@ export class UsersController {
     res.set({
       'Content-Type': mimeType,
       'Cache-Control': 'public, max-age=86400',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
     });
     res.send(buffer);
   }

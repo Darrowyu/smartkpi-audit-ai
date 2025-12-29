@@ -15,7 +15,7 @@ interface NotifyItemProps {
   iconBg?: string;
 }
 
-const NotifyItem: React.FC<NotifyItemProps> = ({ icon: Icon, title, desc, checked, onChange, iconBg = 'bg-[#1E4B8E]/10 text-[#1E4B8E]' }) => (
+const NotifyItem: React.FC<NotifyItemProps> = ({ icon: Icon, title, desc, checked, onChange, iconBg = 'bg-brand-primary/10 text-brand-primary' }) => (
   <div className="flex items-center justify-between py-4">
     <div className="flex items-center gap-4">
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg}`}>
@@ -70,7 +70,7 @@ export const NotificationsTab: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1E4B8E]" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
       </div>
     );
   }

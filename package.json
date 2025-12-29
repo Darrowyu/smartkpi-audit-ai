@@ -1,6 +1,6 @@
 {
   "name": "smartkpi-audit-ai",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "description": "SmartKPI Audit AI - AI-Powered KPI Performance Analysis Platform",
   "private": true,
   "scripts": {
@@ -10,7 +10,10 @@
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "version:bump": "node scripts/version.js bump",
+    "version:sync": "node scripts/version.js sync",
+    "version:get": "node scripts/version.js get"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
@@ -19,4 +22,3 @@
     "node": ">=18.0.0"
   }
 }
-

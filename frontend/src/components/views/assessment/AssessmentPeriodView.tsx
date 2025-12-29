@@ -355,7 +355,7 @@ export const AssessmentPeriodView: React.FC = () => {
                 <StatCard
                     title="周期总数"
                     value={stats.total}
-                    icon={<Calendar className="w-6 h-6 text-[#1E4B8E]" />}
+                    icon={<Calendar className="w-6 h-6 text-brand-primary" />}
                     iconBg="bg-blue-50"
                 />
                 <StatCard

@@ -75,11 +75,11 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border-2 text-left transition-all ${
-                  isActive ? 'border-[#1E4B8E] bg-[#1E4B8E]/5' : 'border-slate-200 hover:border-slate-300'
+                  isActive ? 'border-brand-primary bg-brand-primary/5' : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
-                <span className={`text-xs sm:text-sm font-medium ${isActive ? 'text-[#1E4B8E]' : 'text-slate-500'}`}>{lang.label}</span>
-                <span className={`text-xs sm:text-sm truncate ${isActive ? 'text-[#1E4B8E] font-medium' : 'text-slate-700'}`}>{lang.name}</span>
+                <span className={`text-xs sm:text-sm font-medium ${isActive ? 'text-brand-primary' : 'text-slate-500'}`}>{lang.label}</span>
+                <span className={`text-xs sm:text-sm truncate ${isActive ? 'text-brand-primary font-medium' : 'text-slate-700'}`}>{lang.name}</span>
               </button>
             );
           })}
@@ -91,7 +91,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
-          className="w-full sm:w-80 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+          className="w-full sm:w-80 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
         >
           {TIMEZONES.map(tz => (
             <option key={tz.value} value={tz.value}>{tz.label}</option>
@@ -108,7 +108,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               <select
                 value={dateFormat}
                 onChange={(e) => setDateFormat(e.target.value as DateFormat)}
-                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
               >
                 {DATE_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -120,7 +120,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               <select
                 value={timeFormat}
                 onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
-                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E4B8E]/20 focus:border-[#1E4B8E]"
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
               >
                 {TIME_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -129,7 +129,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
             </div>
           </div>
           <div className="bg-slate-50 rounded-lg p-3 sm:p-4">
-            <div className="text-xs sm:text-sm text-[#1E4B8E] mb-1">{t('settings.language.preview', '预览')}</div>
+            <div className="text-xs sm:text-sm text-brand-primary mb-1">{t('settings.language.preview', '预览')}</div>
             <div className="text-base sm:text-lg font-medium text-slate-800">{previewDateTime}</div>
           </div>
         </div>

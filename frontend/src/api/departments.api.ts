@@ -30,6 +30,7 @@ export const getDepartments = async (params?: {
   page?: number;
   limit?: number;
   search?: string;
+  companyId?: string; // GROUP_ADMIN 可按公司筛选
 }): Promise<{ data: Department[]; meta: { total: number; page: number; limit: number; totalPages: number } }> => {
   const { data } = await apiClient.get('/departments', { params });
   return data;

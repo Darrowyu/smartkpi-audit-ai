@@ -47,11 +47,20 @@ const UserManagement: React.FC<Props> = ({ language }) => {
     finally { setLoading(false); }
   };
 
-  const loadDepartments = async () => {
+  const loadDepartments = async (companyId?: string) => {
     try {
-      const res = await getDepartments({ limit: 100 });
+      const res = await getDepartments({ limit: 100, companyId });
       setDepartments(res.data);
     } catch (_e) { /* 加载失败静默处理 */ }
+  };
+
+  const handleCompanyChange = (companyId: string) => {
+    setFormData({ ...formData, companyId: companyId || undefined, departmentId: undefined });
+    if (companyId) {
+      loadDepartments(companyId);
+    } else {
+      loadDepartments();
+    }
   };
 
   const loadCompanies = async () => {
@@ -67,15 +76,25 @@ const UserManagement: React.FC<Props> = ({ language }) => {
     e.preventDefault();
     try {
       if (editingUser) {
-        const { username, password, ...rest } = formData;
-        const updateData: UpdateUserData = { email: rest.email, firstName: rest.firstName, lastName: rest.lastName, role: rest.role, language: rest.language };
+        const { username, password, companyId, ...rest } = formData;
+        const email = rest.email?.trim();
+        const updateData: UpdateUserData = {
+          email: email || null,
+          firstName: rest.firstName,
+          lastName: rest.lastName,
+          role: rest.role,
+          language: rest.language,
+          departmentId: rest.departmentId || null,
+        };
         await usersApi.updateUser(editingUser.id, updateData);
       } else {
-        await usersApi.createUser(formData);
+        const email = formData.email?.trim();
+        const createData: CreateUserData = { ...formData, email: email || null };
+        await usersApi.createUser(createData);
       }
       setShowModal(false);
       setEditingUser(null);
-      setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: UserRole.USER, language: 'zh' });
+      setFormData({ username: '', email: '', password: '', firstName: '', lastName: '', role: UserRole.USER, language: 'zh', companyId: undefined });
       loadUsers();
     } catch (e: any) {
       alert(e.response?.data?.message || 'Operation failed');
@@ -93,7 +112,8 @@ const UserManagement: React.FC<Props> = ({ language }) => {
       lastName: user.lastName || '',
       role: user.role,
       language: user.language,
-      departmentId: user.departmentId || undefined
+      departmentId: user.departmentId || undefined,
+      companyId: user.companyId || undefined
     });
     setShowModal(true);
   };
@@ -179,6 +199,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('user')}</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('email')}</th>
+                  {isGroupAdmin && <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('company')}</th>}
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('department')}</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('role')}</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t('status')}</th>
@@ -196,6 +217,12 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">{user.email || '-'}</td>
+                    {isGroupAdmin && (
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {user.company?.name || '-'}
+                        {user.company?.code && <span className="ml-1 text-xs text-slate-400">({user.company.code})</span>}
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {user.department?.name || '-'}
                     </td>
@@ -261,7 +288,7 @@ const UserManagement: React.FC<Props> = ({ language }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{t('email')}</label>
-                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                <input type="email" value={formData.email || ''} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary" />
               </div>
               {!editingUser && (
@@ -276,9 +303,10 @@ const UserManagement: React.FC<Props> = ({ language }) => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('company')} *</label>
                   <select
                     value={formData.companyId || ''}
-                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value || undefined })}
-                    required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary"
+                    onChange={(e) => handleCompanyChange(e.target.value)}
+                    required={!editingUser}
+                    disabled={!!editingUser}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-primary disabled:bg-slate-100"
                   >
                     <option value="">{t('selectCompany')}</option>
                     {companies.map(company => (

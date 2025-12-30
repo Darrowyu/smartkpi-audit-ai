@@ -24,10 +24,13 @@ const CompanyList: React.FC<Props> = ({ language }) => {
     domain: '',
     settings: {},
   });
-
   useEffect(() => {
     loadCompanies();
   }, [search]);
+
+  const sortedCompanies = React.useMemo(() => {
+    return [...companies].sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+  }, [companies]);
 
   const loadCompanies = async () => {
     try {
@@ -135,7 +138,7 @@ const CompanyList: React.FC<Props> = ({ language }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {companies.map(company => (
+              {sortedCompanies.map(company => (
                 <tr key={company.id} className="hover:bg-slate-50">
                   <td className="px-6 py-4 font-medium text-slate-900">{company.name}</td>
                   <td className="px-6 py-4 text-sm text-slate-600 font-mono">{company.code || '-'}</td>

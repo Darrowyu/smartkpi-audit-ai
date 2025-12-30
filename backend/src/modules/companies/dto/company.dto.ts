@@ -7,6 +7,11 @@ export class CreateCompanyDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
+  code?: string; // 公司代码
+
+  @IsOptional()
+  @IsString()
   @MaxLength(100)
   domain?: string; // 域名
 
@@ -19,6 +24,11 @@ export class UpdateCompanyDto {
   @IsString()
   @MaxLength(100)
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  code?: string; // 公司代码
 
   @IsOptional()
   @IsString()

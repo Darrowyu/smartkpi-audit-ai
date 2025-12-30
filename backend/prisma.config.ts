@@ -3,13 +3,19 @@
 import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 
+const databaseUrl = env("DATABASE_URL");
+const shadowDatabaseUrl = databaseUrl
+  .replace(/\/([^/?]+)(\?|$)/u, (_m, dbName: string, suffix: string) => `/${dbName}_shadow${suffix}`)
+  .replace(/schema=[^&]+/u, "schema=public");
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
-    seed: "npx tsx prisma/seed.ts", // seed命令配置
+    seed: "npm run db:seed", // seed命令配置
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: databaseUrl,
+    shadowDatabaseUrl,
   },
 });

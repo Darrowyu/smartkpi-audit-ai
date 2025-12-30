@@ -35,12 +35,6 @@ export class CompaniesService {
   // 更新当前公司
   async update(companyId: string, dto: UpdateCompanyDto) {
     await this.findOne(companyId);
-    if (dto.domain) {
-      const existing = await this.prisma.company.findFirst({
-        where: { domain: dto.domain, NOT: { id: companyId } },
-      });
-      if (existing) throw new ConflictException('Domain already exists');
-    }
     return this.prisma.company.update({ where: { id: companyId }, data: dto });
   }
 
@@ -60,11 +54,11 @@ export class CompaniesService {
 
   // 创建子公司
   async create(dto: CreateCompanyDto, groupId: string) {
-    if (dto.domain) {
+    if (dto.code) {
       const existing = await this.prisma.company.findFirst({
-        where: { domain: dto.domain },
+        where: { groupId, code: dto.code },
       });
-      if (existing) throw new ConflictException('Domain already exists');
+      if (existing) throw new ConflictException('Company code already exists');
     }
 
     return this.prisma.company.create({
@@ -135,16 +129,19 @@ export class CompaniesService {
 
   // 更新指定子公司（验证groupId）
   async updateById(id: string, dto: UpdateCompanyDto, groupId: string) {
-    await this.findOneById(id, groupId);
-    if (dto.domain) {
+    const company = await this.findOneById(id, groupId);
+    const newDomain = dto.domain?.trim() || null;
+    const newCode = dto.code?.trim() || null;
+    if (newCode && newCode !== company.code) {
       const existing = await this.prisma.company.findFirst({
-        where: { domain: dto.domain, NOT: { id } },
+        where: { groupId, code: newCode, NOT: { id } },
       });
-      if (existing) throw new ConflictException('Domain already exists');
+      if (existing) throw new ConflictException('Company code already exists');
     }
+    const data = { ...dto, domain: newDomain, code: newCode };
     return this.prisma.company.update({
       where: { id },
-      data: dto,
+      data,
       include: {
         group: { select: { id: true, name: true } },
         _count: { select: { users: true, departments: true, employees: true } },

@@ -11,6 +11,7 @@ import {
   Min,
   Max,
   Matches,
+  ValidateIf,
 } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
@@ -49,6 +50,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsUUID()
   departmentId?: string; // 部门ID（可选）
+
+  @IsOptional()
+  @IsUUID()
+  companyId?: string; // GROUP_ADMIN 可指定子公司
 }
 
 export class UpdateUserDto {
@@ -88,8 +93,14 @@ export class UpdateUserDto {
   isActive?: boolean;
 
   @IsOptional()
+  @ValidateIf((o) => o.departmentId !== null)
   @IsUUID()
   departmentId?: string | null;
+
+  @IsOptional()
+  @ValidateIf((o) => o.linkedEmployeeId !== null)
+  @IsUUID()
+  linkedEmployeeId?: string | null;
 }
 
 export class UserQueryDto {

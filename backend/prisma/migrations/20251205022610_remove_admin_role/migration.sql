@@ -12,10 +12,10 @@ UPDATE "users" SET "role" = 'GROUP_ADMIN' WHERE "role" = 'ADMIN';
 -- AlterEnum
 BEGIN;
 CREATE TYPE "UserRole_new" AS ENUM ('SUPER_ADMIN', 'GROUP_ADMIN', 'MANAGER', 'USER');
-ALTER TABLE "public"."users" ALTER COLUMN "role" DROP DEFAULT;
+ALTER TABLE "users" ALTER COLUMN "role" DROP DEFAULT;
 ALTER TABLE "users" ALTER COLUMN "role" TYPE "UserRole_new" USING ("role"::text::"UserRole_new");
 ALTER TYPE "UserRole" RENAME TO "UserRole_old";
 ALTER TYPE "UserRole_new" RENAME TO "UserRole";
-DROP TYPE "public"."UserRole_old";
+DROP TYPE "UserRole_old";
 ALTER TABLE "users" ALTER COLUMN "role" SET DEFAULT 'USER';
 COMMIT;

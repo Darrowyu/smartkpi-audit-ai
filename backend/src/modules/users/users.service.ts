@@ -26,14 +26,20 @@ export class UsersService {
     private storage: StorageService,
   ) {}
 
-  async create(dto: CreateUserDto, companyId: string) {
+  async create(dto: CreateUserDto, companyId: string, groupId: string) {
     const existing = await this.prisma.user.findUnique({
       where: { username: dto.username },
     });
     if (existing) throw new ConflictException('Username already exists');
 
+    // 验证目标公司属于当前集团
+    const company = await this.prisma.company.findFirst({
+      where: { id: companyId, groupId, isActive: true },
+    });
+    if (!company) throw new ForbiddenException('Invalid company or access denied');
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const { password, ...userData } = dto;
+    const { password, companyId: _, ...userData } = dto;
     return this.prisma.user.create({
       data: { ...userData, passwordHash, companyId },
       select: {
@@ -50,15 +56,20 @@ export class UsersService {
   }
 
   async findAll(
-    companyId: string,
+    companyId: string | undefined,
+    groupId: string,
     page = 1,
     limit = 20,
     search?: string,
     role?: UserRole,
   ) {
     const skip = (page - 1) * limit;
+    // GROUP_ADMIN: 查看集团下所有公司用户; 其他角色: 只看本公司
+    const companyFilter = companyId
+      ? { companyId }
+      : { company: { groupId, isActive: true } };
     const where = {
-      companyId,
+      ...companyFilter,
       ...(role && { role }),
       ...(search && {
         OR: [
@@ -88,7 +99,9 @@ export class UsersService {
           createdAt: true,
           lastLoginAt: true,
           departmentId: true,
+          companyId: true,
           department: { select: { id: true, name: true } },
+          company: { select: { id: true, name: true, code: true } },
         },
       }),
       this.prisma.user.count({ where }),
@@ -148,6 +161,14 @@ export class UsersService {
       data.passwordHash = await bcrypt.hash(password, 10);
     }
 
+    // 处理 null 值：确保 departmentId 和 linkedEmployeeId 能被正确更新为 null
+    if ('departmentId' in dto) {
+      data.departmentId = dto.departmentId || null;
+    }
+    if ('linkedEmployeeId' in dto) {
+      data.linkedEmployeeId = dto.linkedEmployeeId || null;
+    }
+
     return this.prisma.user.update({
       where: { id },
       data,
@@ -160,6 +181,9 @@ export class UsersService {
         role: true,
         language: true,
         isActive: true,
+        departmentId: true,
+        linkedEmployeeId: true,
+        department: { select: { id: true, name: true } },
       },
     });
   }

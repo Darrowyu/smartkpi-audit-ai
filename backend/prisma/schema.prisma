@@ -61,7 +61,7 @@ model Company {
   id       String  @id @default(uuid())
   name     String // e.g., "Makrite USA", "Makrite China"
   code     String? // 公司代码，如 "DG001"
-  domain   String? @unique // 域名标识，如 "dongguan.makrite.com"
+  domain   String? // 域名标识，如 "dongguan.makrite.com"
   settings Json? // Company-specific settings (language, branding, etc.)
 
   groupId String @map("group_id")

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { groupsApi, Group } from '@/api/groups.api';
 import { useAuth } from '@/context/AuthContext';
 import { Language } from '@/types';
-import { Edit, Check, Calendar, Globe, Building2, Users, Info, Shield } from 'lucide-react';
+import { Edit, Check, Calendar, Globe, Building2, Info, Shield, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import CompanyList from '@/components/views/organization/CompanyList';
+
+type TabType = 'basic' | 'companies';
 
 interface Props {
     language: Language;
@@ -47,7 +50,7 @@ const InfoRow: React.FC<{ label: string; value: React.ReactNode; mono?: boolean 
     </div>
 );
 
-const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
+const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
     const { user } = useAuth();
     const { t } = useTranslation();
     const [group, setGroup] = useState<Group | null>(null);
@@ -55,9 +58,15 @@ const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editForm, setEditForm] = useState({ name: '' });
     const [saving, setSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState<TabType>('basic');
 
     const groupId = user?.groupId || (user as { company?: { groupId?: string } })?.company?.groupId;
     const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+    const tabs = [
+        { id: 'basic' as TabType, label: '基本信息', icon: Settings },
+        { id: 'companies' as TabType, label: '子公司管理', icon: Building2 },
+    ];
 
     useEffect(() => { loadGroup(); }, [groupId]);
 
@@ -114,9 +123,9 @@ const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">集团设置</h1>
-                    <p className="text-slate-500">管理集团基本信息和配置</p>
+                    <p className="text-slate-500">管理集团基本信息和子公司</p>
                 </div>
-                {isSuperAdmin && (
+                {isSuperAdmin && activeTab === 'basic' && (
                     <Button onClick={() => setShowEditModal(true)}>
                         <Edit className="w-4 h-4 mr-2" />
                         编辑信息
@@ -124,62 +133,96 @@ const GroupSettings: React.FC<Props> = ({ onUpdate }) => {
                 )}
             </div>
 
-            {/* 统计卡片 */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    title="集团名称"
-                    value={group.name}
-                    icon={<Globe className="w-4 h-4 text-brand-primary" />}
-                    iconBg="bg-primary/10"
-                />
-                <StatCard
-                    title="子公司数量"
-                    value={group._count?.companies || 0}
-                    subtitle="活跃运营中"
-                    icon={<Building2 className="w-4 h-4 text-brand-secondary" />}
-                    iconBg="bg-sky-50"
-                />
-                <StatCard
-                    title="创建时间"
-                    value={new Date(group.createdAt).toLocaleDateString('zh-CN')}
-                    icon={<Calendar className="w-4 h-4 text-emerald-600" />}
-                    iconBg="bg-emerald-50"
-                />
-                <StatCard
-                    title="运营状态"
-                    value={group.isActive ? '正常运营' : '已停用'}
-                    icon={<Shield className="w-4 h-4 text-amber-500" />}
-                    iconBg="bg-amber-50"
-                />
+            {/* Tab 导航 */}
+            <div className="border-b border-slate-200">
+                <nav className="flex gap-6">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={cn(
+                                'flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors',
+                                activeTab === tab.id
+                                    ? 'border-brand-primary text-brand-primary'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                            )}
+                        >
+                            <tab.icon className="w-4 h-4" />
+                            {tab.label}
+                        </button>
+                    ))}
+                </nav>
             </div>
 
-            {/* 基本信息卡片 */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base">基本信息</CardTitle>
-                    <CardDescription>集团的详细配置信息</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <InfoRow label="集团ID" value={group.id} mono />
-                    <InfoRow label="集团名称" value={group.name} />
-                    <InfoRow
-                        label="运营状态"
-                        value={
-                            <Badge variant={group.isActive ? 'default' : 'secondary'} className={group.isActive ? 'bg-emerald-500' : ''}>
-                                {group.isActive ? '正常' : '停用'}
-                            </Badge>
-                        }
-                    />
-                    <InfoRow label="创建时间" value={new Date(group.createdAt).toLocaleString('zh-CN')} />
-                </CardContent>
-            </Card>
+            {/* Tab 内容 */}
+            {activeTab === 'basic' && (
+                <div className="space-y-6">
+                    {/* 统计卡片 */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <StatCard
+                            title="集团名称"
+                            value={group.name}
+                            icon={<Globe className="w-4 h-4 text-brand-primary" />}
+                            iconBg="bg-primary/10"
+                        />
+                        <StatCard
+                            title="子公司数量"
+                            value={group._count?.companies || 0}
+                            subtitle="活跃运营中"
+                            icon={<Building2 className="w-4 h-4 text-brand-secondary" />}
+                            iconBg="bg-sky-50"
+                        />
+                        <StatCard
+                            title="创建时间"
+                            value={new Date(group.createdAt).toLocaleDateString('zh-CN')}
+                            icon={<Calendar className="w-4 h-4 text-emerald-600" />}
+                            iconBg="bg-emerald-50"
+                        />
+                        <StatCard
+                            title="运营状态"
+                            value={group.isActive ? '正常运营' : '已停用'}
+                            icon={<Shield className="w-4 h-4 text-amber-500" />}
+                            iconBg="bg-amber-50"
+                        />
+                    </div>
 
-            {/* 权限提示 */}
-            {!isSuperAdmin && (
-                <Card className="border-amber-200 bg-amber-50">
-                    <CardContent className="flex items-center gap-3 pt-6">
-                        <Info className="h-5 w-5 text-amber-600 flex-shrink-0" />
-                        <p className="text-sm text-amber-800">仅超级管理员可以修改集团设置</p>
+                    {/* 基本信息卡片 */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">基本信息</CardTitle>
+                            <CardDescription>集团的详细配置信息</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <InfoRow label="集团ID" value={group.id} mono />
+                            <InfoRow label="集团名称" value={group.name} />
+                            <InfoRow
+                                label="运营状态"
+                                value={
+                                    <Badge variant={group.isActive ? 'default' : 'secondary'} className={group.isActive ? 'bg-emerald-500' : ''}>
+                                        {group.isActive ? '正常' : '停用'}
+                                    </Badge>
+                                }
+                            />
+                            <InfoRow label="创建时间" value={new Date(group.createdAt).toLocaleString('zh-CN')} />
+                        </CardContent>
+                    </Card>
+
+                    {/* 权限提示 */}
+                    {!isSuperAdmin && (
+                        <Card className="border-amber-200 bg-amber-50">
+                            <CardContent className="flex items-center gap-3 pt-6">
+                                <Info className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                                <p className="text-sm text-amber-800">仅超级管理员可以修改集团设置</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'companies' && (
+                <Card>
+                    <CardContent className="pt-6">
+                        <CompanyList language={language} />
                     </CardContent>
                 </Card>
             )}

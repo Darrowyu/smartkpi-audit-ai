@@ -244,7 +244,7 @@ const FeaturesSection: React.FC = memo(() => {
     { icon: Target, title: '智能目标设定', desc: 'AI 辅助制定 SMART 目标，自动分解到部门和个人，确保战略对齐', color: 'mm-gradient-bg' },
     { icon: BarChart3, title: '实时数据追踪', desc: '多维度数据看板，实时监控 KPI 进度，异常预警及时响应', color: 'bg-emerald-500' },
     { icon: Users, title: '团队协作管理', desc: '多级组织架构，灵活的权限配置，支持跨部门协同评估', color: 'mm-gradient-bg' },
-    { icon: TrendingUp, title: 'AI 分析洞察', desc: 'Gemini AI 深度分析，自动生成改进建议，预测绩效趋势', color: 'bg-amber-500' },
+    { icon: TrendingUp, title: 'AI 分析洞察', desc: 'AI 多维度深度分析，自动生成改进建议，预测绩效趋势', color: 'bg-amber-500' },
     { icon: Shield, title: '企业级安全', desc: '多租户隔离，数据加密存储，完善的审计日志', color: 'mm-gradient-bg' },
     { icon: Zap, title: '高效流程', desc: '多级审批工作流，自动化计算评分，减少 80% 手工操作', color: 'bg-purple-500' },
   ];
@@ -406,7 +406,7 @@ const CTASection: React.FC<{ onLogin: () => void }> = memo(({ onLogin }) => (
               onClick={onLogin}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-[var(--mm-foreground)] bg-[var(--mm-muted)] rounded-xl mm-btn-lift hover:bg-[var(--mm-border)]"
             >
-              联系销售
+              联系我们
             </button>
           </div>
         </div>

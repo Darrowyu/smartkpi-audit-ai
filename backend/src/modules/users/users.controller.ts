@@ -129,9 +129,11 @@ export class UsersController {
   @Roles(UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   create(
     @Body() dto: CreateUserDto,
-    @CurrentUser('companyId') companyId: string,
+    @CurrentUser('companyId') currentCompanyId: string,
+    @CurrentUser('groupId') groupId: string,
   ) {
-    return this.service.create(dto, companyId);
+    const targetCompanyId = dto.companyId || currentCompanyId;
+    return this.service.create(dto, targetCompanyId, groupId);
   }
 
   @Get()
@@ -139,11 +141,15 @@ export class UsersController {
   findAll(
     @Query() query: UserQueryDto,
     @CurrentUser('companyId') companyId: string,
+    @CurrentUser('groupId') groupId: string,
+    @CurrentUser('role') role: UserRole,
   ) {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '20', 10);
+    const isGroupLevel = role === UserRole.GROUP_ADMIN || role === UserRole.SUPER_ADMIN;
     return this.service.findAll(
-      companyId,
+      isGroupLevel ? undefined : companyId,
+      groupId,
       page,
       limit,
       query.search,

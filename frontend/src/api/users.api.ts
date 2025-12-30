@@ -10,7 +10,9 @@ export interface User {
   role: UserRole;
   isActive: boolean;
   departmentId?: string;
+  companyId?: string;
   department?: { id: string; name: string };
+  company?: { id: string; name: string; code?: string };
   linkedEmployeeId?: string;
   linkedEmployee?: { id: string; name: string; employeeId: string };
   phoneNumber?: string;
@@ -21,7 +23,7 @@ export interface User {
 }
 
 export interface CreateUserData {
-  email: string;
+  email?: string | null;
   username: string;
   password?: string;
   firstName?: string;
@@ -29,18 +31,19 @@ export interface CreateUserData {
   role: UserRole;
   phoneNumber?: string;
   departmentId?: string;
+  companyId?: string;
   linkedEmployeeId?: string;
   language?: string;
 }
 
 export interface UpdateUserData {
-  email?: string;
+  email?: string | null;
   firstName?: string;
   lastName?: string;
   role?: UserRole;
   isActive?: boolean;
   phoneNumber?: string;
-  departmentId?: string;
+  departmentId?: string | null;
   linkedEmployeeId?: string | null;
   password?: string;
   language?: string;

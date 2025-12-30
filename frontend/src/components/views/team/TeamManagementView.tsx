@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Pencil, Trash2, MoreHorizontal, Users, UserCheck, UserX, Shield } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, MoreHorizontal, Users, UserCheck, UserX, Shield, Building2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +20,9 @@ import { Badge } from '@/components/ui/badge';
 import { TableRowSkeleton } from '@/components/ui/skeleton';
 import { usersApi, User } from '@/api/users.api';
 import { apiClient } from '@/api/client';
+import { companiesApi, Company } from '@/api/companies.api';
+import { getDepartments, createDepartment, updateDepartment, deleteDepartment, Department, CreateDepartmentDto } from '@/api/departments.api';
+import { useAuth } from '@/context/AuthContext';
 import { UserRole, Language } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +45,8 @@ type UserFormValues = {
     lastName?: string;
     role: UserRole;
     linkedEmployeeId?: string;
+    companyId?: string;
+    departmentId?: string;
 };
 
 // 统计卡片
@@ -92,12 +97,24 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
     const { t } = useTranslation();
     const { toast } = useToast();
     const confirm = useConfirm();
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [activeTab, setActiveTab] = useState<'users' | 'departments'>('users');
+    const [deptSearchTerm, setDeptSearchTerm] = useState('');
+    const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
+    const [editingDept, setEditingDept] = useState<Department | null>(null);
+    const [deptFormData, setDeptFormData] = useState<CreateDepartmentDto & { companyId?: string }>({ name: '', code: '', description: '' });
+    const [deptLoading, setDeptLoading] = useState(false);
+    const [selectedDeptCompanyId, setSelectedDeptCompanyId] = useState<string>('');
+
+    const isGroupAdmin = currentUser?.role === 'GROUP_ADMIN' || currentUser?.role === 'SUPER_ADMIN';
 
     const userSchema = z.object({
         username: z.string().min(2, t('teamView.usernameMinLength')),
@@ -107,6 +124,8 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
         lastName: z.string().optional(),
         role: z.enum([UserRole.SUPER_ADMIN, UserRole.GROUP_ADMIN, UserRole.MANAGER, UserRole.USER]),
         linkedEmployeeId: z.string().optional(),
+        companyId: z.string().optional(),
+        departmentId: z.string().optional(),
     });
 
     const form = useForm<UserFormValues>({
@@ -135,9 +154,40 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
         }
     };
 
+    const fetchCompanies = async () => {
+        if (!isGroupAdmin) return;
+        try {
+            const res = await companiesApi.getCompanies({ limit: 100 });
+            setCompanies(res.data);
+        } catch {
+            // 静默处理
+        }
+    };
+
+    const fetchDepartments = async (companyId?: string) => {
+        try {
+            const res = await getDepartments({ limit: 100, companyId });
+            setDepartments(res.data);
+        } catch {
+            // 静默处理
+        }
+    };
+
+    const handleCompanyChange = (companyId: string) => {
+        form.setValue('companyId', companyId || undefined);
+        form.setValue('departmentId', undefined);
+        if (companyId) {
+            fetchDepartments(companyId);
+        } else {
+            fetchDepartments();
+        }
+    };
+
     useEffect(() => {
         fetchEmployees();
-    }, []);
+        fetchCompanies();
+        fetchDepartments();
+    }, [isGroupAdmin]);
 
     useEffect(() => {
         const timer = setTimeout(() => fetchUsers(), 500);
@@ -147,15 +197,27 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
     const onSubmit = async (data: UserFormValues) => {
         try {
             if (editingUser) {
-                const { password, ...updateData } = data;
-                await usersApi.update(editingUser.id, password ? data : updateData);
+                const { password, companyId, departmentId, linkedEmployeeId, ...updateData } = data;
+                const payload = {
+                    ...updateData,
+                    departmentId: departmentId && departmentId !== '_none_' ? departmentId : null,
+                    linkedEmployeeId: linkedEmployeeId && linkedEmployeeId !== '_none_' ? linkedEmployeeId : null,
+                    ...(password ? { password } : {}),
+                };
+                await usersApi.update(editingUser.id, payload);
                 toast({ title: t('teamView.userUpdated') });
             } else {
                 if (!data.password) {
                     form.setError('password', { message: t('teamView.passwordRequired') });
                     return;
                 }
-                await usersApi.create(data as any);
+                const { departmentId, linkedEmployeeId, ...createData } = data;
+                const createPayload = {
+                    ...createData,
+                    departmentId: departmentId && departmentId !== '_none_' ? departmentId : undefined,
+                    linkedEmployeeId: linkedEmployeeId && linkedEmployeeId !== '_none_' ? linkedEmployeeId : undefined,
+                };
+                await usersApi.create(createPayload as any);
                 toast({ title: t('teamView.userCreated') });
             }
             setIsDialogOpen(false);
@@ -176,7 +238,12 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
             lastName: user.lastName,
             role: user.role,
             linkedEmployeeId: user.linkedEmployeeId || '',
+            companyId: user.companyId || '',
+            departmentId: user.departmentId || '',
         });
+        if (user.companyId) {
+            fetchDepartments(user.companyId);
+        }
         setIsDialogOpen(true);
     };
 
@@ -202,6 +269,83 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
         setIsDialogOpen(true);
     };
 
+    // 部门管理函数
+    const fetchAllDepartments = async (companyId?: string) => {
+        setDeptLoading(true);
+        try {
+            const res = await getDepartments({ limit: 100, companyId: companyId || undefined });
+            setDepartments(res.data);
+        } catch {
+            toast({ variant: 'destructive', title: '加载部门失败' });
+        } finally {
+            setDeptLoading(false);
+        }
+    };
+
+    const handleDeptCompanyChange = (companyId: string) => {
+        setSelectedDeptCompanyId(companyId);
+        fetchAllDepartments(companyId || undefined);
+    };
+
+    const handleDeptSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingDept) {
+                await updateDepartment(editingDept.id, deptFormData);
+                toast({ title: '部门已更新' });
+            } else {
+                const payload = { ...deptFormData, companyId: selectedDeptCompanyId || undefined };
+                await createDepartment(payload);
+                toast({ title: '部门已创建' });
+            }
+            setIsDeptDialogOpen(false);
+            setEditingDept(null);
+            setDeptFormData({ name: '', code: '', description: '' });
+            fetchAllDepartments(selectedDeptCompanyId || undefined);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: '操作失败', description: error.response?.data?.message });
+        }
+    };
+
+    const handleEditDept = (dept: Department) => {
+        setEditingDept(dept);
+        setDeptFormData({ name: dept.name, code: dept.code || '', description: dept.description || '' });
+        setIsDeptDialogOpen(true);
+    };
+
+    const handleDeleteDept = async (id: string) => {
+        const confirmed = await confirm({
+            title: t('common.confirm'),
+            description: '确定要删除此部门吗？',
+            variant: 'destructive',
+        });
+        if (!confirmed) return;
+        try {
+            await deleteDepartment(id);
+            toast({ title: '部门已删除' });
+            fetchAllDepartments();
+        } catch {
+            toast({ variant: 'destructive', title: '删除失败' });
+        }
+    };
+
+    const openCreateDeptDialog = () => {
+        setEditingDept(null);
+        setDeptFormData({ name: '', code: '', description: '' });
+        setIsDeptDialogOpen(true);
+    };
+
+    const filteredDepartments = departments.filter(d =>
+        d.name.toLowerCase().includes(deptSearchTerm.toLowerCase()) ||
+        (d.code && d.code.toLowerCase().includes(deptSearchTerm.toLowerCase()))
+    );
+
+    useEffect(() => {
+        if (activeTab === 'departments') {
+            fetchAllDepartments(selectedDeptCompanyId || undefined);
+        }
+    }, [activeTab, selectedDeptCompanyId]);
+
     // 统计数据
     const activeUsers = users.filter(u => u.isActive).length;
     const inactiveUsers = users.filter(u => !u.isActive).length;
@@ -212,14 +356,53 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
             {/* 页面头部 */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">用户管理</h1>
-                    <p className="text-slate-500">管理系统用户账号和权限</p>
+                    <h1 className="text-2xl font-bold text-slate-900">用户与部门管理</h1>
+                    <p className="text-slate-500">管理系统用户账号、权限和部门结构</p>
                 </div>
-                <Button onClick={openCreateDialog}>
-                    <Plus className="mr-2 h-4 w-4" /> 添加用户
-                </Button>
+                {activeTab === 'users' ? (
+                    <Button onClick={openCreateDialog}>
+                        <Plus className="mr-2 h-4 w-4" /> 添加用户
+                    </Button>
+                ) : (
+                    <Button onClick={openCreateDeptDialog}>
+                        <Plus className="mr-2 h-4 w-4" /> 添加部门
+                    </Button>
+                )}
             </div>
 
+            {/* Tab 导航 */}
+            <div className="border-b border-slate-200">
+                <nav className="flex gap-6">
+                    <button
+                        onClick={() => setActiveTab('users')}
+                        className={cn(
+                            'flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors',
+                            activeTab === 'users'
+                                ? 'border-brand-primary text-brand-primary'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                        )}
+                    >
+                        <Users className="w-4 h-4" />
+                        用户管理
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('departments')}
+                        className={cn(
+                            'flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors',
+                            activeTab === 'departments'
+                                ? 'border-brand-primary text-brand-primary'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                        )}
+                    >
+                        <Building2 className="w-4 h-4" />
+                        部门管理
+                    </button>
+                </nav>
+            </div>
+
+            {/* 用户管理 Tab */}
+            {activeTab === 'users' && (
+                <>
             {/* 统计卡片 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
@@ -278,6 +461,8 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                                 <TableRow>
                                     <TableHead>用户</TableHead>
                                     <TableHead>角色</TableHead>
+                                    {isGroupAdmin && <TableHead className="hidden md:table-cell">公司</TableHead>}
+                                    <TableHead className="hidden lg:table-cell">部门</TableHead>
                                     <TableHead className="hidden sm:table-cell">邮箱</TableHead>
                                     <TableHead>状态</TableHead>
                                     <TableHead className="text-right">操作</TableHead>
@@ -314,6 +499,15 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                                                 <Badge variant="outline" className={getRoleBadgeClass(user.role)}>
                                                     {getRoleName(user.role)}
                                                 </Badge>
+                                            </TableCell>
+                                            {isGroupAdmin && (
+                                                <TableCell className="hidden md:table-cell text-slate-500">
+                                                    {user.company?.name || '-'}
+                                                    {user.company?.code && <span className="text-xs text-slate-400 ml-1">({user.company.code})</span>}
+                                                </TableCell>
+                                            )}
+                                            <TableCell className="hidden lg:table-cell text-slate-500">
+                                                {user.department?.name || '-'}
                                             </TableCell>
                                             <TableCell className="hidden sm:table-cell text-slate-500">
                                                 {user.email}
@@ -402,6 +596,46 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                             </Select>
                         </div>
 
+                        {isGroupAdmin && (
+                            <div className="space-y-2">
+                                <Label>所属公司 <span className="text-red-500">*</span></Label>
+                                <Select
+                                    onValueChange={handleCompanyChange}
+                                    value={form.watch('companyId') || ''}
+                                    disabled={!!editingUser}
+                                >
+                                    <SelectTrigger className={editingUser ? 'bg-slate-100' : ''}>
+                                        <SelectValue placeholder="选择公司" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {companies.map(company => (
+                                            <SelectItem key={company.id} value={company.id}>
+                                                {company.name} {company.code && `(${company.code})`}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label>所属部门 <span className="text-slate-400 text-xs">(可选)</span></Label>
+                            <Select
+                                onValueChange={(val) => form.setValue('departmentId', val === '_none_' ? undefined : val)}
+                                value={form.watch('departmentId') || '_none_'}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="选择部门" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="_none_">无部门</SelectItem>
+                                    {departments.map(dept => (
+                                        <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
                         <div className="space-y-2">
                             <Label>关联员工 <span className="text-slate-400 text-xs">(可选)</span></Label>
                             <Select
@@ -438,6 +672,152 @@ export const TeamManagementView: React.FC<TeamManagementViewProps> = () => {
                     </form>
                 </DialogContent>
             </Dialog>
+                </>
+            )}
+
+            {/* 部门管理 Tab */}
+            {activeTab === 'departments' && (
+                <>
+                    <Card>
+                        <CardHeader className="pb-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div>
+                                    <CardTitle className="text-base">部门列表</CardTitle>
+                                    <CardDescription>共 {filteredDepartments.length} 个部门</CardDescription>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                    {isGroupAdmin && (
+                                        <Select value={selectedDeptCompanyId || '_all_'} onValueChange={(v) => handleDeptCompanyChange(v === '_all_' ? '' : v)}>
+                                            <SelectTrigger className="w-full sm:w-48">
+                                                <SelectValue placeholder="全部公司" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="_all_">全部公司</SelectItem>
+                                                {companies.map(company => (
+                                                    <SelectItem key={company.id} value={company.id}>
+                                                        {company.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                    <div className="relative w-full sm:w-64">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            placeholder="搜索部门名称或代码..."
+                                            value={deptSearchTerm}
+                                            onChange={(e) => setDeptSearchTerm(e.target.value)}
+                                            className="pl-9"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>部门名称</TableHead>
+                                            <TableHead>部门代码</TableHead>
+                                            <TableHead className="hidden sm:table-cell">描述</TableHead>
+                                            <TableHead>员工数</TableHead>
+                                            <TableHead className="text-right">操作</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {deptLoading ? (
+                                            <>
+                                                {Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} columns={5} />)}
+                                            </>
+                                        ) : filteredDepartments.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center py-12 text-slate-400">
+                                                    暂无部门数据
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredDepartments.map((dept) => (
+                                                <TableRow key={dept.id}>
+                                                    <TableCell className="font-medium text-slate-900">{dept.name}</TableCell>
+                                                    <TableCell className="text-slate-500">{dept.code || '-'}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell text-slate-500 max-w-xs truncate">
+                                                        {dept.description || '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="secondary">{dept._count?.employees || 0}</Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => handleEditDept(dept)}>
+                                                                    <Pencil className="mr-2 h-4 w-4" /> 编辑
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteDept(dept.id)}>
+                                                                    <Trash2 className="mr-2 h-4 w-4" /> 删除
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* 部门表单对话框 */}
+                    <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>{editingDept ? '编辑部门' : '添加部门'}</DialogTitle>
+                                <DialogDescription>
+                                    {editingDept ? '修改部门信息' : '创建新的组织部门'}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleDeptSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>部门名称 <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        value={deptFormData.name}
+                                        onChange={(e) => setDeptFormData({ ...deptFormData, name: e.target.value })}
+                                        placeholder="请输入部门名称"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>部门代码</Label>
+                                    <Input
+                                        value={deptFormData.code || ''}
+                                        onChange={(e) => setDeptFormData({ ...deptFormData, code: e.target.value })}
+                                        placeholder="如：TECH、HR、SALES"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>描述</Label>
+                                    <Input
+                                        value={deptFormData.description || ''}
+                                        onChange={(e) => setDeptFormData({ ...deptFormData, description: e.target.value })}
+                                        placeholder="部门职能描述"
+                                    />
+                                </div>
+                                <DialogFooter className="pt-4">
+                                    <Button type="button" variant="outline" onClick={() => setIsDeptDialogOpen(false)}>取消</Button>
+                                    <Button type="submit">保存</Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                </>
+            )}
         </div>
     );
 };

@@ -32,20 +32,27 @@ export class DepartmentsController {
   @Roles(UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   create(
     @Body() dto: CreateDepartmentDto,
-    @CurrentUser('companyId') companyId: string,
+    @CurrentUser('companyId') currentCompanyId: string,
+    @CurrentUser('groupId') groupId: string,
   ) {
-    return this.service.create(dto, companyId);
+    const targetCompanyId = dto.companyId || currentCompanyId;
+    return this.service.create(dto, targetCompanyId, groupId);
   }
 
   @Get()
   @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   findAll(
     @Query() query: DepartmentQueryDto,
-    @CurrentUser('companyId') companyId: string,
+    @CurrentUser('companyId') currentCompanyId: string,
+    @CurrentUser('groupId') groupId: string,
+    @CurrentUser('role') role: UserRole,
   ) {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '20', 10);
-    return this.service.findAll(companyId, page, limit, query.search);
+    // GROUP_ADMIN 可以指定公司ID查询，其他角色只能查自己公司
+    const isGroupLevel = role === UserRole.GROUP_ADMIN || role === UserRole.SUPER_ADMIN;
+    const targetCompanyId = isGroupLevel && query.companyId ? query.companyId : currentCompanyId;
+    return this.service.findAll(targetCompanyId, groupId, page, limit, query.search);
   }
 
   @Get(':id')

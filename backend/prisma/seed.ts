@@ -8,6 +8,9 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+const SALES_DEPT_ID = '9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
+const TECH_DEPT_ID = '1a2b3c4d-5e6f-4a7b-9c8d-0e1f2a3b4c5d';
+
 async function main() {
   console.log('🌱 Seeding database...');
 
@@ -24,24 +27,24 @@ async function main() {
   console.log(`✅ Group created: ${group.name}`);
 
   // 创建默认子公司 (Makrite Headquarters)
-  const company = await prisma.company.upsert({
-    where: { domain: 'default' },
-    update: {},
-    create: {
-      name: 'Makrite Headquarters',
-      domain: 'default',
-      groupId: group.id,
-      settings: { defaultLanguage: 'zh' },
-    },
-  });
+  const company =
+    (await prisma.company.findFirst({ where: { domain: 'default', groupId: group.id } })) ||
+    (await prisma.company.create({
+      data: {
+        name: 'Makrite Headquarters',
+        domain: 'default',
+        groupId: group.id,
+        settings: { defaultLanguage: 'zh' },
+      },
+    }));
   console.log(`✅ Company created: ${company.name}`);
 
   // 创建示例部门
   const salesDept = await prisma.department.upsert({
-    where: { id: 'sales-dept-id' },
-    update: {},
+    where: { id: SALES_DEPT_ID },
+    update: { name: '销售部', description: 'Sales Department', companyId: company.id, isActive: true },
     create: {
-      id: 'sales-dept-id',
+      id: SALES_DEPT_ID,
       name: '销售部',
       description: 'Sales Department',
       companyId: company.id,
@@ -50,10 +53,10 @@ async function main() {
   console.log(`✅ Department created: ${salesDept.name}`);
 
   const techDept = await prisma.department.upsert({
-    where: { id: 'tech-dept-id' },
-    update: {},
+    where: { id: TECH_DEPT_ID },
+    update: { name: '技术部', description: 'Technology Department', companyId: company.id, isActive: true },
     create: {
-      id: 'tech-dept-id',
+      id: TECH_DEPT_ID,
       name: '技术部',
       description: 'Technology Department',
       companyId: company.id,

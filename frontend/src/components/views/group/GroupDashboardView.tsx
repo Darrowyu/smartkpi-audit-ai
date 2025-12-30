@@ -105,10 +105,13 @@ export const GroupDashboardView: React.FC = () => {
 
     useEffect(() => { loadData(); }, [loadData]);
 
-    // 计算汇总
-    const totalEmployees = companyPerformances.reduce((sum, c) => sum + c.totalEmployees, 0);
-    const avgScore = companyPerformances.length > 0
-        ? Math.round(companyPerformances.reduce((sum, c) => sum + c.avgScore * c.totalEmployees, 0) / totalEmployees * 100) / 100
+    // 计算汇总 - 基础统计优先使用 groupStats API 数据
+    const totalCompanies = groupStats?.totalCompanies ?? companyPerformances.length;
+    const totalUsers = groupStats?.totalUsers ?? 0;
+    // 绩效数据从 companyPerformances 计算
+    const performanceEmployees = companyPerformances.reduce((sum, c) => sum + c.totalEmployees, 0);
+    const avgScore = performanceEmployees > 0
+        ? Math.round(companyPerformances.reduce((sum, c) => sum + c.avgScore * c.totalEmployees, 0) / performanceEmployees * 100) / 100
         : 0;
     const totalPoor = companyPerformances.reduce((sum, c) => sum + c.poor, 0);
 
@@ -148,29 +151,29 @@ export const GroupDashboardView: React.FC = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="子公司数量"
-                    value={groupStats?.totalCompanies || companyPerformances.length}
+                    value={totalCompanies}
                     subtitle="活跃运营中"
                     icon={<Building2 className="w-4 h-4 text-brand-primary" />}
                     iconBg="bg-primary/10"
                 />
                 <StatCard
-                    title="总员工数"
-                    value={totalEmployees}
-                    subtitle="覆盖所有子公司"
+                    title="系统用户数"
+                    value={totalUsers}
+                    subtitle={`${groupStats?.totalDepartments ?? 0} 个部门`}
                     icon={<Users className="w-4 h-4 text-brand-secondary" />}
                     iconBg="bg-sky-50"
                 />
                 <StatCard
                     title="集团平均分"
                     value={avgScore > 0 ? `${avgScore}分` : '-'}
-                    subtitle={avgScore >= 80 ? '表现优秀' : avgScore > 0 ? '需关注' : '暂无数据'}
+                    subtitle={performanceEmployees > 0 ? `${performanceEmployees}人参评` : '暂无数据'}
                     icon={<Trophy className="w-4 h-4 text-amber-500" />}
                     iconBg="bg-amber-50"
                 />
                 <StatCard
                     title="待改进人数"
                     value={totalPoor}
-                    subtitle={`占比${totalEmployees > 0 ? Math.round(totalPoor / totalEmployees * 100) : 0}%`}
+                    subtitle={`占比${performanceEmployees > 0 ? Math.round(totalPoor / performanceEmployees * 100) : 0}%`}
                     icon={<AlertTriangle className="w-4 h-4 text-red-500" />}
                     iconBg="bg-red-50"
                 />

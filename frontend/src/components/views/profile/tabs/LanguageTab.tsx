@@ -30,10 +30,10 @@ const TIMEZONES = [
 ];
 
 const DATE_FORMATS: { value: DateFormat; label: string }[] = [
-  { value: 'YYYY-MM-DD', label: '2024-01-15' },
-  { value: 'DD/MM/YYYY', label: '15/01/2024' },
-  { value: 'MM/DD/YYYY', label: '01/15/2024' },
-  { value: 'YYYY年MM月DD日', label: '2024年01月15日' },
+  { value: 'YYYY-MM-DD', label: '2026-01-01' },
+  { value: 'DD/MM/YYYY', label: '01/01/26' },
+  { value: 'MM/DD/YYYY', label: '01/01/26' },
+  { value: 'YYYY年MM月DD日', label: '26年01月01日' },
 ];
 
 const TIME_FORMATS: { value: TimeFormat; label: string }[] = [
@@ -74,7 +74,7 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
   };
 
   const previewDateTime = useMemo(() => {
-    const dateStr = DATE_FORMATS.find(f => f.value === dateFormat)?.label || '2024-01-15';
+    const dateStr = DATE_FORMATS.find(f => f.value === dateFormat)?.label || '2026-01-01';
     const timeStr = timeFormat === '24h' ? '14:30' : '2:30 PM';
     return `${dateStr} ${timeStr}`;
   }, [dateFormat, timeFormat]);

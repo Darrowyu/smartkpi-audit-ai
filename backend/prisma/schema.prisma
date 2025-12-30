@@ -103,6 +103,7 @@ model User {
   notificationSettings Json?    @map("notification_settings") // 通知设置
   kpiPreferences       Json?    @map("kpi_preferences") // KPI偏好设置
   appearanceSettings   Json?    @map("appearance_settings") // 外观设置
+  regionalSettings     Json?    @map("regional_settings") // 区域设置(时区/日期格式)
 
   companyId String  @map("company_id")
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)

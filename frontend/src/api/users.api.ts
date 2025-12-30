@@ -119,6 +119,12 @@ export interface AppearanceSettings {
   animations: boolean;
 }
 
+export interface RegionalSettings {
+  timezone: string;
+  dateFormat: 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY年MM月DD日';
+  timeFormat: '24h' | '12h';
+}
+
 export const getAvatarUrl = (userId: string): string => {
   const apiOrigin = import.meta.env.VITE_API_URL as string | undefined;
   const apiBasePath = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '/api';
@@ -221,6 +227,16 @@ export const usersApi = {
 
   updateAppearanceSettings: async (data: Partial<AppearanceSettings>): Promise<AppearanceSettings> => {
     const res = await apiClient.patch('/users/me/appearance-settings', data);
+    return res.data;
+  },
+
+  getRegionalSettings: async (): Promise<RegionalSettings> => {
+    const res = await apiClient.get('/users/me/regional-settings');
+    return res.data;
+  },
+
+  updateRegionalSettings: async (data: Partial<RegionalSettings>): Promise<RegionalSettings> => {
+    const res = await apiClient.patch('/users/me/regional-settings', data);
     return res.data;
   },
 };

@@ -15,6 +15,7 @@ import {
   UpdateNotificationSettingsDto,
   UpdateKpiPreferencesDto,
   UpdateAppearanceSettingsDto,
+  UpdateRegionalSettingsDto,
 } from './dto/user.dto';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -380,6 +381,32 @@ export class UsersService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { appearanceSettings: updated },
+    });
+    return updated;
+  }
+
+  async getRegionalSettings(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { regionalSettings: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const defaults = {
+      timezone: 'Asia/Shanghai',
+      dateFormat: 'YYYY-MM-DD',
+      timeFormat: '24h',
+    };
+    return { ...defaults, ...(user.regionalSettings as object || {}) };
+  }
+
+  async updateRegionalSettings(userId: string, dto: UpdateRegionalSettingsDto) {
+    const current = await this.getRegionalSettings(userId);
+    const updated = { ...current, ...dto };
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { regionalSettings: updated },
     });
     return updated;
   }

@@ -31,6 +31,7 @@ import {
   UpdateNotificationSettingsDto,
   UpdateKpiPreferencesDto,
   UpdateAppearanceSettingsDto,
+  UpdateRegionalSettingsDto,
 } from './dto/user.dto';
 import { UserRole } from '@prisma/client';
 import { Public } from '../../common/decorators/public.decorator';
@@ -98,6 +99,19 @@ export class UsersController {
     @CurrentUser('userId') userId: string,
   ) {
     return this.service.updateAppearanceSettings(userId, dto);
+  }
+
+  @Get('me/regional-settings')
+  getRegionalSettings(@CurrentUser('userId') userId: string) {
+    return this.service.getRegionalSettings(userId);
+  }
+
+  @Patch('me/regional-settings')
+  updateRegionalSettings(
+    @Body() dto: UpdateRegionalSettingsDto,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.service.updateRegionalSettings(userId, dto);
   }
 
   @Post('me/avatar') // POST /api/users/me/avatar - 上传头像

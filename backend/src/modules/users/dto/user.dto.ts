@@ -253,3 +253,17 @@ export class UpdateAppearanceSettingsDto {
   @IsBoolean()
   animations?: boolean;
 }
+
+export class UpdateRegionalSettingsDto {
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @IsOptional()
+  @IsString()
+  dateFormat?: 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY年MM月DD日';
+
+  @IsOptional()
+  @IsString()
+  timeFormat?: '24h' | '12h';
+}

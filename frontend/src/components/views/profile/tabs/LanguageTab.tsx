@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, Clock, Calendar } from 'lucide-react';
-import { usersApi } from '@/api/users.api';
+import { usersApi, RegionalSettings } from '@/api/users.api';
 import { Language } from '@/types';
 import { SectionCard } from '../components/SectionCard';
+import { useToast } from '@/components/ui/use-toast';
 
 interface LanguageTabProps {
   language: Language;
@@ -42,13 +43,34 @@ const TIME_FORMATS: { value: TimeFormat; label: string }[] = [
 
 export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage }) => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [timezone, setTimezone] = useState('Asia/Shanghai');
   const [dateFormat, setDateFormat] = useState<DateFormat>('YYYY-MM-DD');
   const [timeFormat, setTimeFormat] = useState<TimeFormat>('24h');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    usersApi.getRegionalSettings().then((settings) => {
+      setTimezone(settings.timezone);
+      setDateFormat(settings.dateFormat);
+      setTimeFormat(settings.timeFormat);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
     usersApi.updateProfile({ language: lang }).catch(() => {});
+  };
+
+  const handleRegionalChange = (data: Partial<RegionalSettings>) => {
+    usersApi.updateRegionalSettings(data).then((updated) => {
+      if (data.timezone) setTimezone(updated.timezone);
+      if (data.dateFormat) setDateFormat(updated.dateFormat);
+      if (data.timeFormat) setTimeFormat(updated.timeFormat);
+      toast({ title: t('settings.language.saved', '设置已保存') });
+    }).catch(() => {
+      toast({ title: t('settings.language.saveFailed', '保存失败'), variant: 'destructive' });
+    });
   };
 
   const previewDateTime = useMemo(() => {
@@ -89,8 +111,9 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
       <SectionCard icon={<Clock className="w-5 h-5" />} title={t('settings.language.timezone', '时区设置')} description={t('settings.language.timezoneDesc', '选择您所在的时区')}>
         <select
           value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-          className="w-full sm:w-80 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
+          onChange={(e) => handleRegionalChange({ timezone: e.target.value })}
+          disabled={loading}
+          className="w-full sm:w-80 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary disabled:opacity-50"
         >
           {TIMEZONES.map(tz => (
             <option key={tz.value} value={tz.value}>{tz.label}</option>
@@ -106,8 +129,9 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">{t('settings.language.dateFormat', '日期格式')}</label>
               <select
                 value={dateFormat}
-                onChange={(e) => setDateFormat(e.target.value as DateFormat)}
-                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
+                onChange={(e) => handleRegionalChange({ dateFormat: e.target.value as DateFormat })}
+                disabled={loading}
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary disabled:opacity-50"
               >
                 {DATE_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -118,8 +142,9 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
               <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">{t('settings.language.timeFormat', '时间格式')}</label>
               <select
                 value={timeFormat}
-                onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
-                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
+                onChange={(e) => handleRegionalChange({ timeFormat: e.target.value as TimeFormat })}
+                disabled={loading}
+                className="w-full px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary disabled:opacity-50"
               >
                 {TIME_FORMATS.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>

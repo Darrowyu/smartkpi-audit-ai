@@ -5,7 +5,7 @@ export enum KPIStatus {
   POOR = 'Poor'
 }
 
-export type Language = 'en' | 'zh' | 'zh-TW' | 'ja';
+export type Language = 'en' | 'zh' | 'zh-TW';
 export type View =
   | 'landing'
   | 'dashboard'

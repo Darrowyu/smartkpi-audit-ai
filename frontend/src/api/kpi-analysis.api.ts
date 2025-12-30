@@ -5,7 +5,6 @@ import { PaginatedResponse } from './files.api';
 type ApiLanguage = 'en' | 'zh';
 const mapLanguage = (lang: Language | undefined): ApiLanguage => {
   if (lang === 'zh' || lang === 'zh-TW') return 'zh';
-  if (lang === 'ja') return 'en'; // 日语fallback到英文
   return lang === 'en' ? 'en' : 'zh';
 };
 

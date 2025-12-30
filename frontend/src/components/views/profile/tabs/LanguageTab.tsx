@@ -17,7 +17,6 @@ const LANGUAGES = [
   { code: 'zh' as Language, label: 'CN', name: '简体中文' },
   { code: 'zh-TW' as Language, label: 'TW', name: '繁體中文' },
   { code: 'en' as Language, label: 'US', name: 'English (US)' },
-  { code: 'ja' as Language, label: 'JP', name: '日本語' },
 ];
 
 const TIMEZONES = [

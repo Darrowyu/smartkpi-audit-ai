@@ -140,6 +140,8 @@ export class AuthService {
         email: true,
         firstName: true,
         lastName: true,
+        phoneNumber: true,
+        bio: true,
         avatar: true,
         role: true,
         companyId: true,
@@ -148,6 +150,7 @@ export class AuthService {
         language: true,
         createdAt: true,
         lastLoginAt: true,
+        department: { select: { id: true, name: true } },
         company: {
           select: {
             id: true,

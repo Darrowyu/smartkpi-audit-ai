@@ -63,12 +63,18 @@ export const LanguageTab: React.FC<LanguageTabProps> = ({ language, setLanguage 
   };
 
   const handleRegionalChange = (data: Partial<RegionalSettings>) => {
-    usersApi.updateRegionalSettings(data).then((updated) => {
-      if (data.timezone) setTimezone(updated.timezone);
-      if (data.dateFormat) setDateFormat(updated.dateFormat);
-      if (data.timeFormat) setTimeFormat(updated.timeFormat);
+    const oldTimezone = timezone;
+    const oldDateFormat = dateFormat;
+    const oldTimeFormat = timeFormat;
+    if (data.timezone) setTimezone(data.timezone);
+    if (data.dateFormat) setDateFormat(data.dateFormat);
+    if (data.timeFormat) setTimeFormat(data.timeFormat);
+    usersApi.updateRegionalSettings(data).then(() => {
       toast({ title: t('settings.language.saved', '设置已保存') });
     }).catch(() => {
+      setTimezone(oldTimezone);
+      setDateFormat(oldDateFormat);
+      setTimeFormat(oldTimeFormat);
       toast({ title: t('settings.language.saveFailed', '保存失败'), variant: 'destructive' });
     });
   };

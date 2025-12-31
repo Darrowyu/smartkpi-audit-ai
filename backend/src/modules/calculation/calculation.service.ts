@@ -87,16 +87,19 @@ export class CalculationService {
     return period;
   }
 
-  /** 获取员工在考核期第一天的归属部门（归属锁定逻辑） */
-  private async getLockedDepartment(
-    employeeId: string,
+  /** 批量获取员工在考核期第一天的归属部门（优化N+1） */
+  private async batchGetLockedDepartments(
+    employeeIds: string[],
     periodStartDate: Date,
     companyId: string,
-  ) {
-    const history = await this.prisma.employeeDepartmentHistory.findFirst({
-      // 查询历史记录
+  ): Promise<Map<string, { deptId: string | null; deptName: string | null }>> {
+    const result = new Map<string, { deptId: string | null; deptName: string | null }>();
+    if (employeeIds.length === 0) return result;
+
+    // 批量查询历史记录
+    const histories = await this.prisma.employeeDepartmentHistory.findMany({
       where: {
-        employeeId,
+        employeeId: { in: employeeIds },
         companyId,
         effectiveDate: { lte: periodStartDate },
         OR: [{ endDate: null }, { endDate: { gte: periodStartDate } }],
@@ -104,25 +107,76 @@ export class CalculationService {
       orderBy: { effectiveDate: 'desc' },
     });
 
-    if (history) {
-      return { deptId: history.departmentId, deptName: history.departmentName };
+    // 按员工分组取最新记录
+    const historyMap = new Map<string, typeof histories[0]>();
+    for (const h of histories) {
+      if (!historyMap.has(h.employeeId)) historyMap.set(h.employeeId, h);
     }
 
-    const employee = await this.prisma.employee.findUnique({
-      // 无历史记录则使用当前部门
-      where: { id: employeeId },
-      include: { department: true },
-    });
+    // 找出无历史记录的员工
+    const noHistoryIds = employeeIds.filter((id) => !historyMap.has(id));
 
-    if (!employee) return { deptId: null, deptName: null };
+    // 批量查询员工当前部门
+    const employees = noHistoryIds.length > 0
+      ? await this.prisma.employee.findMany({
+          where: { id: { in: noHistoryIds } },
+          include: { department: true },
+        })
+      : [];
+    const empMap = new Map(employees.map((e) => [e.id, e]));
 
-    return {
-      deptId: employee.departmentId,
-      deptName: employee.department?.name || null,
-    };
+    // 组装结果
+    for (const empId of employeeIds) {
+      const history = historyMap.get(empId);
+      if (history) {
+        result.set(empId, { deptId: history.departmentId, deptName: history.departmentName });
+      } else {
+        const emp = empMap.get(empId);
+        result.set(empId, {
+          deptId: emp?.departmentId || null,
+          deptName: emp?.department?.name || null,
+        });
+      }
+    }
+
+    return result;
   }
 
-  /** 执行同步计算（用于小规模数据或测试） */
+  /** 计算单条数据的得分 */
+  private calculateEntryScore(entry: any): CalculationResult {
+    const { assignment } = entry;
+    const kpi = assignment.kpiDefinition;
+
+    const input: CalculationInput = {
+      actual: entry.actualValue,
+      target: assignment.targetValue,
+      challenge: assignment.challengeValue || undefined,
+      weight: assignment.weight,
+    };
+
+    switch (kpi.formulaType) {
+      case FormulaType.POSITIVE:
+        return this.formulaEngine.calculatePositive(input, kpi.scoreCap, kpi.scoreFloor);
+      case FormulaType.NEGATIVE:
+        return this.formulaEngine.calculateNegative(input, kpi.scoreCap, kpi.scoreFloor);
+      case FormulaType.BINARY:
+        return this.formulaEngine.calculateBinary(entry.actualValue, assignment.weight, 100);
+      case FormulaType.STEPPED:
+        return this.formulaEngine.calculateStepped(entry.actualValue, (kpi.scoringRules as any[]) || [], assignment.weight);
+      case FormulaType.CUSTOM:
+        return this.formulaEngine.calculateCustom(
+          kpi.customFormula || '(actual / target) * 100',
+          { actual: entry.actualValue, target: assignment.targetValue },
+          assignment.weight,
+          kpi.scoreCap,
+          kpi.scoreFloor,
+        );
+      default:
+        return this.formulaEngine.calculatePositive(input, kpi.scoreCap, kpi.scoreFloor);
+    }
+  }
+
+  /** 执行同步计算（用于小规模数据或测试） - 使用事务保护 */
   async executeCalculation(
     periodId: string,
     companyId: string,
@@ -130,189 +184,88 @@ export class CalculationService {
   ): Promise<CalculationJobResult> {
     const startTime = Date.now();
 
-    const period = await this.validateCalculationAllowed(periodId, companyId); // 验证计算冻结
+    const period = await this.validateCalculationAllowed(periodId, companyId);
 
     const entries = await this.prisma.kPIDataEntry.findMany({
-      // 获取所有已审批的数据
-      where: {
-        submission: { periodId, companyId, status: SubmissionStatus.APPROVED },
-      },
-      include: {
-        assignment: { include: { kpiDefinition: true } },
-      },
+      where: { submission: { periodId, companyId, status: SubmissionStatus.APPROVED } },
+      include: { assignment: { include: { kpiDefinition: true } } },
     });
 
-    const employeeScores = new Map<
-      string,
-      { scores: CalculationResult[]; departmentId?: string }
-    >(); // 按员工分组计算
+    // 第一步：计算所有得分（纯计算，无IO）
+    const employeeScores = new Map<string, { scores: CalculationResult[]; departmentId?: string }>();
+    const entryUpdates: { id: string; rawScore: number; cappedScore: number; weightedScore: number }[] = [];
 
     for (const entry of entries) {
-      const { assignment } = entry;
-      const kpi = assignment.kpiDefinition;
+      const result = this.calculateEntryScore(entry);
+      entryUpdates.push({ id: entry.id, rawScore: result.rawScore, cappedScore: result.cappedScore, weightedScore: result.weightedScore });
 
-      const input: CalculationInput = {
-        // 计算单项得分
-        actual: entry.actualValue,
-        target: assignment.targetValue,
-        challenge: assignment.challengeValue || undefined,
-        weight: assignment.weight,
-      };
-
-      let result: CalculationResult;
-
-      switch (kpi.formulaType) {
-        case FormulaType.POSITIVE:
-          result = this.formulaEngine.calculatePositive(
-            input,
-            kpi.scoreCap,
-            kpi.scoreFloor,
-          );
-          break;
-        case FormulaType.NEGATIVE:
-          result = this.formulaEngine.calculateNegative(
-            input,
-            kpi.scoreCap,
-            kpi.scoreFloor,
-          );
-          break;
-        case FormulaType.BINARY:
-          result = this.formulaEngine.calculateBinary(
-            entry.actualValue,
-            assignment.weight,
-            100,
-          );
-          break;
-        case FormulaType.STEPPED:
-          const steps = (kpi.scoringRules as any[]) || [];
-          result = this.formulaEngine.calculateStepped(
-            entry.actualValue,
-            steps,
-            assignment.weight,
-          );
-          break;
-        case FormulaType.CUSTOM:
-          result = this.formulaEngine.calculateCustom(
-            kpi.customFormula || '(actual / target) * 100',
-            { actual: entry.actualValue, target: assignment.targetValue },
-            assignment.weight,
-            kpi.scoreCap,
-            kpi.scoreFloor,
-          );
-          break;
-        default:
-          result = this.formulaEngine.calculatePositive(
-            input,
-            kpi.scoreCap,
-            kpi.scoreFloor,
-          );
-      }
-
-      await this.prisma.kPIDataEntry.update({
-        // 更新数据条目的得分
-        where: { id: entry.id },
-        data: {
-          rawScore: result.rawScore,
-          cappedScore: result.cappedScore,
-          weightedScore: result.weightedScore,
-        },
-      });
-
-      const existing = employeeScores.get(entry.employeeId) || { scores: [] }; // 累计员工得分
+      const existing = employeeScores.get(entry.employeeId) || { scores: [] };
       existing.scores.push(result);
-      existing.departmentId = assignment.departmentId || undefined;
+      existing.departmentId = entry.assignment.departmentId || undefined;
       employeeScores.set(entry.employeeId, existing);
     }
 
-    const individualScores: IndividualScore[] = []; // 计算员工总分并保存
+    // 第二步：批量获取归属部门（消除N+1）
+    const employeeIds = [...employeeScores.keys()];
+    const lockedDeptMap = await this.batchGetLockedDepartments(employeeIds, period.startDate, companyId);
+
+    // 第三步：批量获取员工信息（消除N+1）
+    const employees = employeeIds.length > 0
+      ? await this.prisma.employee.findMany({ where: { id: { in: employeeIds } }, select: { id: true, name: true } })
+      : [];
+    const empNameMap = new Map(employees.map((e) => [e.id, e.name]));
+
+    // 第四步：准备员工绩效数据
+    const individualScores: IndividualScore[] = [];
+    const performanceOps: any[] = [];
 
     for (const [employeeId, data] of employeeScores) {
       const totalScore = this.formulaEngine.calculateTotalScore(data.scores);
-      const status = this.formulaEngine.determineStatus(
-        totalScore,
-      ) as KPIStatusEnum;
+      const status = this.formulaEngine.determineStatus(totalScore) as KPIStatusEnum;
+      const lockedDept = lockedDeptMap.get(employeeId) || { deptId: null, deptName: null };
 
-      const lockedDept = await this.getLockedDepartment(
-        employeeId,
-        period.startDate,
-        companyId,
-      ); // 获取归属锁定部门
-
-      await this.prisma.employeePerformance.upsert({
-        where: { periodId_employeeId: { periodId, employeeId } },
-        create: {
-          periodId,
-          employeeId,
-          companyId,
-          departmentId: data.departmentId,
-          totalScore,
-          status,
-          lockedDeptId: lockedDept.deptId, // 归属锁定
-          lockedDeptName: lockedDept.deptName,
-          calculatedById: userId,
-        },
-        update: {
-          totalScore,
-          status,
-          lockedDeptId: lockedDept.deptId,
-          lockedDeptName: lockedDept.deptName,
-          calculatedAt: new Date(),
-          calculatedById: userId,
-        },
-      });
-
-      const employee = await this.prisma.employee.findUnique({
-        where: { id: employeeId },
-      });
+      performanceOps.push(
+        this.prisma.employeePerformance.upsert({
+          where: { periodId_employeeId: { periodId, employeeId } },
+          create: { periodId, employeeId, companyId, departmentId: data.departmentId, totalScore, status, lockedDeptId: lockedDept.deptId, lockedDeptName: lockedDept.deptName, calculatedById: userId },
+          update: { totalScore, status, lockedDeptId: lockedDept.deptId, lockedDeptName: lockedDept.deptName, calculatedAt: new Date(), calculatedById: userId },
+        }),
+      );
 
       individualScores.push({
         employeeId,
-        employeeName: employee?.name || 'Unknown',
-        departmentId: lockedDept.deptId || data.departmentId || '', // 使用归属锁定部门
+        employeeName: empNameMap.get(employeeId) || 'Unknown',
+        departmentId: lockedDept.deptId || data.departmentId || '',
         totalScore,
       });
     }
 
-    const grouped = this.rollupEngine.groupByDepartment(individualScores); // 计算部门绩效
+    // 第五步：准备部门绩效数据
+    const grouped = this.rollupEngine.groupByDepartment(individualScores);
+    const deptOps: any[] = [];
 
     for (const [departmentId, scores] of grouped) {
-      const deptScore = this.rollupEngine.calculateDepartmentScore(
-        scores,
-        RollupMethod.AVERAGE,
+      const deptScore = this.rollupEngine.calculateDepartmentScore(scores, RollupMethod.AVERAGE);
+      deptOps.push(
+        this.prisma.departmentPerformance.upsert({
+          where: { periodId_departmentId: { periodId, departmentId } },
+          create: { periodId, departmentId, companyId, totalScore: deptScore, employeeCount: scores.length, rollupMethod: RollupMethod.AVERAGE },
+          update: { totalScore: deptScore, employeeCount: scores.length, calculatedAt: new Date() },
+        }),
       );
-
-      await this.prisma.departmentPerformance.upsert({
-        where: { periodId_departmentId: { periodId, departmentId } },
-        create: {
-          periodId,
-          departmentId,
-          companyId,
-          totalScore: deptScore,
-          employeeCount: scores.length,
-          rollupMethod: RollupMethod.AVERAGE,
-        },
-        update: {
-          totalScore: deptScore,
-          employeeCount: scores.length,
-          calculatedAt: new Date(),
-        },
-      });
     }
 
-    // 发送计算完成通知
-    await this.notificationsService.notifyCalculationComplete(
-      periodId,
-      period.name,
-      companyId,
-      employeeScores.size,
-    );
+    // 第六步：使用事务批量执行所有数据库操作
+    await this.prisma.$transaction([
+      ...entryUpdates.map((u) => this.prisma.kPIDataEntry.update({ where: { id: u.id }, data: { rawScore: u.rawScore, cappedScore: u.cappedScore, weightedScore: u.weightedScore } })),
+      ...performanceOps,
+      ...deptOps,
+    ]);
 
-    return {
-      periodId,
-      employeeCount: employeeScores.size,
-      departmentCount: grouped.size,
-      totalTime: Date.now() - startTime,
-    };
+    // 发送通知（事务外执行，不影响计算结果）
+    await this.notificationsService.notifyCalculationComplete(periodId, period.name, companyId, employeeScores.size);
+
+    return { periodId, employeeCount: employeeScores.size, departmentCount: grouped.size, totalTime: Date.now() - startTime };
   }
 
   /** 获取周期计算结果 */

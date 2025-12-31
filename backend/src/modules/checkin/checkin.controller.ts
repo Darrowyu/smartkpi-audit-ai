@@ -41,6 +41,6 @@ export class CheckInController {
 
   @Put(':id/feedback')
   addManagerFeedback(@Request() req, @Param('id') id: string, @Body() dto: { feedback: string }) {
-    return this.service.addManagerFeedback(id, req.user.id, dto.feedback);
+    return this.service.addManagerFeedback(id, req.user.id, req.user.companyId, req.user.role, dto.feedback);
   }
 }

@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsArray,
   ValidateNested,
+  ArrayMaxSize,
   Min,
   Max,
 } from 'class-validator';
@@ -64,6 +65,7 @@ export class BulkAssignmentDto {
   periodId: string;
 
   @IsArray()
+  @ArrayMaxSize(500, { message: '单次最多分配500个指标，请分批操作' })
   @ValidateNested({ each: true })
   @Type(() => AssignmentItemDto)
   assignments: AssignmentItemDto[];

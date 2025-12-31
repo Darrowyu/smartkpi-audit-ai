@@ -6,6 +6,7 @@ import {
   MaxLength,
   IsArray,
   ValidateNested,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -100,6 +101,7 @@ export class BulkImportEmployeeDto {
 
 export class BulkImportDto {
   @IsArray()
+  @ArrayMaxSize(2000, { message: '单次最多导入2000名员工，请分批导入' })
   @ValidateNested({ each: true })
   @Type(() => BulkImportEmployeeDto)
   employees: BulkImportEmployeeDto[];

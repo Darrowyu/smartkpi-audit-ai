@@ -1,9 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class CheckInService {
   constructor(private prisma: PrismaService) {}
+
+  /** 校验检查点权限 */
+  private async validateCheckInAccess(checkInId: string, companyId: string) {
+    const checkIn = await this.prisma.progressCheckIn.findFirst({
+      where: { id: checkInId, companyId },
+    });
+    if (!checkIn) throw new NotFoundException('检查点不存在');
+    return checkIn;
+  }
 
   async createCheckIn(companyId: string, employeeId: string, dto: { assignmentId: string; currentValue: number; notes?: string; attachments?: string[]; riskLevel?: string }) {
     const assignment = await this.prisma.kPIAssignment.findUnique({
@@ -88,9 +98,13 @@ export class CheckInService {
     });
   }
 
-  async addManagerFeedback(checkInId: string, userId: string, feedback: string) {
-    const checkIn = await this.prisma.progressCheckIn.findUnique({ where: { id: checkInId } });
-    if (!checkIn) throw new NotFoundException('检查点不存在');
+  async addManagerFeedback(checkInId: string, userId: string, companyId: string, userRole: UserRole, feedback: string) {
+    const checkIn = await this.validateCheckInAccess(checkInId, companyId); // 校验租户权限
+
+    // 仅MANAGER及以上角色可添加反馈
+    if (userRole === UserRole.USER) {
+      throw new ForbiddenException('普通用户无权添加管理者反馈');
+    }
 
     return this.prisma.progressCheckIn.update({
       where: { id: checkInId },
@@ -109,6 +123,12 @@ export class CheckInService {
     });
 
     const assignmentIds = assignments.map((a) => a.id);
+
+    // 边界处理：空数组时直接返回空结果
+    if (assignmentIds.length === 0) {
+      return { summary: { total: 0, onTrack: 0, atRisk: 0, critical: 0, noUpdate: 0 }, details: [] };
+    }
+
     const latestCheckIns = await this.prisma.$queryRaw`
       SELECT DISTINCT ON (assignment_id) *
       FROM progress_check_ins

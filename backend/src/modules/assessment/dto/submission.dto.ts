@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsArray,
   ValidateNested,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SubmissionStatus } from '@prisma/client';
@@ -53,6 +54,7 @@ export class BulkDataEntryDto {
   submissionId: string;
 
   @IsArray()
+  @ArrayMaxSize(1000, { message: '单次最多提交1000条数据，请分批提交' })
   @ValidateNested({ each: true })
   @Type(() => DataEntryDto)
   entries: DataEntryDto[];

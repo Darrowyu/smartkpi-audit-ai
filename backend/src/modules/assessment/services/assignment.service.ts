@@ -17,55 +17,49 @@ import { PeriodStatus } from '@prisma/client';
 export class AssignmentService {
   constructor(private prisma: PrismaService) {}
 
-  /** 创建单个指标分配 */
+  /** 创建单个指标分配 - 使用事务防止竞态条件 */
   async create(dto: CreateAssignmentDto, companyId: string) {
-    await this.validatePeriodNotLocked(dto.periodId, companyId); // 检查周期是否已锁定
-    await this.validateKPIExists(dto.kpiDefinitionId, companyId); // 检查指标是否存在
+    await this.validatePeriodNotLocked(dto.periodId, companyId);
+    await this.validateKPIExists(dto.kpiDefinitionId, companyId);
 
     if (dto.departmentId && dto.employeeId) {
-      // 检查分配层级互斥
       throw new BadRequestException('部门分配和个人分配不能同时指定');
     }
 
-    const existing = await this.prisma.kPIAssignment.findFirst({
-      // 检查是否重复分配
-      where: {
-        periodId: dto.periodId,
-        kpiDefinitionId: dto.kpiDefinitionId,
-        departmentId: dto.departmentId || null,
-        employeeId: dto.employeeId || null,
-      },
-    });
+    // 使用事务确保权重校验和创建的原子性
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.kPIAssignment.findFirst({
+        where: {
+          periodId: dto.periodId,
+          kpiDefinitionId: dto.kpiDefinitionId,
+          departmentId: dto.departmentId || null,
+          employeeId: dto.employeeId || null,
+        },
+      });
 
-    if (existing) {
-      throw new ConflictException('该指标已分配给此对象');
-    }
+      if (existing) {
+        throw new ConflictException('该指标已分配给此对象');
+      }
 
-    const kpi = await this.prisma.kPIDefinition.findUnique({
-      where: { id: dto.kpiDefinitionId },
-    }); // 获取默认权重
-    const newWeight = dto.weight ?? kpi?.defaultWeight ?? 10;
+      const kpi = await tx.kPIDefinition.findUnique({ where: { id: dto.kpiDefinitionId } });
+      const newWeight = dto.weight ?? kpi?.defaultWeight ?? 10;
 
-    await this.validateWeightSum(
-      dto.periodId,
-      dto.departmentId,
-      dto.employeeId,
-      newWeight,
-      companyId,
-    ); // 校验权重总和
+      // 在事务内校验权重（防止并发问题）
+      await this.validateWeightSumInTx(tx, dto.periodId, dto.departmentId, dto.employeeId, newWeight, companyId);
 
-    return this.prisma.kPIAssignment.create({
-      data: {
-        kpiDefinitionId: dto.kpiDefinitionId,
-        periodId: dto.periodId,
-        companyId,
-        departmentId: dto.departmentId,
-        employeeId: dto.employeeId,
-        targetValue: dto.targetValue,
-        challengeValue: dto.challengeValue,
-        weight: newWeight,
-      },
-      include: { kpiDefinition: true },
+      return tx.kPIAssignment.create({
+        data: {
+          kpiDefinitionId: dto.kpiDefinitionId,
+          periodId: dto.periodId,
+          companyId,
+          departmentId: dto.departmentId,
+          employeeId: dto.employeeId,
+          targetValue: dto.targetValue,
+          challengeValue: dto.challengeValue,
+          weight: newWeight,
+        },
+        include: { kpiDefinition: true },
+      });
     });
   }
 
@@ -264,37 +258,42 @@ export class AssignmentService {
     employeeId: string | undefined,
     newWeight: number,
     companyId: string,
-    excludeId?: string, // 更新时排除当前记录
+    excludeId?: string,
+  ) {
+    return this.validateWeightSumInTx(this.prisma, periodId, departmentId, employeeId, newWeight, companyId, excludeId);
+  }
+
+  /** 事务内校验权重总和（防止竞态条件） */
+  private async validateWeightSumInTx(
+    tx: any,
+    periodId: string,
+    departmentId: string | undefined,
+    employeeId: string | undefined,
+    newWeight: number,
+    companyId: string,
+    excludeId?: string,
   ) {
     const where: any = { periodId, companyId };
 
     if (employeeId) {
-      where.employeeId = employeeId; // 员工级分配
+      where.employeeId = employeeId;
     } else if (departmentId) {
-      where.departmentId = departmentId; // 部门级分配
+      where.departmentId = departmentId;
       where.employeeId = null;
     } else {
-      where.departmentId = null; // 公司级分配
+      where.departmentId = null;
       where.employeeId = null;
     }
 
     if (excludeId) where.NOT = { id: excludeId };
 
-    const existingAssignments = await this.prisma.kPIAssignment.findMany({
-      where,
-      select: { weight: true },
-    });
-    const currentSum = existingAssignments.reduce(
-      (sum, a) => sum + a.weight,
-      0,
-    );
+    const existingAssignments = await tx.kPIAssignment.findMany({ where, select: { weight: true } });
+    const currentSum = existingAssignments.reduce((sum: number, a: any) => sum + a.weight, 0);
     const totalWeight = currentSum + newWeight;
 
     if (totalWeight > 100) {
       const target = employeeId ? '该员工' : departmentId ? '该部门' : '公司级';
-      throw new BadRequestException(
-        `${target}权重总和将达到 ${totalWeight}%，超过100%上限（当前已分配 ${currentSum}%）`,
-      );
+      throw new BadRequestException(`${target}权重总和将达到 ${totalWeight}%，超过100%上限（当前已分配 ${currentSum}%）`);
     }
   }
 }

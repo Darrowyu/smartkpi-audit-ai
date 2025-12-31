@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FormulaEngine } from '../calculation/engines/formula.engine';
@@ -150,6 +151,10 @@ export class KPILibraryService {
 
   /** 批量导入指标 */
   async bulkCreate(definitions: CreateKPIDefinitionDto[], companyId: string) {
+    if (definitions.length > 500) {
+      throw new BadRequestException('单次最多导入500个指标，请分批导入');
+    }
+
     const results = { success: 0, failed: 0, errors: [] as string[] };
 
     for (const dto of definitions) {

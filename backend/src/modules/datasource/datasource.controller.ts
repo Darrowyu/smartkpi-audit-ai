@@ -23,28 +23,28 @@ export class DataSourceController {
   }
 
   @Get('logs/:logId')
-  getSyncStatus(@Param('logId') logId: string) {
-    return this.service.getSyncStatus(logId);
+  getSyncStatus(@Request() req, @Param('logId') logId: string) {
+    return this.service.getSyncStatus(logId, req.user.companyId);
   }
 
   @Get(':id')
-  getDataSource(@Param('id') id: string) {
-    return this.service.getDataSource(id);
+  getDataSource(@Request() req, @Param('id') id: string) {
+    return this.service.getDataSource(id, req.user.companyId);
   }
 
   @Put(':id')
-  updateDataSource(@Param('id') id: string, @Body() dto: Partial<{ name: string; connectionConfig: Record<string, any>; fieldMapping: Record<string, any>; syncFrequency: string; isActive: boolean }>) {
-    return this.service.updateDataSource(id, dto);
+  updateDataSource(@Request() req, @Param('id') id: string, @Body() dto: Partial<{ name: string; connectionConfig: Record<string, any>; fieldMapping: Record<string, any>; syncFrequency: string; isActive: boolean }>) {
+    return this.service.updateDataSource(id, req.user.companyId, dto);
   }
 
   @Delete(':id')
-  deleteDataSource(@Param('id') id: string) {
-    return this.service.deleteDataSource(id);
+  deleteDataSource(@Request() req, @Param('id') id: string) {
+    return this.service.deleteDataSource(id, req.user.companyId);
   }
 
   @Post(':id/test')
-  testConnection(@Param('id') id: string) {
-    return this.service.testConnection(id);
+  testConnection(@Request() req, @Param('id') id: string) {
+    return this.service.testConnection(id, req.user.companyId);
   }
 
   @Post(':id/sync')

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Key, Eye, EyeOff, Smartphone, History, RefreshCw, Loader2 } from 'lucide-react';
+import { Key, Eye, EyeOff, Smartphone, History, RefreshCw, Loader2, Monitor } from 'lucide-react';
 import { usersApi, ChangePasswordData, LoginHistoryItem } from '@/api/users.api';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,47 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { SectionCard } from '../components/SectionCard';
 import { Toggle } from '../components/Toggle';
+
+const formatTimeAgo = (dateStr: string, t: (key: string, fallback: string) => string): string => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return t('settings.security.justNow', '刚刚');
+  if (diffMins < 60) return t('settings.security.minsAgo', '{mins} 分钟前').replace('{mins}', String(diffMins));
+  if (diffHours < 24) return t('settings.security.hoursAgo', '{hours} 小时前').replace('{hours}', String(diffHours));
+  if (diffDays < 7) return t('settings.security.daysAgo', '{days} 天前').replace('{days}', String(diffDays));
+  return date.toLocaleDateString();
+};
+
+const getDeviceIcon = (device: string | null, os: string | null): React.ReactNode => {
+  const deviceLower = (device || '').toLowerCase();
+  const osLower = (os || '').toLowerCase();
+  const isMobile = deviceLower.includes('iphone') || deviceLower.includes('android') || deviceLower.includes('mobile') || osLower.includes('ios') || osLower.includes('android');
+  
+  if (isMobile) {
+    return <Smartphone className="w-5 h-5 text-slate-500" />;
+  }
+  return <Monitor className="w-5 h-5 text-slate-500" />;
+};
+
+const formatDeviceName = (item: LoginHistoryItem): string => {
+  const parts: string[] = [];
+  if (item.device) parts.push(item.device);
+  if (item.browser) parts.push(item.browser);
+  if (parts.length === 0) return '未知设备';
+  return parts.join(' - ');
+};
+
+const formatLocationInfo = (item: LoginHistoryItem): string => {
+  const parts: string[] = [];
+  if (item.location) parts.push(item.location);
+  if (item.ipAddress) parts.push(item.ipAddress);
+  return parts.join(' • ') || '-';
+};
 
 export const SecurityTab: React.FC = () => {
   const { t } = useTranslation();
@@ -118,19 +159,28 @@ export const SecurityTab: React.FC = () => {
         ) : loginHistory.length === 0 ? (
           <div className="text-center py-8 text-slate-400">{t('settings.security.noLoginHistory', '暂无登录记录')}</div>
         ) : (
-          <div className="space-y-4">
+          <div className="divide-y divide-slate-100">
             {loginHistory.map((item) => (
-              <div key={item.id} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${item.isCurrent ? 'bg-green-500' : 'bg-slate-300'}`} />
-                  <div>
-                    <div className="font-medium text-slate-800">{item.device || t('settings.security.unknownDevice', '未知设备')}</div>
-                    <div className="text-sm text-slate-500">{item.location || item.ipAddress || '-'}</div>
-                  </div>
+              <div key={item.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  {getDeviceIcon(item.device, item.os)}
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-slate-600">{new Date(item.createdAt).toLocaleString()}</div>
-                  {item.isCurrent && <div className="text-xs text-brand-primary">{t('settings.security.currentDevice', '当前设备')}</div>}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-800 truncate">{formatDeviceName(item)}</span>
+                    {item.isCurrent && (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        {t('settings.security.currentSession', '当前会话')}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-slate-500 mt-0.5">
+                    {formatLocationInfo(item)}
+                    {!item.isCurrent && (
+                      <span className="ml-2">· {t('settings.security.lastActive', '最后活跃')}: {formatTimeAgo(item.createdAt, t)}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

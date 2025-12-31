@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { groupsApi, GroupStats } from '@/api/groups.api';
 import { companiesApi, CompanyStats } from '@/api/companies.api';
+import { useToast } from '@/components/ui/use-toast';
 import { Language } from '@/types';
 import { Building2, Users, Briefcase, LayoutGrid, ChevronRight, Settings } from 'lucide-react';
 import OrganizationOverview from './OrganizationOverview';
@@ -20,6 +21,7 @@ type SidebarView = 'overview' | 'group-settings' | 'companies' | 'departments' |
 const OrganizationManagement: React.FC<Props> = ({ language }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [currentView, setCurrentView] = useState<SidebarView>('overview');
   const [groupStats, setGroupStats] = useState<GroupStats | null>(null);
   const [companyStats, setCompanyStats] = useState<CompanyStats | null>(null);
@@ -51,8 +53,8 @@ const OrganizationManagement: React.FC<Props> = ({ language }) => {
         setGroupName(company.name);
         setCompanyStats(cStats);
       }
-    } catch (e) {
-      console.error('Failed to load stats:', e);
+    } catch {
+      toast({ variant: 'destructive', title: '加载统计数据失败' });
     }
   };
 

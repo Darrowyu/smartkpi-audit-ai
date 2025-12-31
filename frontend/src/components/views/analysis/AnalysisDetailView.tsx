@@ -97,8 +97,7 @@ export const AnalysisDetailView: React.FC = memo(() => {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             toast({ title: t('analysis.exportSuccess', 'PDF导出成功') });
-        } catch (e) {
-            console.error('PDF export error:', e);
+        } catch {
             toast({ variant: 'destructive', title: t('analysis.exportFailed', '导出失败') });
         } finally {
             setExporting(false);

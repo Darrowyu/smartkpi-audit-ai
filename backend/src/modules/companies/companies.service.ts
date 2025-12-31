@@ -149,9 +149,20 @@ export class CompaniesService {
     });
   }
 
-  // 删除子公司（软删除，验证groupId）
+  // 删除子公司（软删除，验证groupId，检查是否有关联数据）
   async remove(id: string, groupId: string) {
-    await this.findOneById(id, groupId);
+    const company = await this.findOneById(id, groupId);
+
+    const userCount = company._count?.users ?? 0;
+    const deptCount = company._count?.departments ?? 0;
+
+    if (userCount > 0) {
+      throw new ForbiddenException(`无法删除：该公司下还有 ${userCount} 个用户`);
+    }
+    if (deptCount > 0) {
+      throw new ForbiddenException(`无法删除：该公司下还有 ${deptCount} 个部门`);
+    }
+
     await this.prisma.company.update({
       where: { id },
       data: { isActive: false },

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Shield, Save, RotateCcw, Target, Calendar, FileSpreadsheet, FileText, Users, Settings, Check, X, ClipboardList, CheckSquare, ClipboardCheck, MessageSquare, Scale, PieChart, Grid3X3, DollarSign, Database, Building2, Building, UserCog, ChevronDown, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Shield, Save, RotateCcw, Target, Calendar, FileSpreadsheet, FileText, Users, Settings, Check, X, ClipboardList, CheckSquare, ClipboardCheck, MessageSquare, Scale, PieChart, Grid3X3, DollarSign, Database, Building2, Building, UserCog, ChevronDown, ChevronRight, CheckCircle2, Search, AlertTriangle, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +8,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { UserRole } from '@/types';
 import { permissionsApi } from '@/api/permissions.api';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Permission {
     id: string;
@@ -218,22 +220,36 @@ export const PermissionsView: React.FC = () => {
     const [expandedGroups, setExpandedGroups] = useState<string[]>(['business']);
     const [hasChanges, setHasChanges] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const { toast } = useToast();
     const confirm = useConfirm();
 
-    useEffect(() => { loadData(); }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setIsLoading(true);
             const roles = await permissionsApi.getRolePermissions();
             setRolePermissions(roles);
         } catch {
-            // 静默处理
+            toast({ variant: 'destructive', title: '加载失败', description: '无法获取权限配置' });
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [toast]);
+
+    useEffect(() => { loadData(); }, [loadData]);
+
+    // 未保存变更提示
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasChanges]);
 
     const getPermissionsByModule = (moduleId: string) => allPermissions.filter(p => p.module === moduleId);
 
@@ -295,30 +311,49 @@ export const PermissionsView: React.FC = () => {
 
     const handleSave = async () => {
         try {
+            setIsSaving(true);
             await permissionsApi.saveRolePermissions(rolePermissions);
             toast({ title: '保存成功', description: '权限配置已更新' });
             setHasChanges(false);
         } catch {
-            toast({ variant: 'destructive', title: '保存失败' });
+            toast({ variant: 'destructive', title: '保存失败', description: '无法保存权限配置' });
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleReset = async () => {
         const confirmed = await confirm({
             title: '重置权限',
-            description: '确定要重置为默认权限配置吗？',
+            description: '确定要重置为默认权限配置吗？所有自定义配置将丢失。',
             variant: 'destructive',
         });
         if (!confirmed) return;
         try {
+            setIsSaving(true);
             await permissionsApi.resetToDefault();
-            toast({ title: '重置成功' });
+            toast({ title: '重置成功', description: '已恢复默认权限配置' });
             await loadData();
             setHasChanges(false);
         } catch {
             toast({ variant: 'destructive', title: '重置失败' });
+        } finally {
+            setIsSaving(false);
         }
     };
+
+    // 搜索过滤
+    const filteredModules = useMemo(() => {
+        if (!searchTerm.trim()) return null;
+        const term = searchTerm.toLowerCase();
+        return allModules.filter(m => 
+            m.name.toLowerCase().includes(term) ||
+            getPermissionsByModule(m.id).some(p => 
+                p.name.toLowerCase().includes(term) || 
+                p.description.toLowerCase().includes(term)
+            )
+        );
+    }, [searchTerm, allModules]);
 
     const selectedModuleData = selectedModule ? allModules.find(m => m.id === selectedModule) : null;
     const selectedModulePerms = selectedModule ? getPermissionsByModule(selectedModule) : [];
@@ -339,12 +374,19 @@ export const PermissionsView: React.FC = () => {
                     <h1 className="text-2xl font-bold text-slate-900">权限管理</h1>
                     <p className="text-slate-500">配置不同角色的系统访问权限</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleReset} disabled={isLoading}>
+                <div className="flex items-center gap-3">
+                    {hasChanges && (
+                        <div className="flex items-center gap-2 text-amber-600 text-sm">
+                            <AlertTriangle className="w-4 h-4" />
+                            <span className="hidden sm:inline">有未保存的更改</span>
+                        </div>
+                    )}
+                    <Button variant="outline" onClick={handleReset} disabled={isLoading || isSaving}>
                         <RotateCcw className="mr-2 h-4 w-4" /> 重置默认
                     </Button>
-                    <Button onClick={handleSave} disabled={!hasChanges || isLoading}>
-                        <Save className="mr-2 h-4 w-4" /> 保存更改
+                    <Button onClick={handleSave} disabled={!hasChanges || isLoading || isSaving}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        {isSaving ? '保存中...' : '保存更改'}
                     </Button>
                 </div>
             </div>
@@ -373,8 +415,58 @@ export const PermissionsView: React.FC = () => {
                     <CardHeader className="pb-3">
                         <CardTitle className="text-base">功能模块</CardTitle>
                         <CardDescription>选择模块配置权限</CardDescription>
+                        <div className="relative mt-3">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input
+                                placeholder="搜索模块或权限..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
                     </CardHeader>
                     <CardContent className="p-0">
+                        {/* 搜索结果 */}
+                        {filteredModules ? (
+                            filteredModules.length === 0 ? (
+                                <div className="py-8 text-center text-slate-400 text-sm">
+                                    未找到匹配的模块或权限
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-slate-100">
+                                    {filteredModules.map((mod) => {
+                                        const Icon = mod.icon;
+                                        const count = getModulePermissionCount(mod.id);
+                                        const isSelected = selectedModule === mod.id;
+                                        const isModComplete = count.granted === count.total;
+
+                                        return (
+                                            <button
+                                                key={mod.id}
+                                                onClick={() => setSelectedModule(mod.id)}
+                                                className={cn(
+                                                    'w-full flex items-center justify-between px-4 py-3 transition-colors',
+                                                    isSelected ? 'bg-primary/5 border-r-2 border-brand-primary' : 'hover:bg-slate-50'
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className={cn('w-4 h-4', mod.color)} />
+                                                    <span className={cn('text-sm', isSelected ? 'text-brand-primary font-medium' : 'text-slate-600')}>
+                                                        {mod.name}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {isModComplete && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                                                    <span className={cn('text-xs', isModComplete ? 'text-emerald-600' : 'text-slate-400')}>
+                                                        {count.granted}/{count.total}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )
+                        ) : (
                         <div className="divide-y divide-slate-100">
                             {moduleGroups.map((group) => {
                                 const isExpanded = expandedGroups.includes(group.id);
@@ -440,6 +532,7 @@ export const PermissionsView: React.FC = () => {
                                 );
                             })}
                         </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -472,10 +565,11 @@ export const PermissionsView: React.FC = () => {
                                 )}
                             </div>
                         ) : (
-                            <div className="text-center py-8 text-slate-400">
-                                <Shield className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                <p>请从左侧选择一个模块</p>
-                            </div>
+                            <EmptyState
+                                icon={Shield}
+                                title="选择功能模块"
+                                description="从左侧选择一个模块来配置权限"
+                            />
                         )}
                     </CardHeader>
 

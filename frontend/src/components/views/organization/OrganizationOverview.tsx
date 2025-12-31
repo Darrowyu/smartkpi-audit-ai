@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { companiesApi } from '@/api/companies.api';
 import { getDepartments } from '@/api/departments.api';
+import { useToast } from '@/components/ui/use-toast';
 import { Language } from '@/types';
 import { ChevronRight, ChevronDown, Building2, Briefcase, Users, Folder } from 'lucide-react';
 
@@ -21,6 +22,7 @@ interface TreeNode {
 const OrganizationOverview: React.FC<Props> = ({ language }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root']));
   const [loading, setLoading] = useState(true);
@@ -90,8 +92,8 @@ const OrganizationOverview: React.FC<Props> = ({ language }) => {
           children: departments,
         });
       }
-    } catch (e) {
-      console.error('Failed to load organization tree:', e);
+    } catch {
+      toast({ variant: 'destructive', title: '加载组织架构失败' });
     } finally {
       setLoading(false);
     }

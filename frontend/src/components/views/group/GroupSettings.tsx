@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { groupsApi, Group } from '@/api/groups.api';
+import { groupsApi, Group, GroupStats } from '@/api/groups.api';
 import { useAuth } from '@/context/AuthContext';
 import { Language } from '@/types';
-import { Edit, Check, Calendar, Globe, Building2, Info, Shield, Settings } from 'lucide-react';
+import { Edit, Check, Globe, Building2, Info, Shield, Settings, Users, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import CompanyList from '@/components/views/organization/CompanyList';
 
@@ -53,7 +54,9 @@ const InfoRow: React.FC<{ label: string; value: React.ReactNode; mono?: boolean 
 const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
     const { user } = useAuth();
     const { t } = useTranslation();
+    const { toast } = useToast();
     const [group, setGroup] = useState<Group | null>(null);
+    const [stats, setStats] = useState<GroupStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editForm, setEditForm] = useState({ name: '' });
@@ -68,20 +71,24 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
         { id: 'companies' as TabType, label: '子公司管理', icon: Building2 },
     ];
 
-    useEffect(() => { loadGroup(); }, [groupId]);
-
-    const loadGroup = async () => {
+    const loadGroup = useCallback(async () => {
         if (!groupId) { setLoading(false); return; }
         try {
-            const data = await groupsApi.getGroup(groupId);
+            const [data, statsData] = await Promise.all([
+                groupsApi.getGroup(groupId),
+                groupsApi.getGroupStats(groupId),
+            ]);
             setGroup(data);
+            setStats(statsData);
             setEditForm({ name: data.name });
         } catch {
-            // 静默处理
+            toast({ variant: 'destructive', title: '加载集团信息失败' });
         } finally {
             setLoading(false);
         }
-    };
+    }, [groupId, toast]);
+
+    useEffect(() => { loadGroup(); }, [loadGroup]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -94,7 +101,7 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
             onUpdate?.();
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : t('updateFailed');
-            alert(msg);
+            toast({ variant: 'destructive', title: msg });
         } finally {
             setSaving(false);
         }
@@ -158,25 +165,34 @@ const GroupSettings: React.FC<Props> = ({ language, onUpdate }) => {
             {activeTab === 'basic' && (
                 <div className="space-y-6">
                     {/* 统计卡片 */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                         <StatCard
                             title="集团名称"
                             value={group.name}
+                            subtitle={`创建于 ${new Date(group.createdAt).toLocaleDateString('zh-CN')}`}
                             icon={<Globe className="w-4 h-4 text-brand-primary" />}
                             iconBg="bg-primary/10"
                         />
                         <StatCard
                             title="子公司数量"
-                            value={group._count?.companies || 0}
+                            value={stats?.totalCompanies ?? group._count?.companies ?? 0}
                             subtitle="活跃运营中"
                             icon={<Building2 className="w-4 h-4 text-brand-secondary" />}
                             iconBg="bg-sky-50"
                         />
                         <StatCard
-                            title="创建时间"
-                            value={new Date(group.createdAt).toLocaleDateString('zh-CN')}
-                            icon={<Calendar className="w-4 h-4 text-emerald-600" />}
-                            iconBg="bg-emerald-50"
+                            title="用户总数"
+                            value={stats?.totalUsers ?? 0}
+                            subtitle="系统账户"
+                            icon={<Users className="w-4 h-4 text-violet-500" />}
+                            iconBg="bg-violet-50"
+                        />
+                        <StatCard
+                            title="部门总数"
+                            value={stats?.totalDepartments ?? 0}
+                            subtitle="组织架构"
+                            icon={<Layers className="w-4 h-4 text-cyan-500" />}
+                            iconBg="bg-cyan-50"
                         />
                         <StatCard
                             title="运营状态"

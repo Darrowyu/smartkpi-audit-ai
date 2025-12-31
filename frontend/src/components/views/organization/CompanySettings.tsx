@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { companiesApi, Company, CompanyStats } from '@/api/companies.api';
 import { useAuth } from '@/context/AuthContext';
 import { Language } from '@/types';
-import { Building2, Users, Briefcase, UserCircle, FileText, BarChart3, Edit, Check, Calendar, Info, Shield, Globe } from 'lucide-react';
+import { Building2, Users, Briefcase, UserCircle, FileText, BarChart3, Edit, Check, Info, Shield, Globe, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -67,6 +68,7 @@ const InfoRow: React.FC<{ label: string; value: React.ReactNode; mono?: boolean 
 const CompanySettings: React.FC<Props> = () => {
     const { user } = useAuth();
     const { t } = useTranslation();
+    const { toast } = useToast();
     const [company, setCompany] = useState<Company | null>(null);
     const [stats, setStats] = useState<CompanyStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -74,11 +76,10 @@ const CompanySettings: React.FC<Props> = () => {
     const [editForm, setEditForm] = useState({ name: '', code: '', domain: '' });
     const [saving, setSaving] = useState(false);
 
-    const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN';
+    const isAdmin = user?.role === 'GROUP_ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'MANAGER';
 
-    useEffect(() => { loadData(); }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
+        setLoading(true);
         try {
             const [companyData, statsData] = await Promise.all([
                 companiesApi.getCompany(),
@@ -88,33 +89,44 @@ const CompanySettings: React.FC<Props> = () => {
             setStats(statsData);
             setEditForm({
                 name: companyData.name,
-                code: (companyData as any).code || '',
-                domain: (companyData as any).domain || ''
+                code: companyData.code || '',
+                domain: companyData.domain || ''
             });
         } catch {
-            // 静默处理
+            toast({ variant: 'destructive', title: '加载公司信息失败' });
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
+
+    useEffect(() => { loadData(); }, [loadData]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!editForm.name.trim()) {
+            toast({ variant: 'destructive', title: '公司名称不能为空' });
+            return;
+        }
         setSaving(true);
         try {
             const updated = await companiesApi.updateCompany({
-                name: editForm.name,
-                code: editForm.code || undefined,
-                domain: editForm.domain || undefined,
+                name: editForm.name.trim(),
+                code: editForm.code.trim() || undefined,
+                domain: editForm.domain.trim() || undefined,
             });
             setCompany(updated);
             setShowEditModal(false);
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : t('updateFailed');
-            alert(msg);
+            toast({ title: '保存成功' });
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: e.response?.data?.message || '保存失败' });
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleRefresh = () => {
+        loadData();
+        toast({ title: '已刷新' });
     };
 
     if (loading) {
@@ -130,6 +142,10 @@ const CompanySettings: React.FC<Props> = () => {
             <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                 <Info className="h-12 w-12 mb-4" />
                 <p>无法加载公司信息</p>
+                <Button variant="outline" onClick={loadData} className="mt-4">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    重试
+                </Button>
             </div>
         );
     }
@@ -140,14 +156,19 @@ const CompanySettings: React.FC<Props> = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">公司设置</h1>
-                    <p className="text-slate-500">管理公司基本信息和查看统计数据</p>
+                    <p className="text-slate-500">管理公司基本信息</p>
                 </div>
-                {isAdmin && (
-                    <Button onClick={() => setShowEditModal(true)}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        编辑信息
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handleRefresh} disabled={loading}>
+                        <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
                     </Button>
-                )}
+                    {isAdmin && (
+                        <Button onClick={() => setShowEditModal(true)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            编辑信息
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* 统计卡片 */}
@@ -155,20 +176,23 @@ const CompanySettings: React.FC<Props> = () => {
                 <StatCard
                     title="公司名称"
                     value={company.name}
+                    subtitle={`创建于 ${new Date(company.createdAt).toLocaleDateString('zh-CN')}`}
                     icon={<Building2 className="w-4 h-4 text-brand-primary" />}
                     iconBg="bg-primary/10"
                 />
                 <StatCard
                     title="公司代码"
-                    value={(company as any).code || '-'}
+                    value={company.code || '-'}
+                    subtitle="系统识别码"
                     icon={<Globe className="w-4 h-4 text-brand-secondary" />}
                     iconBg="bg-sky-50"
                 />
                 <StatCard
-                    title="创建时间"
-                    value={new Date(company.createdAt).toLocaleDateString('zh-CN')}
-                    icon={<Calendar className="w-4 h-4 text-emerald-600" />}
-                    iconBg="bg-emerald-50"
+                    title="域名标识"
+                    value={company.domain || '-'}
+                    subtitle="访问地址"
+                    icon={<Globe className="w-4 h-4 text-violet-500" />}
+                    iconBg="bg-violet-50"
                 />
                 <StatCard
                     title="运营状态"
@@ -229,10 +253,10 @@ const CompanySettings: React.FC<Props> = () => {
                     <CardDescription>公司的详细配置信息</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <InfoRow label="公司ID" value={company.id} mono />
+                    <InfoRow label="公司ID" value={<code className="px-2 py-1 bg-slate-100 rounded text-xs">{company.id}</code>} />
                     <InfoRow label="公司名称" value={company.name} />
-                    <InfoRow label="公司代码" value={(company as any).code || '-'} />
-                    <InfoRow label="域名标识" value={(company as any).domain || '-'} />
+                    <InfoRow label="公司代码" value={company.code || '-'} />
+                    <InfoRow label="域名标识" value={company.domain || '-'} />
                     <InfoRow
                         label="运营状态"
                         value={
@@ -244,6 +268,16 @@ const CompanySettings: React.FC<Props> = () => {
                     <InfoRow label="创建时间" value={new Date(company.createdAt).toLocaleString('zh-CN')} />
                 </CardContent>
             </Card>
+
+            {/* 权限提示 */}
+            {!isAdmin && (
+                <Card className="border-amber-200 bg-amber-50">
+                    <CardContent className="flex items-center gap-3 pt-6">
+                        <Info className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                        <p className="text-sm text-amber-800">仅管理员可以修改公司设置</p>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* 编辑对话框 */}
             <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
@@ -267,6 +301,7 @@ const CompanySettings: React.FC<Props> = () => {
                                 value={editForm.code}
                                 onChange={(e) => setEditForm({ ...editForm, code: e.target.value })}
                                 placeholder="如：DG001"
+                                className="font-mono"
                             />
                             <p className="text-xs text-slate-500">用于系统内部识别，建议使用简短的字母数字组合</p>
                         </div>
@@ -275,7 +310,7 @@ const CompanySettings: React.FC<Props> = () => {
                             <Input
                                 value={editForm.domain}
                                 onChange={(e) => setEditForm({ ...editForm, domain: e.target.value })}
-                                placeholder="如：dongguan"
+                                placeholder="如：dongguan.makrite.com"
                             />
                             <p className="text-xs text-slate-500">用于生成公司专属访问地址</p>
                         </div>

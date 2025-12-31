@@ -49,8 +49,8 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({ r
     </div>
 );
 
-export const CardSkeleton: React.FC = () => (
-    <div className="rounded-lg border bg-card p-6 space-y-4">
+export const CardSkeleton: React.FC<{ className?: string }> = ({ className }) => (
+    <div className={cn("rounded-lg border bg-card p-6 space-y-4", className)}>
         <Skeleton className="h-6 w-1/3" />
         <Skeleton className="h-4 w-2/3" />
         <div className="space-y-2">

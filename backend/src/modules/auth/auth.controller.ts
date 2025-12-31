@@ -35,6 +35,18 @@ export class AuthController {
     return this.authService.getMe(userId);
   }
 
+  @Post('logout') // POST /api/auth/logout - 登出并撤销会话
+  @UseGuards(JwtAuthGuard)
+  async logout(@CurrentUser('userId') userId: string) {
+    return this.authService.logout(userId);
+  }
+
+  @Post('extend') // POST /api/auth/extend - 延长会话（滑动过期）
+  @UseGuards(JwtAuthGuard)
+  async extend(@CurrentUser('userId') userId: string) {
+    return this.authService.extendSession(userId);
+  }
+
   @Post('forgot-password') // POST /api/auth/forgot-password - 忘记密码
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: ForgotPasswordDto) {

@@ -29,6 +29,10 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface ExtendSessionResponse {
+  accessToken: string;
+}
+
 export const authApi = {
   async login(data: LoginData): Promise<AuthResponse> {
     const res = await apiClient.post<AuthResponse>('/auth/login', data);
@@ -42,7 +46,14 @@ export const authApi = {
   },
 
   logout() {
+    apiClient.post('/auth/logout').catch(() => {});
     removeToken();
+  },
+
+  async extendSession(): Promise<ExtendSessionResponse> {
+    const res = await apiClient.post<ExtendSessionResponse>('/auth/extend');
+    setToken(res.data.accessToken);
+    return res.data;
   },
 
   async forgotPassword(username: string, email: string): Promise<{ message: string }> {

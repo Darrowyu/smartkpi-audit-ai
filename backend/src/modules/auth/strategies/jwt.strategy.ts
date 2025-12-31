@@ -12,10 +12,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     configService: ConfigService,
     private prisma: PrismaService,
   ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret || secret.length < 32) {
+      throw new Error('JWT_SECRET must be set and at least 32 characters');
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret',
+      secretOrKey: secret,
     });
   }
 
@@ -31,11 +35,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         departmentId: true,
         linkedEmployeeId: true,
         isActive: true,
+        tokenVersion: true,
       },
     });
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('User not found or inactive');
+    }
+
+    const payloadTokenVersion = typeof payload.tokenVersion === 'number' ? payload.tokenVersion : 0;
+    if (user.tokenVersion !== payloadTokenVersion) {
+      throw new UnauthorizedException('Token revoked');
     }
 
     return {

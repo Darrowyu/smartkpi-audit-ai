@@ -100,6 +100,7 @@ model User {
   avatar               String? // 头像文件路径
   role                 UserRole @default(USER)
   language             String   @default("en") // User preference: "en" | "zh"
+  tokenVersion         Int      @default(0) @map("token_version") // token版本，用于会话撤销
   notificationSettings Json?    @map("notification_settings") // 通知设置
   kpiPreferences       Json?    @map("kpi_preferences") // KPI偏好设置
   appearanceSettings   Json?    @map("appearance_settings") // 外观设置

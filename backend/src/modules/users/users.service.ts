@@ -160,6 +160,7 @@ export class UsersService {
 
     if (password) {
       data.passwordHash = await bcrypt.hash(password, 10);
+      data.tokenVersion = { increment: 1 };
     }
 
     // 处理 null 值：确保 departmentId 和 linkedEmployeeId 能被正确更新为 null
@@ -235,7 +236,7 @@ export class UsersService {
     const newHash = await bcrypt.hash(dto.newPassword, 10);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash: newHash },
+      data: { passwordHash: newHash, tokenVersion: { increment: 1 } },
     });
     return { message: 'Password changed successfully' };
   }

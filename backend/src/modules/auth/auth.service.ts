@@ -45,6 +45,7 @@ export class AuthService {
         lastName: true,
         role: true,
         companyId: true,
+        tokenVersion: true,
         language: true,
         isActive: true,
         company: { select: { groupId: true } }, // 获取集团ID
@@ -82,7 +83,7 @@ export class AuthService {
 
     const accessToken = await this.generateToken(user); // 生成JWT令牌
 
-    const { passwordHash, company, ...userWithoutPassword } = user; // 从响应中移除密码哈希
+    const { passwordHash, company, tokenVersion, ...userWithoutPassword } = user; // 从响应中移除敏感字段
 
     return {
       accessToken,
@@ -178,6 +179,38 @@ export class AuthService {
     };
   }
 
+  /** 登出：撤销当前用户全部会话 */
+  async logout(userId: string): Promise<{ message: string }> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+    return { message: 'Logged out' };
+  }
+
+  /** 延长会话：签发新的访问令牌（滑动过期） */
+  async extendSession(userId: string): Promise<{ accessToken: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        companyId: true,
+        role: true,
+        tokenVersion: true,
+        isActive: true,
+        company: { select: { groupId: true } },
+      },
+    });
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+
+    const accessToken = await this.generateToken(user);
+    return { accessToken };
+  }
+
   /** 忘记密码 - 生成重置令牌 */
   async forgotPassword(
     dto: ForgotPasswordDto,
@@ -261,6 +294,7 @@ export class AuthService {
         passwordHash: newPasswordHash,
         passwordResetToken: null, // 清除token
         passwordResetExpires: null,
+        tokenVersion: { increment: 1 },
       },
     });
 
@@ -274,6 +308,7 @@ export class AuthService {
     companyId: string;
     role: UserRole;
     company: { groupId: string };
+    tokenVersion: number;
   }): Promise<string> {
     const payload: JwtPayload = {
       sub: user.id,
@@ -281,6 +316,7 @@ export class AuthService {
       companyId: user.companyId,
       groupId: user.company.groupId, // 添加集团ID到JWT
       role: user.role,
+      tokenVersion: user.tokenVersion,
     };
 
     return this.jwtService.sign(payload, {

@@ -126,14 +126,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
         onClick={() => handleNavClick(item.path)}
         title={collapsed ? t(item.labelKey) : undefined}
         className={`group relative w-full flex items-center py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target
-          ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10'}
+          ${isActive ? 'text-nav-text bg-nav-active' : 'text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10'}
           ${compact ? 'py-1.5 pl-7 text-xs' : 'pl-[22px]'}
         `}
       >
         {isActive && (
-          <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] bg-brand-secondary rounded-r-full ${compact ? 'h-4' : 'h-5'}`} />
+          <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] bg-nav-accent rounded-r-full ${compact ? 'h-4' : 'h-5'}`} />
         )}
-        <Icon className={`flex-shrink-0 ${compact ? 'w-4 h-4' : 'w-5 h-5'} ${isActive ? 'text-brand-secondary' : ''}`} />
+        <Icon className={`flex-shrink-0 ${compact ? 'w-4 h-4' : 'w-5 h-5'} ${isActive ? 'text-nav-accent' : ''}`} />
         <span className={`ml-2 truncate whitespace-nowrap transition-all duration-300 overflow-hidden ${collapsed ? 'w-0 ml-0 opacity-0' : 'opacity-100'}`}>
           {t(item.labelKey)}
         </span>
@@ -143,14 +143,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
 
   const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className={`pl-[22px] py-2 mt-4 first:mt-0 overflow-hidden transition-all duration-300 ${collapsed ? 'h-0 opacity-0 mt-0 py-0' : 'h-auto opacity-100'}`}>
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-text opacity-60 whitespace-nowrap">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-nav-text opacity-60 whitespace-nowrap">
         {children}
       </span>
     </div>
   );
 
   return (
-    <div className={`${collapsed ? 'w-16 overflow-visible' : 'w-72 sm:w-64'} bg-brand-primary text-brand-text flex flex-col h-full border-r border-brand-dark transition-all duration-300 ease-in-out`}>
+    <div className={`${collapsed ? 'w-16 overflow-visible' : 'w-72 sm:w-64'} bg-nav-bg text-nav-text flex flex-col h-full border-r border-nav-border transition-all duration-300 ease-in-out`}>
       {/* Logo 区域 */}
       <div className="h-14 flex items-center justify-between border-b border-white/10">
         <div className="flex items-center pl-4">
@@ -166,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
         {onClose && !collapsed && (
           <button
             onClick={onClose}
-            className="lg:hidden p-2 -mr-2 text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10 rounded-lg transition-colors transition-opacity touch-target"
+            className="lg:hidden p-2 -mr-2 text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10 rounded-lg transition-colors transition-opacity touch-target"
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5" />
@@ -195,14 +195,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
               {collapsed ? (
                 <div className="group relative">
                   <button
-                    className="w-full flex items-center pl-[22px] py-2.5 text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10 transition-colors transition-opacity duration-200"
+                    className="w-full flex items-center pl-[22px] py-2.5 text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10 transition-colors transition-opacity duration-200"
                   >
                     <Building2 className="w-5 h-5" />
                   </button>
                   <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
                     <div className="absolute left-0 top-0 w-2 h-full" />
-                    <div className="bg-brand-primary rounded-lg shadow-xl border border-brand-dark py-2 min-w-[180px]">
-                      <div className="px-3 py-1.5 text-xs font-semibold text-brand-text opacity-70 uppercase">{t('sidebar.orgAdmin', '组织管理')}</div>
+                  <div className="bg-nav-bg rounded-lg shadow-xl border border-nav-border py-2 min-w-[180px]">
+                    <div className="px-3 py-1.5 text-xs font-semibold text-nav-text opacity-70 uppercase">{t('sidebar.orgAdmin', '组织管理')}</div>
                       {adminNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -210,9 +210,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                           <button
                             key={item.path}
                             onClick={() => handleNavClick(item.path)}
-                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
+                          className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-nav-text bg-nav-active' : 'text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
                           >
-                            <Icon className={`w-5 h-5 ${isActive ? 'text-brand-secondary' : ''}`} />
+                          <Icon className={`w-5 h-5 ${isActive ? 'text-nav-accent' : ''}`} />
                             <span className="ml-2">{t(item.labelKey)}</span>
                           </button>
                         );
@@ -224,7 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                 <>
                   <button
                     onClick={() => setAdminExpanded(!adminExpanded)}
-                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10"
+                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10"
                   >
                     <div className="flex items-center">
                       <Building2 className="w-5 h-5 flex-shrink-0" />
@@ -233,7 +233,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                       </span>
                     </div>
                     <div>
-                      {adminExpanded ? <ChevronDown className="w-4 h-4 text-brand-text opacity-70" /> : <ChevronRight className="w-4 h-4 text-brand-text opacity-70" />}
+                      {adminExpanded ? <ChevronDown className="w-4 h-4 text-nav-text opacity-70" /> : <ChevronRight className="w-4 h-4 text-nav-text opacity-70" />}
                     </div>
                   </button>
                   <div className={`overflow-hidden transition-all duration-200 ${adminExpanded ? 'max-h-60' : 'max-h-0'}`}>
@@ -248,14 +248,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
               {collapsed ? (
                 <div className="group relative">
                   <button
-                    className="w-full flex items-center pl-[22px] py-2.5 text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10 transition-colors transition-opacity duration-200"
+                    className="w-full flex items-center pl-[22px] py-2.5 text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10 transition-colors transition-opacity duration-200"
                   >
                     <Scale className="w-5 h-5" />
                   </button>
                   <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
                     <div className="absolute left-0 top-0 w-2 h-full" />
-                    <div className="bg-brand-primary rounded-lg shadow-xl border border-brand-dark py-2 min-w-[180px]">
-                      <div className="px-3 py-1.5 text-xs font-semibold text-brand-text opacity-70 uppercase">{t('sidebar.perfAdmin', '绩效管理')}</div>
+                  <div className="bg-nav-bg rounded-lg shadow-xl border border-nav-border py-2 min-w-[180px]">
+                    <div className="px-3 py-1.5 text-xs font-semibold text-nav-text opacity-70 uppercase">{t('sidebar.perfAdmin', '绩效管理')}</div>
                       {performanceAdminNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -263,9 +263,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                           <button
                             key={item.path}
                             onClick={() => handleNavClick(item.path)}
-                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-brand-text bg-brand-dark' : 'text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
+                          className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-nav-text bg-nav-active' : 'text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
                           >
-                            <Icon className={`w-5 h-5 ${isActive ? 'text-brand-secondary' : ''}`} />
+                          <Icon className={`w-5 h-5 ${isActive ? 'text-nav-accent' : ''}`} />
                             <span className="ml-2">{t(item.labelKey)}</span>
                           </button>
                         );
@@ -277,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                 <>
                   <button
                     onClick={() => setPerfExpanded(!perfExpanded)}
-                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target text-brand-text opacity-75 hover:opacity-100 hover:bg-black/10"
+                    className="group relative w-full flex items-center justify-between pl-[22px] pr-3 py-2.5 text-sm font-medium transition-colors transition-opacity duration-200 touch-target text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10"
                   >
                     <div className="flex items-center">
                       <Scale className="w-5 h-5 flex-shrink-0" />
@@ -286,7 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                       </span>
                     </div>
                     <div>
-                      {perfExpanded ? <ChevronDown className="w-4 h-4 text-brand-text opacity-70" /> : <ChevronRight className="w-4 h-4 text-brand-text opacity-70" />}
+                      {perfExpanded ? <ChevronDown className="w-4 h-4 text-nav-text opacity-70" /> : <ChevronRight className="w-4 h-4 text-nav-text opacity-70" />}
                     </div>
                   </button>
                   <div className={`overflow-hidden transition-all duration-200 ${perfExpanded ? 'max-h-60' : 'max-h-0'}`}>
@@ -305,14 +305,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
       <div className="border-t border-white/10 py-2 safe-area-bottom relative" ref={userMenuRef}>
         {/* 用户菜单弹出层 */}
         {userMenuOpen && (
-          <div className={`absolute ${collapsed ? 'left-full ml-2' : 'left-3 right-3'} bottom-full mb-2 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50`}>
+          <div className={`absolute ${collapsed ? 'left-full ml-2' : 'left-3 right-3'} bottom-full mb-2 bg-card rounded-lg shadow-xl border border-border py-2 z-50`}>
             {/* 用户信息头部 */}
-            <div className="px-4 py-3 border-b border-gray-100">
+            <div className="px-4 py-3 border-b border-border">
               <div className="flex items-center gap-3">
                 <Avatar name={user?.username || 'User'} email={user?.email || ''} avatarUrl={avatarUrl} size="md" />
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">{user?.username || 'User'}</div>
-                  <div className="text-xs text-gray-500 truncate">{user?.email || ''}</div>
+                  <div className="text-sm font-medium text-foreground truncate">{user?.username || 'User'}</div>
+                  <div className="text-xs text-muted-foreground truncate">{user?.email || ''}</div>
                 </div>
               </div>
             </div>
@@ -327,24 +327,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                       navigate(item.path);
                       setUserMenuOpen(false);
                     }}
-                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                   >
-                    <Icon className="w-4 h-4 mr-3 text-gray-400" />
+                    <Icon className="w-4 h-4 mr-3 text-muted-foreground" />
                     {t(item.labelKey)}
                   </button>
                 );
               })}
             </div>
             {/* 退出登录 */}
-            <div className="border-t border-gray-100 pt-1">
+            <div className="border-t border-border pt-1">
               <button
                 onClick={() => {
                   handleLogout();
                   setUserMenuOpen(false);
                 }}
-                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
               >
-                <LogOut className="w-4 h-4 mr-3 text-gray-400" />
+                <LogOut className="w-4 h-4 mr-3 text-muted-foreground" />
                 {t('sidebar.logout', '退出登录')}
               </button>
             </div>
@@ -358,10 +358,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
         >
           <Avatar name={user?.username || 'User'} email={user?.email || ''} avatarUrl={avatarUrl} size="sm" />
           <div className={`ml-2 text-left transition-all duration-300 overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'opacity-100'}`}>
-            <div className="text-sm font-medium text-brand-text truncate whitespace-nowrap">
+            <div className="text-sm font-medium text-nav-text truncate whitespace-nowrap">
               {user?.username || 'User'}
             </div>
-            <div className="text-[10px] text-brand-text opacity-70 uppercase tracking-wide whitespace-nowrap">
+            <div className="text-[10px] text-nav-text opacity-70 uppercase tracking-wide whitespace-nowrap">
               {user?.role || 'USER'}
             </div>
           </div>

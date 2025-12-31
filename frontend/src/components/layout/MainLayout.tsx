@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -6,68 +6,12 @@ import { NotificationDropdown } from '@/components/notifications/NotificationDro
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useTranslation } from 'react-i18next';
 import { Language } from '@/types';
-import { Languages, Menu, X, PanelLeftClose, PanelLeft } from 'lucide-react';
-import { usersApi, AppearanceSettings } from '@/api/users.api';
-import { hexToHsl, darkenColor, lightenColor, isValidHex, isLightColor } from '@/utils/color';
+import { Languages, Menu, X, PanelLeftClose, PanelLeft, Sun, Moon } from 'lucide-react';
+import { usersApi, type AppearanceSettings } from '@/api/users.api';
+import { applyAppearanceSettings, isDefaultAppearanceSettings, readCachedAppearanceSettings } from '@/utils/appearance';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
-const APPEARANCE_STORAGE_KEY = 'user_appearance';
-
-const ACCENT_COLOR_MAP: Record<string, { hex: string; hsl: string }> = {
-    blue: { hex: '#1E4B8E', hsl: '213 65% 34%' },
-    teal: { hex: '#0D9488', hsl: '175 85% 29%' },
-    purple: { hex: '#7C3AED', hsl: '262 83% 58%' },
-    orange: { hex: '#EA580C', hsl: '21 90% 48%' },
-};
-
-const FONT_SIZE_MAP: Record<string, string> = {
-    small: '14px',
-    medium: '16px',
-    large: '18px',
-};
-
-const applyAppearance = (settings: AppearanceSettings) => {
-    const root = document.documentElement;
-    let isDark = settings.theme === 'dark';
-    if (settings.theme === 'system') {
-        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    root.classList.toggle('dark', isDark);
-    
-    let hex: string, hsl: string;
-    if (settings.accentColor === 'custom' && settings.customColor && isValidHex(settings.customColor)) {
-        hex = settings.customColor;
-        hsl = hexToHsl(hex);
-    } else if (settings.accentColor !== 'custom') {
-        const colorConfig = ACCENT_COLOR_MAP[settings.accentColor] || ACCENT_COLOR_MAP.blue;
-        hex = colorConfig.hex;
-        hsl = colorConfig.hsl;
-    } else {
-        hex = ACCENT_COLOR_MAP.blue.hex;
-        hsl = ACCENT_COLOR_MAP.blue.hsl;
-    }
-    
-    const darkHex = darkenColor(hex, 15);
-    const secondaryHex = lightenColor(hex, 25);
-    const isLight = isLightColor(hex);
-    
-    root.style.setProperty('--accent-color', hex);
-    root.style.setProperty('--primary', hsl);
-    root.style.setProperty('--ring', hsl);
-    root.style.setProperty('--brand-primary', hex);
-    root.style.setProperty('--brand-dark', darkHex);
-    root.style.setProperty('--brand-secondary', secondaryHex);
-    root.style.setProperty('--brand-text', isLight ? '#1e293b' : '#ffffff');
-    root.style.setProperty('--brand-text-muted', isLight ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)');
-    root.setAttribute('data-accent', settings.accentColor === 'custom' ? 'custom' : settings.accentColor);
-    root.style.setProperty('--base-font-size', FONT_SIZE_MAP[settings.fontSize] || '16px');
-    root.classList.toggle('compact', settings.compactMode);
-    root.classList.toggle('no-animations', !settings.animations);
-
-    try {
-        localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(settings));
-    } catch {}
-};
+const SYSTEM_DARK_QUERY = '(prefers-color-scheme: dark)';
 
 export const MainLayout: React.FC = () => {
     const { isLoading, isAuthenticated, logout } = useAuth();
@@ -78,6 +22,10 @@ export const MainLayout: React.FC = () => {
         const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
         return stored === 'true';
     });
+
+    const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettings | null>(() => readCachedAppearanceSettings());
+    const [systemPrefersDark, setSystemPrefersDark] = useState(() => window.matchMedia(SYSTEM_DARK_QUERY).matches);
+    const themeSavingRef = useRef(false);
 
     const toggleSidebarCollapsed = () => {
         setSidebarCollapsed(prev => {
@@ -114,10 +62,64 @@ export const MainLayout: React.FC = () => {
 
     // 加载并应用外观设置
     useEffect(() => {
-        if (isAuthenticated) {
-            usersApi.getAppearanceSettings().then(applyAppearance).catch(() => {});
+        if (!isAuthenticated) return;
+
+        const cached = readCachedAppearanceSettings();
+        if (cached) {
+            setAppearanceSettings(cached);
+            applyAppearanceSettings(cached);
         }
+
+        usersApi.getAppearanceSettings().then((server) => {
+            if (cached && isDefaultAppearanceSettings(server) && !isDefaultAppearanceSettings(cached)) {
+                usersApi.updateAppearanceSettings(cached).catch(() => {});
+                return;
+            }
+            setAppearanceSettings(server);
+            applyAppearanceSettings(server);
+        }).catch(() => {});
     }, [isAuthenticated]);
+
+    useEffect(() => {
+        const mql = window.matchMedia(SYSTEM_DARK_QUERY);
+        const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+        if (typeof mql.addEventListener === 'function') mql.addEventListener('change', handler);
+        else mql.addListener(handler);
+        return () => {
+            if (typeof mql.removeEventListener === 'function') mql.removeEventListener('change', handler);
+            else mql.removeListener(handler);
+        };
+    }, []);
+
+    const isDark = appearanceSettings
+        ? (appearanceSettings.theme === 'dark' || (appearanceSettings.theme === 'system' && systemPrefersDark))
+        : systemPrefersDark;
+
+    const handleToggleTheme = useCallback(() => {
+        if (themeSavingRef.current) return;
+
+        const current = readCachedAppearanceSettings() || appearanceSettings;
+        if (!current) return;
+
+        const currentIsDark = current.theme === 'dark' || (current.theme === 'system' && systemPrefersDark);
+        const nextTheme: AppearanceSettings['theme'] = currentIsDark ? 'light' : 'dark';
+        const next: AppearanceSettings = { ...current, theme: nextTheme };
+        const prev: AppearanceSettings = current;
+
+        setAppearanceSettings(next);
+        applyAppearanceSettings(next);
+
+        themeSavingRef.current = true;
+        usersApi.updateAppearanceSettings(next).then((saved) => {
+            setAppearanceSettings(saved);
+            applyAppearanceSettings(saved);
+        }).catch(() => {
+            setAppearanceSettings(prev);
+            applyAppearanceSettings(prev);
+        }).finally(() => {
+            themeSavingRef.current = false;
+        });
+    }, [appearanceSettings, systemPrefersDark]);
 
     const handleLanguageChange = (lang: Language) => {
         i18n.changeLanguage(lang);
@@ -130,7 +132,7 @@ export const MainLayout: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-100">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <LoadingSpinner size="lg" />
             </div>
         );
@@ -141,7 +143,7 @@ export const MainLayout: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-slate-100 overflow-hidden">
+        <div className="flex h-screen bg-background overflow-hidden">
             {/* 移动端遮罩层 */}
             <div
                 className={`sidebar-overlay lg:hidden ${sidebarOpen ? 'sidebar-overlay-visible' : 'sidebar-overlay-hidden'}`}
@@ -168,12 +170,12 @@ export const MainLayout: React.FC = () => {
             {/* 主内容区 */}
             <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
                 {/* 顶部工具栏 */}
-                <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-slate-200">
+                <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-sm border-b border-border">
                     <div className="flex items-center px-4 sm:px-6 py-3">
                         {/* 移动端汉堡菜单按钮 */}
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors touch-target"
+                            className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors touch-target"
                             aria-label="Toggle menu"
                         >
                             {sidebarOpen ? (
@@ -185,13 +187,13 @@ export const MainLayout: React.FC = () => {
 
                         {/* 移动端Logo - 仅在小屏幕显示 */}
                         <div className="lg:hidden flex-1 text-center">
-                            <span className="text-lg font-semibold text-slate-900">Makrite KPI</span>
+                            <span className="text-lg font-semibold text-foreground">Makrite KPI</span>
                         </div>
 
                         {/* 桌面端折叠按钮 */}
                         <button
                             onClick={toggleSidebarCollapsed}
-                            className="hidden lg:flex items-center justify-center p-2 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors"
+                            className="hidden lg:flex items-center justify-center p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors"
                             title={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
                         >
                             {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
@@ -204,10 +206,19 @@ export const MainLayout: React.FC = () => {
                         <div className="flex items-center gap-2 sm:gap-3">
                             <button
                                 onClick={toggleLanguage}
-                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-100 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors"
                             >
                                 <Languages className="w-4 h-4" />
                                 <span className="hidden sm:inline">{i18n.language === 'en' ? '中文' : 'EN'}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleToggleTheme}
+                                className="flex items-center justify-center p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors touch-target"
+                                aria-label={i18n.language === 'zh' ? '切换主题' : 'Toggle theme'}
+                                title={i18n.language === 'zh' ? '切换主题' : 'Toggle theme'}
+                            >
+                                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                             </button>
                             <NotificationDropdown />
                         </div>

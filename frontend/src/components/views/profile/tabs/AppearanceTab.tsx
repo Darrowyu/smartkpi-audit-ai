@@ -5,79 +5,11 @@ import { SectionCard } from '../components/SectionCard';
 import { Toggle } from '../components/Toggle';
 import { usersApi, AppearanceSettings } from '@/api/users.api';
 import { useToast } from '@/components/ui/use-toast';
-import { hexToHsl, darkenColor, lightenColor, isValidHex, isLightColor } from '@/utils/color';
+import { ACCENT_COLOR_MAP, applyAppearanceSettings, isDefaultAppearanceSettings, readCachedAppearanceSettings } from '@/utils/appearance';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 type AccentColor = 'blue' | 'teal' | 'purple' | 'orange' | 'custom';
 type FontSize = 'small' | 'medium' | 'large';
-
-const APPEARANCE_STORAGE_KEY = 'user_appearance';
-
-const ACCENT_COLOR_MAP: Record<Exclude<AccentColor, 'custom'>, { hex: string; hsl: string }> = {
-  blue: { hex: '#1E4B8E', hsl: '213 65% 34%' },
-  teal: { hex: '#0D9488', hsl: '175 85% 29%' },
-  purple: { hex: '#7C3AED', hsl: '262 83% 58%' },
-  orange: { hex: '#EA580C', hsl: '21 90% 48%' },
-};
-
-const FONT_SIZE_MAP: Record<FontSize, string> = {
-  small: '14px',
-  medium: '16px',
-  large: '18px',
-};
-
-/** 应用主题设置到 DOM */
-const applyTheme = (settings: AppearanceSettings) => {
-  const root = document.documentElement;
-
-  // 主题模式
-  let isDark = settings.theme === 'dark';
-  if (settings.theme === 'system') {
-    isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-  root.classList.toggle('dark', isDark);
-
-  // 强调色 - 更新所有相关 CSS 变量
-  let hex: string, hsl: string;
-  if (settings.accentColor === 'custom' && settings.customColor && isValidHex(settings.customColor)) {
-    hex = settings.customColor;
-    hsl = hexToHsl(hex);
-  } else if (settings.accentColor !== 'custom') {
-    const colorConfig = ACCENT_COLOR_MAP[settings.accentColor];
-    hex = colorConfig.hex;
-    hsl = colorConfig.hsl;
-  } else {
-    hex = ACCENT_COLOR_MAP.blue.hex;
-    hsl = ACCENT_COLOR_MAP.blue.hsl;
-  }
-  
-  const darkHex = darkenColor(hex, 15);
-  const secondaryHex = lightenColor(hex, 25);
-  const isLight = isLightColor(hex);
-  
-  root.style.setProperty('--accent-color', hex);
-  root.style.setProperty('--primary', hsl);
-  root.style.setProperty('--ring', hsl);
-  root.style.setProperty('--brand-primary', hex);
-  root.style.setProperty('--brand-dark', darkHex);
-  root.style.setProperty('--brand-secondary', secondaryHex);
-  root.style.setProperty('--brand-text', isLight ? '#1e293b' : '#ffffff');
-  root.style.setProperty('--brand-text-muted', isLight ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.7)');
-  root.setAttribute('data-accent', settings.accentColor === 'custom' ? 'custom' : settings.accentColor);
-
-  // 字体大小
-  root.style.setProperty('--base-font-size', FONT_SIZE_MAP[settings.fontSize]);
-
-  // 紧凑模式
-  root.classList.toggle('compact', settings.compactMode);
-
-  // 动画效果
-  root.classList.toggle('no-animations', !settings.animations);
-
-  try {
-    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(settings));
-  } catch {}
-};
 
 const THEME_OPTIONS: { key: ThemeMode; icon: React.ElementType; labelKey: string; defaultLabel: string }[] = [
   { key: 'light', icon: Sun, labelKey: 'settings.appearance.themeLight', defaultLabel: '浅色' },
@@ -102,7 +34,6 @@ export const AppearanceTab: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const pendingRef = useRef<Set<string>>(new Set());
   const colorInputRef = useRef<HTMLInputElement>(null);
 
   const [settings, setSettings] = useState<AppearanceSettings>({
@@ -114,34 +45,81 @@ export const AppearanceTab: React.FC = () => {
     animations: true,
   });
 
-  useEffect(() => {
-    usersApi.getAppearanceSettings()
-      .then(data => {
-        setSettings(data);
-        applyTheme(data);
-      })
-      .catch(() => toast({ title: t('settings.appearance.loadFailed', '加载设置失败'), variant: 'destructive' }))
-      .finally(() => setLoading(false));
-  }, [t, toast]);
+  const settingsRef = useRef<AppearanceSettings>(settings);
+  const lastPersistedRef = useRef<AppearanceSettings | null>(null);
+  const savingRef = useRef(false);
+  const queuedRef = useRef<AppearanceSettings | null>(null);
 
-  const updateSetting = useCallback(async <K extends keyof AppearanceSettings>(key: K, value: AppearanceSettings[K]) => {
-    if (pendingRef.current.has(key)) return;
-    pendingRef.current.add(key);
-    const prev = settings[key];
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    applyTheme(newSettings);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
+  const flushQueue = useCallback(async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
     try {
-      await usersApi.updateAppearanceSettings({ [key]: value });
+      while (queuedRef.current) {
+        const toSave = queuedRef.current;
+        queuedRef.current = null;
+
+        const saved = await usersApi.updateAppearanceSettings(toSave);
+        lastPersistedRef.current = saved;
+        settingsRef.current = saved;
+        setSettings(saved);
+        applyAppearanceSettings(saved);
+      }
     } catch {
-      const rollback = { ...settings, [key]: prev };
-      setSettings(rollback);
-      applyTheme(rollback);
+      queuedRef.current = null;
+      const fallback = lastPersistedRef.current;
+      if (fallback) {
+        settingsRef.current = fallback;
+        setSettings(fallback);
+        applyAppearanceSettings(fallback);
+      }
       toast({ title: t('settings.appearance.saveFailed', '保存失败'), variant: 'destructive' });
     } finally {
-      pendingRef.current.delete(key);
+      savingRef.current = false;
+      if (queuedRef.current) void flushQueue();
     }
-  }, [settings, t, toast]);
+  }, [t, toast]);
+
+  const queueUpdate = useCallback((patch: Partial<AppearanceSettings>) => {
+    const next = { ...settingsRef.current, ...patch };
+    settingsRef.current = next;
+    setSettings(next);
+    applyAppearanceSettings(next);
+    queuedRef.current = next;
+    void flushQueue();
+  }, [flushQueue]);
+
+  useEffect(() => {
+    const cached = readCachedAppearanceSettings();
+    if (cached) {
+      lastPersistedRef.current = cached;
+      settingsRef.current = cached;
+      setSettings(cached);
+      applyAppearanceSettings(cached);
+      setLoading(false);
+    }
+
+    usersApi.getAppearanceSettings()
+      .then((server) => {
+        if (cached && isDefaultAppearanceSettings(server) && !isDefaultAppearanceSettings(cached)) {
+          usersApi.updateAppearanceSettings(cached).catch(() => {});
+          return;
+        }
+        lastPersistedRef.current = server;
+        settingsRef.current = server;
+        setSettings(server);
+        applyAppearanceSettings(server);
+      })
+      .catch(() => {
+        if (!cached) toast({ title: t('settings.appearance.loadFailed', '加载设置失败'), variant: 'destructive' });
+      })
+      .finally(() => {
+        if (!cached) setLoading(false);
+      });
+  }, [t, toast]);
 
   if (loading) {
     return (
@@ -167,7 +145,7 @@ export const AppearanceTab: React.FC = () => {
             return (
               <button
                 key={option.key}
-                onClick={() => updateSetting('theme', option.key)}
+                onClick={() => queueUpdate({ theme: option.key })}
                 className={`flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-lg border-2 transition-all ${
                   isActive ? 'border-brand-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'
                 }`}
@@ -190,7 +168,7 @@ export const AppearanceTab: React.FC = () => {
             return (
               <button
                 key={option.key}
-                onClick={() => updateSetting('accentColor', option.key)}
+                onClick={() => queueUpdate({ accentColor: option.key })}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border-2 transition-all ${
                   isActive ? 'border-slate-400 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
                 }`}
@@ -220,13 +198,7 @@ export const AppearanceTab: React.FC = () => {
             type="color"
             value={settings.customColor || '#1E4B8E'}
             onChange={(e) => {
-              const newColor = e.target.value;
-              const newSettings = { ...settings, accentColor: 'custom' as const, customColor: newColor };
-              setSettings(newSettings);
-              applyTheme(newSettings);
-              usersApi.updateAppearanceSettings({ accentColor: 'custom', customColor: newColor }).catch(() => {
-                toast({ title: t('settings.appearance.saveFailed', '保存失败'), variant: 'destructive' });
-              });
+              queueUpdate({ accentColor: 'custom', customColor: e.target.value });
             }}
             className="sr-only"
           />
@@ -243,7 +215,7 @@ export const AppearanceTab: React.FC = () => {
       <SectionCard icon={<Type className="w-5 h-5" />} title={t('settings.appearance.fontSizeTitle', '字体大小')} description={t('settings.appearance.fontSizeDesc', '调整界面的文字大小')}>
         <select
           value={settings.fontSize}
-          onChange={(e) => updateSetting('fontSize', e.target.value as FontSize)}
+          onChange={(e) => queueUpdate({ fontSize: e.target.value as FontSize })}
           className="w-full sm:w-64 px-3 sm:px-4 py-2 border border-slate-200 rounded-lg text-sm sm:text-base text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
         >
           {FONT_SIZES.map(option => (
@@ -262,14 +234,14 @@ export const AppearanceTab: React.FC = () => {
               <div className="font-medium text-slate-800">{t('settings.appearance.compactMode', '紧凑模式')}</div>
               <div className="text-sm text-slate-500">{t('settings.appearance.compactModeDesc', '减少界面元素的间距')}</div>
             </div>
-            <Toggle checked={settings.compactMode} onChange={(v) => updateSetting('compactMode', v)} />
+            <Toggle checked={settings.compactMode} onChange={(v) => queueUpdate({ compactMode: v })} />
           </div>
           <div className="flex items-center justify-between py-2">
             <div>
               <div className="font-medium text-slate-800">{t('settings.appearance.animations', '动画效果')}</div>
               <div className="text-sm text-slate-500">{t('settings.appearance.animationsDesc', '启用界面过渡动画')}</div>
             </div>
-            <Toggle checked={settings.animations} onChange={(v) => updateSetting('animations', v)} />
+            <Toggle checked={settings.animations} onChange={(v) => queueUpdate({ animations: v })} />
           </div>
         </div>
       </SectionCard>

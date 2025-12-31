@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Phone, Building2, Briefcase, FileText, Camera, RefreshCw, Edit3, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -28,10 +28,31 @@ export const ProfileTab: React.FC = () => {
     bio: (user as any)?.bio || '',
   });
 
+  const syncProfileFormFromUser = useCallback(() => {
+    if (!user) return;
+    setProfileForm({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      phoneNumber: (user as any)?.phoneNumber || '',
+      bio: (user as any)?.bio || '',
+    });
+  }, [user]);
+
   const avatarLetter = useMemo(() => (user?.firstName?.[0] || user?.username?.[0] || 'U').toUpperCase(), [user]);
-  const displayName = useMemo(() => user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'User', [user]);
+  const displayName = useMemo(() => {
+    const firstName = (user?.firstName || '').trim();
+    const lastName = (user?.lastName || '').trim();
+    if (firstName && lastName) return firstName === lastName ? lastName : `${firstName} ${lastName}`;
+    return firstName || lastName || user?.username || 'User';
+  }, [user]);
 
   useEffect(() => { setAvatarError(false); }, [user?.avatar]); // avatar变化时重置错误状态
+
+  useEffect(() => {
+    if (!user || isEditing) return;
+    syncProfileFormFromUser();
+  }, [user, isEditing, syncProfileFormFromUser]);
 
   const avatarUrl = useMemo(() => (user?.avatar && !avatarError) ? `${getAvatarUrl(user.id)}&k=${avatarKey}` : null, [user, avatarKey, avatarError]);
 
@@ -63,8 +84,8 @@ export const ProfileTab: React.FC = () => {
     setProfileSaving(true);
     try {
       const data: UpdateProfileData = {
-        firstName: profileForm.firstName || undefined,
-        lastName: profileForm.lastName || undefined,
+        firstName: profileForm.firstName.trim(),
+        lastName: profileForm.lastName.trim(),
         email: profileForm.email || undefined,
         phoneNumber: profileForm.phoneNumber || undefined,
         bio: profileForm.bio || undefined,
@@ -112,13 +133,13 @@ export const ProfileTab: React.FC = () => {
         title={t('settings.profile.basicInfo', '基本信息')}
         headerRight={
           !isEditing ? (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="text-slate-600">
+            <Button variant="outline" size="sm" onClick={() => { syncProfileFormFromUser(); setIsEditing(true); }} className="text-slate-600">
               <Edit3 className="w-4 h-4 mr-1.5" />
               {t('settings.profile.edit', '编辑资料')}
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>{t('common.cancel', '取消')}</Button>
+              <Button variant="outline" size="sm" onClick={() => { syncProfileFormFromUser(); setIsEditing(false); }}>{t('common.cancel', '取消')}</Button>
               <Button size="sm" onClick={handleSaveProfile} disabled={profileSaving} className="bg-brand-primary hover:opacity-90">
                 {profileSaving && <RefreshCw className="w-4 h-4 mr-1.5 animate-spin" />}
                 {t('common.save', '保存')}

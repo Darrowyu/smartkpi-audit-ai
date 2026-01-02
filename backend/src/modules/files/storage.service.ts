@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -47,7 +51,10 @@ export class StorageService {
 
       return filePath;
     } catch (error) {
-      this.logger.error('Storage error', error instanceof Error ? error.stack : error);
+      this.logger.error(
+        'Storage error',
+        error instanceof Error ? error.stack : error,
+      );
       throw new InternalServerErrorException('Failed to save file');
     }
   }
@@ -60,7 +67,10 @@ export class StorageService {
         : path.resolve(process.cwd(), filePath);
       return await fs.promises.readFile(absolutePath);
     } catch (error) {
-      this.logger.error(`File read error, path: ${filePath}`, error instanceof Error ? error.stack : error);
+      this.logger.error(
+        `File read error, path: ${filePath}`,
+        error instanceof Error ? error.stack : error,
+      );
       throw new InternalServerErrorException('Failed to read file');
     }
   }
@@ -75,7 +85,10 @@ export class StorageService {
         await fs.promises.unlink(absolutePath);
       }
     } catch (error) {
-      this.logger.warn('File delete error', error instanceof Error ? error.message : error);
+      this.logger.warn(
+        'File delete error',
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 
@@ -100,7 +113,10 @@ export class StorageService {
       await fs.promises.writeFile(filePath, buffer);
       return filePath;
     } catch (error) {
-      this.logger.error('Avatar save error', error instanceof Error ? error.stack : error);
+      this.logger.error(
+        'Avatar save error',
+        error instanceof Error ? error.stack : error,
+      );
       throw new InternalServerErrorException('Failed to save avatar');
     }
   }

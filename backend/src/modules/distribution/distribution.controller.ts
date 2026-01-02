@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { DistributionService } from './distribution.service';
@@ -14,7 +22,17 @@ export class DistributionController {
   }
 
   @Post('config')
-  saveConfig(@Request() req, @Body() dto: { periodId?: string; distribution: Record<string, number>; scoreBoundaries?: Record<string, number>; isEnforced?: boolean; tolerance?: number }) {
+  saveConfig(
+    @Request() req,
+    @Body()
+    dto: {
+      periodId?: string;
+      distribution: Record<string, number>;
+      scoreBoundaries?: Record<string, number>;
+      isEnforced?: boolean;
+      tolerance?: number;
+    },
+  ) {
     return this.service.saveConfig(req.user.companyId, dto);
   }
 

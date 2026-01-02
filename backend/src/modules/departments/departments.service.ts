@@ -16,7 +16,8 @@ export class DepartmentsService {
     const company = await this.prisma.company.findFirst({
       where: { id: companyId, groupId, isActive: true },
     });
-    if (!company) throw new ForbiddenException('Invalid company or access denied');
+    if (!company)
+      throw new ForbiddenException('Invalid company or access denied');
 
     const { companyId: _, ...deptData } = dto;
     return this.prisma.department.create({
@@ -24,12 +25,19 @@ export class DepartmentsService {
     });
   }
 
-  async findAll(companyId: string, groupId: string, page = 1, limit = 20, search?: string) {
+  async findAll(
+    companyId: string,
+    groupId: string,
+    page = 1,
+    limit = 20,
+    search?: string,
+  ) {
     // 验证目标公司属于当前集团
     const company = await this.prisma.company.findFirst({
       where: { id: companyId, groupId, isActive: true },
     });
-    if (!company) throw new ForbiddenException('Invalid company or access denied');
+    if (!company)
+      throw new ForbiddenException('Invalid company or access denied');
 
     const skip = (page - 1) * limit;
     const where = {

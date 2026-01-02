@@ -19,6 +19,7 @@ import { AssessmentPeriod, PeriodStatus } from '@/types';
 import { assessmentApi } from '@/api/assessment.api';
 import { reportsApi, PerformanceOverview, DepartmentRanking, TrendData } from '@/api/reports.api';
 import { useToast } from '@/components/ui/use-toast';
+import { usePermission } from '@/hooks/usePermission';
 import { cn } from '@/lib/utils';
 import { EmployeeRankingTable } from './EmployeeRankingTable';
 
@@ -119,6 +120,7 @@ export const ReportsView: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { toast } = useToast();
+    const canExport = usePermission('report:export');
 
     const [activeTab, setActiveTab] = useState('dashboard');
     const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
@@ -160,6 +162,10 @@ export const ReportsView: React.FC = () => {
     useEffect(() => { loadReportData(); }, [loadReportData]);
 
     const handleExport = async (type: 'employees' | 'departments') => {
+        if (!canExport) {
+            toast({ variant: 'destructive', title: '无导出权限' });
+            return;
+        }
         if (!selectedPeriod) {
             toast({ title: '导出成功', description: `已导出${type === 'employees' ? '员工' : '部门'}绩效报表` });
             return;
@@ -273,7 +279,7 @@ export const ReportsView: React.FC = () => {
                                         </CardTitle>
                                         <CardDescription>各部门平均绩效得分对比</CardDescription>
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={() => handleExport('departments')}>
+                                    <Button variant="outline" size="sm" onClick={() => handleExport('departments')} disabled={!canExport}>
                                         <Download className="h-4 w-4 mr-1" /> 导出
                                     </Button>
                                 </div>
@@ -376,10 +382,10 @@ export const ReportsView: React.FC = () => {
 
                     {/* 导出按钮 */}
                     <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => handleExport('departments')}>
+                        <Button variant="outline" onClick={() => handleExport('departments')} disabled={!canExport}>
                             <Download className="mr-2 h-4 w-4" /> 导出部门报表
                         </Button>
-                        <Button onClick={() => handleExport('employees')}>
+                        <Button onClick={() => handleExport('employees')} disabled={!canExport}>
                             <Download className="mr-2 h-4 w-4" /> 导出员工报表
                         </Button>
                     </div>

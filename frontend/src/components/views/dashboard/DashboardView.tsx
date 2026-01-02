@@ -8,7 +8,7 @@ import { calculationApi } from '@/api/calculation.api';
 import { usersApi, KpiPreferences } from '@/api/users.api';
 import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { useIsManager } from '@/hooks/usePermission';
+import { useIsManager, usePermission } from '@/hooks/usePermission';
 import {
   StatsCards,
   TrendChart,
@@ -53,6 +53,7 @@ export const DashboardView: React.FC = () => {
   const [kpiPrefs, setKpiPrefs] = useState<KpiPreferences>(defaultPreferences);
   const { toast } = useToast();
   const isManager = useIsManager();
+  const canExport = usePermission('report:export');
 
   useEffect(() => {
     loadPeriods();
@@ -98,6 +99,10 @@ export const DashboardView: React.FC = () => {
   };
 
   const handleExport = async () => {
+    if (!canExport) {
+      toast({ variant: 'destructive', title: '无导出权限' });
+      return;
+    }
     if (!selectedPeriod) return;
     try {
       const blob = await reportsApi.exportEmployees(selectedPeriod, 'xlsx');
@@ -224,7 +229,7 @@ export const DashboardView: React.FC = () => {
               <Button className="flex-1 sm:flex-none bg-brand-primary hover:opacity-90 text-brand-text">
                 <Plus className="w-4 h-4 mr-1" /> <span className="hidden xs:inline">新建</span>KPI
               </Button>
-              <Button variant="outline" onClick={handleExport} className="flex-1 sm:flex-none">
+              <Button variant="outline" onClick={handleExport} className="flex-1 sm:flex-none" disabled={!canExport}>
                 <FileText className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">生成报告</span>
               </Button>
               <Button variant="outline" className="flex-1 sm:flex-none">

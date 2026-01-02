@@ -41,11 +41,20 @@ export class AssignmentService {
         throw new ConflictException('该指标已分配给此对象');
       }
 
-      const kpi = await tx.kPIDefinition.findUnique({ where: { id: dto.kpiDefinitionId } });
+      const kpi = await tx.kPIDefinition.findUnique({
+        where: { id: dto.kpiDefinitionId },
+      });
       const newWeight = dto.weight ?? kpi?.defaultWeight ?? 10;
 
       // 在事务内校验权重（防止并发问题）
-      await this.validateWeightSumInTx(tx, dto.periodId, dto.departmentId, dto.employeeId, newWeight, companyId);
+      await this.validateWeightSumInTx(
+        tx,
+        dto.periodId,
+        dto.departmentId,
+        dto.employeeId,
+        newWeight,
+        companyId,
+      );
 
       return tx.kPIAssignment.create({
         data: {
@@ -260,7 +269,15 @@ export class AssignmentService {
     companyId: string,
     excludeId?: string,
   ) {
-    return this.validateWeightSumInTx(this.prisma, periodId, departmentId, employeeId, newWeight, companyId, excludeId);
+    return this.validateWeightSumInTx(
+      this.prisma,
+      periodId,
+      departmentId,
+      employeeId,
+      newWeight,
+      companyId,
+      excludeId,
+    );
   }
 
   /** 事务内校验权重总和（防止竞态条件） */
@@ -287,13 +304,21 @@ export class AssignmentService {
 
     if (excludeId) where.NOT = { id: excludeId };
 
-    const existingAssignments = await tx.kPIAssignment.findMany({ where, select: { weight: true } });
-    const currentSum = existingAssignments.reduce((sum: number, a: any) => sum + a.weight, 0);
+    const existingAssignments = await tx.kPIAssignment.findMany({
+      where,
+      select: { weight: true },
+    });
+    const currentSum = existingAssignments.reduce(
+      (sum: number, a: any) => sum + a.weight,
+      0,
+    );
     const totalWeight = currentSum + newWeight;
 
     if (totalWeight > 100) {
       const target = employeeId ? '该员工' : departmentId ? '该部门' : '公司级';
-      throw new BadRequestException(`${target}权重总和将达到 ${totalWeight}%，超过100%上限（当前已分配 ${currentSum}%）`);
+      throw new BadRequestException(
+        `${target}权重总和将达到 ${totalWeight}%，超过100%上限（当前已分配 ${currentSum}%）`,
+      );
     }
   }
 }

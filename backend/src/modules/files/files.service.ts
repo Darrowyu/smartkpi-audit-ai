@@ -207,8 +207,12 @@ export class FilesService {
     const detected = await fileType.fromBuffer(file.buffer);
     if (detected) {
       if (!this.allowedExtensions.includes(detected.ext)) {
-        this.logger.warn(`File type mismatch: claimed ${file.mimetype}, detected ${detected.mime}`);
-        throw new BadRequestException('File content does not match allowed types');
+        this.logger.warn(
+          `File type mismatch: claimed ${file.mimetype}, detected ${detected.mime}`,
+        );
+        throw new BadRequestException(
+          'File content does not match allowed types',
+        );
       }
     }
     // CSV文件没有magic bytes，跳过检测（依赖MIME类型验证）

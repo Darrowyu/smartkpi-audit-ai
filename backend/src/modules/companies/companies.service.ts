@@ -157,10 +157,14 @@ export class CompaniesService {
     const deptCount = company._count?.departments ?? 0;
 
     if (userCount > 0) {
-      throw new ForbiddenException(`无法删除：该公司下还有 ${userCount} 个用户`);
+      throw new ForbiddenException(
+        `无法删除：该公司下还有 ${userCount} 个用户`,
+      );
     }
     if (deptCount > 0) {
-      throw new ForbiddenException(`无法删除：该公司下还有 ${deptCount} 个部门`);
+      throw new ForbiddenException(
+        `无法删除：该公司下还有 ${deptCount} 个部门`,
+      );
     }
 
     await this.prisma.company.update({

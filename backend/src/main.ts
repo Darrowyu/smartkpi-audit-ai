@@ -26,7 +26,7 @@ async function bootstrap() {
   // CORS配置 - 生产环境限制来源
   const corsOrigin = configService.get('CORS_ORIGIN');
   app.enableCors({
-    origin: isProd ? (corsOrigin?.split(',') || false) : true,
+    origin: isProd ? corsOrigin?.split(',') || false : true,
     credentials: true,
   });
 
@@ -44,6 +44,8 @@ async function bootstrap() {
   const host = isProd ? '127.0.0.1' : '0.0.0.0'; // 生产环境绑定本地，由反向代理转发
   await app.listen(port, host);
 
-  logger.log(`SmartKPI Backend running on http://${host}:${port}/api [${isProd ? 'PROD' : 'DEV'}]`);
+  logger.log(
+    `SmartKPI Backend running on http://${host}:${port}/api [${isProd ? 'PROD' : 'DEV'}]`,
+  );
 }
 bootstrap();

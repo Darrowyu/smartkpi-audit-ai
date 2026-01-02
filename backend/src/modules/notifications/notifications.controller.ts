@@ -20,7 +20,7 @@ import {
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 export class NotificationsController {
-  constructor(private notificationsService: NotificationsService) { }
+  constructor(private notificationsService: NotificationsService) {}
 
   /** 获取当前用户的通知列表 */
   @Get()
@@ -31,7 +31,9 @@ export class NotificationsController {
   /** 获取未读数量 */
   @Get('unread-count')
   async getUnreadCount(@Request() req) {
-    const count = await this.notificationsService.getUnreadCount(req.user.userId);
+    const count = await this.notificationsService.getUnreadCount(
+      req.user.userId,
+    );
     return { count };
   }
 
@@ -45,7 +47,9 @@ export class NotificationsController {
   /** 标记全部为已读 */
   @Post('mark-all-read')
   async markAllAsRead(@Request() req) {
-    const result = await this.notificationsService.markAllAsRead(req.user.userId);
+    const result = await this.notificationsService.markAllAsRead(
+      req.user.userId,
+    );
     return { message: '已全部标记为已读', count: result.count };
   }
 
@@ -59,7 +63,9 @@ export class NotificationsController {
   /** 删除所有已读通知 */
   @Delete()
   async removeAllRead(@Request() req) {
-    const result = await this.notificationsService.removeAllRead(req.user.userId);
+    const result = await this.notificationsService.removeAllRead(
+      req.user.userId,
+    );
     return { message: '已清除已读通知', count: result.count };
   }
 

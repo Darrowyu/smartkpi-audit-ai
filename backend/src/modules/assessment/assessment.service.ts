@@ -21,7 +21,7 @@ export class AssessmentService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   // ==================== Period 考核周期 ====================
 
@@ -106,7 +106,12 @@ export class AssessmentService {
     }
 
     if (dto.status && dto.status !== period.status) {
-      await this.validateStatusTransition(id, period.status, dto.status, companyId);
+      await this.validateStatusTransition(
+        id,
+        period.status,
+        dto.status,
+        companyId,
+      );
     }
 
     const result = await this.prisma.assessmentPeriod.update({
@@ -188,7 +193,11 @@ export class AssessmentService {
     });
     // 获取用户信息
     const userIds = [
-      ...new Set(submissions.flatMap(s => [s.submittedById, s.approvedById].filter(Boolean))),
+      ...new Set(
+        submissions.flatMap((s) =>
+          [s.submittedById, s.approvedById].filter(Boolean),
+        ),
+      ),
     ] as string[];
     const users = userIds.length
       ? await this.prisma.user.findMany({
@@ -196,8 +205,8 @@ export class AssessmentService {
           select: { id: true, username: true },
         })
       : [];
-    const userMap = new Map(users.map(u => [u.id, u]));
-    return submissions.map(s => ({
+    const userMap = new Map(users.map((u) => [u.id, u]));
+    return submissions.map((s) => ({
       ...s,
       submittedBy: s.submittedById ? userMap.get(s.submittedById) : null,
       approvedBy: s.approvedById ? userMap.get(s.approvedById) : null,
@@ -422,7 +431,10 @@ export class AssessmentService {
     newStatus: PeriodStatus,
     companyId: string,
   ) {
-    if (currentStatus === PeriodStatus.DRAFT && newStatus === PeriodStatus.ACTIVE) {
+    if (
+      currentStatus === PeriodStatus.DRAFT &&
+      newStatus === PeriodStatus.ACTIVE
+    ) {
       const assignmentCount = await this.prisma.kPIAssignment.count({
         where: { periodId, companyId },
       });
@@ -431,7 +443,10 @@ export class AssessmentService {
       }
     }
 
-    if (currentStatus === PeriodStatus.ACTIVE && newStatus === PeriodStatus.LOCKED) {
+    if (
+      currentStatus === PeriodStatus.ACTIVE &&
+      newStatus === PeriodStatus.LOCKED
+    ) {
       const approvedCount = await this.prisma.dataSubmission.count({
         where: { periodId, companyId, status: SubmissionStatus.APPROVED },
       });
@@ -440,7 +455,10 @@ export class AssessmentService {
       }
     }
 
-    if (newStatus === PeriodStatus.ARCHIVED && currentStatus !== PeriodStatus.LOCKED) {
+    if (
+      newStatus === PeriodStatus.ARCHIVED &&
+      currentStatus !== PeriodStatus.LOCKED
+    ) {
       throw new BadRequestException('仅可归档已锁定的周期');
     }
   }

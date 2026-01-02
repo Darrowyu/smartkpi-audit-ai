@@ -1,6 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { GRADE_BOUNDARIES, getGradeFromScore } from '../../common/constants/grade-boundaries';
+import {
+  GRADE_BOUNDARIES,
+  getGradeFromScore,
+} from '../../common/constants/grade-boundaries';
 
 const DEFAULT_DISTRIBUTION = { S: 10, A: 20, B: 40, C: 20, D: 10 };
 const DEFAULT_BOUNDARIES = GRADE_BOUNDARIES;
@@ -32,11 +39,23 @@ export class DistributionService {
     return config;
   }
 
-  async saveConfig(companyId: string, dto: { periodId?: string; distribution: Record<string, number>; scoreBoundaries?: Record<string, number>; isEnforced?: boolean; tolerance?: number }) {
+  async saveConfig(
+    companyId: string,
+    dto: {
+      periodId?: string;
+      distribution: Record<string, number>;
+      scoreBoundaries?: Record<string, number>;
+      isEnforced?: boolean;
+      tolerance?: number;
+    },
+  ) {
     const total = Object.values(dto.distribution).reduce((a, b) => a + b, 0);
     const roundedTotal = Math.round(total * 100) / 100; // 四舍五入到两位小数
-    if (Math.abs(roundedTotal - 100) > 0.5) { // 允许0.5%的浮点误差
-      throw new BadRequestException(`分布比例总和必须为100%（当前: ${roundedTotal}%）`);
+    if (Math.abs(roundedTotal - 100) > 0.5) {
+      // 允许0.5%的浮点误差
+      throw new BadRequestException(
+        `分布比例总和必须为100%（当前: ${roundedTotal}%）`,
+      );
     }
 
     const existing = await this.prisma.distributionConfig.findFirst({
@@ -75,10 +94,12 @@ export class DistributionService {
       where: { periodId, companyId },
     });
 
-    if (performances.length === 0) return { valid: true, message: '无绩效数据' };
+    if (performances.length === 0)
+      return { valid: true, message: '无绩效数据' };
 
     const distribution = config.distribution as Record<string, number>;
-    const boundaries = (config.scoreBoundaries as Record<string, number>) || DEFAULT_BOUNDARIES;
+    const boundaries =
+      (config.scoreBoundaries as Record<string, number>) || DEFAULT_BOUNDARIES;
     const tolerance = config.tolerance || 5;
 
     const actualCounts = { S: 0, A: 0, B: 0, C: 0, D: 0 };
@@ -94,7 +115,9 @@ export class DistributionService {
       const actualPercent = (actualCounts[grade] / total) * 100;
       const diff = Math.abs(actualPercent - expectedPercent);
       if (diff > tolerance) {
-        violations.push(`${grade}等级: 期望${expectedPercent}%, 实际${actualPercent.toFixed(1)}%`);
+        violations.push(
+          `${grade}等级: 期望${expectedPercent}%, 实际${actualPercent.toFixed(1)}%`,
+        );
       }
     }
 
@@ -114,7 +137,8 @@ export class DistributionService {
     });
 
     const config = await this.getConfig(companyId, periodId);
-    const boundaries = (config.scoreBoundaries as Record<string, number>) || DEFAULT_BOUNDARIES;
+    const boundaries =
+      (config.scoreBoundaries as Record<string, number>) || DEFAULT_BOUNDARIES;
 
     const counts = { S: 0, A: 0, B: 0, C: 0, D: 0 };
     for (const p of performances) {
@@ -137,7 +161,10 @@ export class DistributionService {
     };
   }
 
-  private getGradeFromScoreLocal(score: number, boundaries: Record<string, number>): string {
+  private getGradeFromScoreLocal(
+    score: number,
+    boundaries: Record<string, number>,
+  ): string {
     return getGradeFromScore(score, boundaries); // 使用统一边界配置
   }
 }

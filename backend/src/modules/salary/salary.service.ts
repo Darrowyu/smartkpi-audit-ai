@@ -10,21 +10,40 @@ export class SalaryService {
   constructor(private prisma: PrismaService) {}
 
   async getCoefficients(companyId: string) {
-    const config = await this.prisma.salaryCoefficient.findUnique({ where: { companyId } });
-    return config || { coefficients: DEFAULT_COEFFICIENTS, bonusBaseType: 'fixed' };
+    const config = await this.prisma.salaryCoefficient.findUnique({
+      where: { companyId },
+    });
+    return (
+      config || { coefficients: DEFAULT_COEFFICIENTS, bonusBaseType: 'fixed' }
+    );
   }
 
-  async saveCoefficients(companyId: string, dto: { coefficients: Record<string, number>; bonusBaseType?: string }) {
+  async saveCoefficients(
+    companyId: string,
+    dto: { coefficients: Record<string, number>; bonusBaseType?: string },
+  ) {
     return this.prisma.salaryCoefficient.upsert({
       where: { companyId },
-      create: { companyId, coefficients: dto.coefficients, bonusBaseType: dto.bonusBaseType || 'fixed' },
-      update: { coefficients: dto.coefficients, bonusBaseType: dto.bonusBaseType },
+      create: {
+        companyId,
+        coefficients: dto.coefficients,
+        bonusBaseType: dto.bonusBaseType || 'fixed',
+      },
+      update: {
+        coefficients: dto.coefficients,
+        bonusBaseType: dto.bonusBaseType,
+      },
     });
   }
 
-  async calculateSalaries(companyId: string, periodId: string, baseBonusAmount?: number) {
+  async calculateSalaries(
+    companyId: string,
+    periodId: string,
+    baseBonusAmount?: number,
+  ) {
     const config = await this.getCoefficients(companyId);
-    const coefficients = (config.coefficients as Record<string, number>) || DEFAULT_COEFFICIENTS;
+    const coefficients =
+      (config.coefficients as Record<string, number>) || DEFAULT_COEFFICIENTS;
 
     const performances = await this.prisma.employeePerformance.findMany({
       where: { periodId, companyId },
@@ -34,10 +53,14 @@ export class SalaryService {
     for (const perf of performances) {
       const grade = this.getGradeFromScore(perf.totalScore);
       const coefficient = coefficients[grade] || 1.0;
-      const bonusAmount = baseBonusAmount ? baseBonusAmount * coefficient : undefined;
+      const bonusAmount = baseBonusAmount
+        ? baseBonusAmount * coefficient
+        : undefined;
 
       const calc = await this.prisma.salaryCalculation.upsert({
-        where: { periodId_employeeId: { periodId, employeeId: perf.employeeId } },
+        where: {
+          periodId_employeeId: { periodId, employeeId: perf.employeeId },
+        },
         create: {
           periodId,
           employeeId: perf.employeeId,
@@ -79,7 +102,11 @@ export class SalaryService {
     }));
   }
 
-  async exportSalaryData(companyId: string, periodId: string, format: string = 'json') {
+  async exportSalaryData(
+    companyId: string,
+    periodId: string,
+    format: string = 'json',
+  ) {
     const calculations = await this.getSalaryCalculations(companyId, periodId);
 
     const data = calculations.map((c) => ({
@@ -119,7 +146,8 @@ export class SalaryService {
       totalEmployees: calculations.length,
       gradeCounts,
       totalBonus,
-      avgCoefficient: calculations.length > 0 ? avgCoefficient / calculations.length : 0,
+      avgCoefficient:
+        calculations.length > 0 ? avgCoefficient / calculations.length : 0,
       exportedCount: calculations.filter((c) => c.exportedAt).length,
     };
   }

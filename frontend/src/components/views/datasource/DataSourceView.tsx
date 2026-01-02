@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { datasourceApi, DataSourceConfig, DataSyncLog } from '@/api/datasource.api';
+import { usePermission } from '@/hooks/usePermission';
 import { cn } from '@/lib/utils';
 import { TableRowSkeleton } from '@/components/ui/skeleton';
 
@@ -28,6 +29,10 @@ const SYNC_STATUS: Record<string, { label: string; color: string; icon: React.Re
 
 export const DataSourceView: React.FC = memo(() => {
   const { toast } = useToast();
+  const canView = usePermission('datasource:view');
+  const canCreate = usePermission('datasource:create');
+  const canEdit = usePermission('datasource:edit');
+  const canDelete = usePermission('datasource:delete');
   const [dataSources, setDataSources] = useState<DataSourceConfig[]>([]);
   const [syncLogs, setSyncLogs] = useState<DataSyncLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +61,10 @@ export const DataSourceView: React.FC = memo(() => {
   useEffect(() => { loadDataSources(); }, [loadDataSources]);
 
   const handleCreate = async () => {
+    if (!canCreate) {
+      toast({ variant: 'destructive', title: '无创建权限' });
+      return;
+    }
     if (!name.trim() || !connectionUrl.trim()) return;
     setProcessing(true);
     try {
@@ -84,6 +93,10 @@ export const DataSourceView: React.FC = memo(() => {
   };
 
   const handleSync = async (id: string) => {
+    if (!canEdit) {
+      toast({ variant: 'destructive', title: '无编辑权限' });
+      return;
+    }
     setSyncingId(id);
     try {
       await datasourceApi.triggerSync(id);
@@ -94,6 +107,10 @@ export const DataSourceView: React.FC = memo(() => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!canDelete) {
+      toast({ variant: 'destructive', title: '无删除权限' });
+      return;
+    }
     if (!confirm('确定要删除此数据源吗？')) return;
     try {
       await datasourceApi.deleteDataSource(id);
@@ -103,6 +120,10 @@ export const DataSourceView: React.FC = memo(() => {
   };
 
   const handleToggleActive = async (ds: DataSourceConfig) => {
+    if (!canEdit) {
+      toast({ variant: 'destructive', title: '无编辑权限' });
+      return;
+    }
     try {
       await datasourceApi.updateDataSource(ds.id, { isActive: !ds.isActive });
       loadDataSources();
@@ -118,6 +139,16 @@ export const DataSourceView: React.FC = memo(() => {
 
   const activeCount = dataSources.filter(ds => ds.isActive).length;
 
+  if (!canView) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6 text-slate-600">无权限访问数据源配置</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -125,7 +156,7 @@ export const DataSourceView: React.FC = memo(() => {
           <h1 className="text-2xl font-bold text-slate-900">数据源配置</h1>
           <p className="text-slate-500">管理外部数据源接入与同步</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />添加数据源</Button>
+        <Button onClick={() => setCreateDialogOpen(true)} disabled={!canCreate}><Plus className="w-4 h-4 mr-2" />添加数据源</Button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -167,12 +198,12 @@ export const DataSourceView: React.FC = memo(() => {
                       <TableCell>
                         {statusInfo ? <Badge className={cn('gap-1', statusInfo.color)}>{statusInfo.icon}{statusInfo.label}</Badge> : <span className="text-slate-400">-</span>}
                       </TableCell>
-                      <TableCell><Switch checked={ds.isActive} onCheckedChange={() => handleToggleActive(ds)} /></TableCell>
+                      <TableCell><Switch checked={ds.isActive} onCheckedChange={() => handleToggleActive(ds)} disabled={!canEdit} /></TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button size="sm" variant="ghost" onClick={() => handleTestConnection(ds.id)} disabled={testingId === ds.id}><Plug className="w-4 h-4" /></Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleSync(ds.id)} disabled={syncingId === ds.id}><RefreshCw className={cn('w-4 h-4', syncingId === ds.id && 'animate-spin')} /></Button>
-                          <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDelete(ds.id)}><Trash2 className="w-4 h-4" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleSync(ds.id)} disabled={syncingId === ds.id || !canEdit}><RefreshCw className={cn('w-4 h-4', syncingId === ds.id && 'animate-spin')} /></Button>
+                          <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDelete(ds.id)} disabled={!canDelete}><Trash2 className="w-4 h-4" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>

@@ -48,7 +48,12 @@ export class EmployeesController {
   }
 
   @Get()
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   findAll(
     @Query() query: EmployeeQueryDto,
     @CurrentUser('companyId') companyId: string,
@@ -65,7 +70,12 @@ export class EmployeesController {
   }
 
   @Get(':id')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser('companyId') companyId: string,

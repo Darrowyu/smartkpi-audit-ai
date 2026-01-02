@@ -160,7 +160,8 @@ export class UsersController {
   ) {
     const page = parseInt(query.page || '1', 10);
     const limit = parseInt(query.limit || '20', 10);
-    const isGroupLevel = role === UserRole.GROUP_ADMIN || role === UserRole.SUPER_ADMIN;
+    const isGroupLevel =
+      role === UserRole.GROUP_ADMIN || role === UserRole.SUPER_ADMIN;
     return this.service.findAll(
       isGroupLevel ? undefined : companyId,
       groupId,

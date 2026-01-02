@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { Public } from './common/decorators/public.decorator';
 
 @Controller()
 export class AppController {
@@ -17,11 +18,13 @@ export class AppController {
     }
   }
 
+  @Public()
   @Get()
   getHello(): string {
     return this.appService.getHello();
   }
 
+  @Public()
   @Get('health')
   getHealth(): { status: string; version: string; timestamp: string } {
     return {

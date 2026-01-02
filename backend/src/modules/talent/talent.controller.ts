@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { TalentService } from './talent.service';
@@ -9,7 +18,18 @@ export class TalentController {
   constructor(private readonly service: TalentService) {}
 
   @Post('assess')
-  assessPotential(@Request() req, @Body() dto: { employeeId: string; periodId: string; learningAgility: number; leadershipPotential: number; technicalDepth: number; collaborationSkill: number }) {
+  assessPotential(
+    @Request() req,
+    @Body()
+    dto: {
+      employeeId: string;
+      periodId: string;
+      learningAgility: number;
+      leadershipPotential: number;
+      technicalDepth: number;
+      collaborationSkill: number;
+    },
+  ) {
     return this.service.assessPotential(req.user.companyId, req.user.id, dto);
   }
 
@@ -19,7 +39,10 @@ export class TalentController {
   }
 
   @Get('employee/:employeeId')
-  getEmployeeAssessment(@Param('employeeId') employeeId: string, @Query('periodId') periodId: string) {
+  getEmployeeAssessment(
+    @Param('employeeId') employeeId: string,
+    @Query('periodId') periodId: string,
+  ) {
     return this.service.getEmployeeAssessment(employeeId, periodId);
   }
 

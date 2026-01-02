@@ -16,7 +16,7 @@ import { UserRole } from '@prisma/client';
 @Controller('permissions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) { }
+  constructor(private readonly permissionsService: PermissionsService) {}
 
   /** 获取所有可用权限列表 */
   @Get('all')

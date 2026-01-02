@@ -35,7 +35,12 @@ export class KPILibraryController {
 
   /** 获取指标列表 */
   @Get()
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async findAll(@Query() query: QueryKPIDefinitionDto, @Request() req: any) {
     return this.kpiLibraryService.findAll(
       query,
@@ -53,7 +58,12 @@ export class KPILibraryController {
 
   /** 获取单个指标详情 */
   @Get(':id')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async findOne(@Param('id') id: string, @Request() req: any) {
     return this.kpiLibraryService.findOne(id, req.user.companyId);
   }

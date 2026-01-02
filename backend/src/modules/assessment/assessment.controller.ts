@@ -45,7 +45,7 @@ export class AssessmentController {
     private readonly assignmentService: AssignmentService,
     private readonly excelTemplateService: ExcelTemplateService,
     @InjectQueue('excel-import') private excelImportQueue: Queue,
-  ) { }
+  ) {}
 
   // ==================== Period 考核周期 ====================
 
@@ -60,7 +60,12 @@ export class AssessmentController {
   }
 
   @Get('periods')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async findPeriods(@Query() query: QueryPeriodDto, @Request() req: any) {
     return this.assessmentService.findPeriods(query, req.user.companyId);
   }
@@ -97,7 +102,12 @@ export class AssessmentController {
 
   /** 下载 KPI 填报模板 */
   @Get('template/:periodId')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async downloadTemplate(
     @Param('periodId') periodId: string,
     @Request() req: any,
@@ -121,7 +131,12 @@ export class AssessmentController {
 
   /** 上传 Excel 数据 */
   @Post('upload')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   @UseInterceptors(FileInterceptor('file'))
   async uploadData(
     @UploadedFile() file: Express.Multer.File,
@@ -159,7 +174,12 @@ export class AssessmentController {
 
   /** 同步解析 Excel（用于小文件或调试） */
   @Post('parse')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   @UseInterceptors(FileInterceptor('file'))
   async parseExcel(
     @UploadedFile() file: Express.Multer.File,
@@ -179,7 +199,12 @@ export class AssessmentController {
   // ==================== Submission 数据提交 ====================
 
   @Post('submissions')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async createSubmission(
     @Body() dto: CreateSubmissionDto,
     @Request() req: any,
@@ -192,19 +217,37 @@ export class AssessmentController {
   }
 
   @Get('submissions')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
-  async getSubmissions(@Query('periodId') periodId: string, @Request() req: any) {
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
+  async getSubmissions(
+    @Query('periodId') periodId: string,
+    @Request() req: any,
+  ) {
     return this.assessmentService.findSubmissions(periodId, req.user.companyId);
   }
 
   @Get('submissions/:id')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async getSubmission(@Param('id') id: string, @Request() req: any) {
     return this.assessmentService.getSubmissionEntries(id, req.user.companyId);
   }
 
   @Post('submissions/:id/submit')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async submitForApproval(@Param('id') id: string, @Request() req: any) {
     return this.assessmentService.submitForApproval(
       id,
@@ -241,7 +284,12 @@ export class AssessmentController {
   // ==================== Data Entry 数据录入 ====================
 
   @Post('entries/bulk')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async bulkCreateEntries(@Body() dto: BulkDataEntryDto, @Request() req: any) {
     return this.assessmentService.bulkCreateEntries(
       dto.submissionId,
@@ -251,7 +299,12 @@ export class AssessmentController {
   }
 
   @Put('entries/:id')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async updateEntry(
     @Param('id') id: string,
     @Body() body: { actualValue: number; remark?: string },
@@ -286,7 +339,12 @@ export class AssessmentController {
   }
 
   @Get('assignments')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async findAssignments(
     @Query() query: QueryAssignmentDto,
     @Request() req: any,
@@ -295,13 +353,23 @@ export class AssessmentController {
   }
 
   @Get('assignments/period/:periodId')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async findByPeriod(@Param('periodId') periodId: string, @Request() req: any) {
     return this.assignmentService.findByPeriod(periodId, req.user.companyId);
   }
 
   @Get('assignments/departments/:periodId')
-  @Roles(UserRole.USER, UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.USER,
+    UserRole.MANAGER,
+    UserRole.GROUP_ADMIN,
+    UserRole.SUPER_ADMIN,
+  )
   async getDepartmentAssignments(
     @Param('periodId') periodId: string,
     @Request() req: any,

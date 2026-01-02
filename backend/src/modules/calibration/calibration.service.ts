@@ -1,18 +1,34 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PerformanceGrade, KPIStatusEnum } from '@prisma/client';
-import { determinePerformanceGrade, determineKPIStatus } from '../../common/constants/grade-boundaries';
+import {
+  determinePerformanceGrade,
+  determineKPIStatus,
+} from '../../common/constants/grade-boundaries';
 
 @Injectable()
 export class CalibrationService {
   constructor(private prisma: PrismaService) {}
 
-  async createSession(companyId: string, userId: string, data: { name: string; periodId: string; departmentIds: string[] }) {
+  async createSession(
+    companyId: string,
+    userId: string,
+    data: { name: string; periodId: string; departmentIds: string[] },
+  ) {
     const performances = await this.prisma.employeePerformance.findMany({
-      where: { periodId: data.periodId, departmentId: { in: data.departmentIds } },
+      where: {
+        periodId: data.periodId,
+        departmentId: { in: data.departmentIds },
+      },
     });
 
-    const originalStats = this.calculateStats(performances.map((p) => p.totalScore));
+    const originalStats = this.calculateStats(
+      performances.map((p) => p.totalScore),
+    );
 
     return this.prisma.calibrationSession.create({
       data: {
@@ -46,10 +62,15 @@ export class CalibrationService {
 
     const departmentIds = session.departmentIds as string[];
     const performances = await this.prisma.employeePerformance.findMany({
-      where: { periodId: session.periodId, departmentId: { in: departmentIds } },
+      where: {
+        periodId: session.periodId,
+        departmentId: { in: departmentIds },
+      },
     });
 
-    const adjustmentMap = new Map(session.adjustments.map((a) => [a.employeeId, a]));
+    const adjustmentMap = new Map(
+      session.adjustments.map((a) => [a.employeeId, a]),
+    );
     const employees = await this.prisma.employee.findMany({
       where: { id: { in: performances.map((p) => p.employeeId) } },
       include: { department: true },
@@ -65,7 +86,9 @@ export class CalibrationService {
         originalScore: p.totalScore,
         adjustedScore: adj?.adjustedScore ?? p.totalScore,
         originalGrade: this.determineGrade(p.totalScore),
-        adjustedGrade: adj ? this.determineGrade(adj.adjustedScore) : this.determineGrade(p.totalScore),
+        adjustedGrade: adj
+          ? this.determineGrade(adj.adjustedScore)
+          : this.determineGrade(p.totalScore),
         isAdjusted: !!adj,
         reason: adj?.reason,
       };
@@ -74,10 +97,19 @@ export class CalibrationService {
     return { session, employees: data };
   }
 
-  async adjustScore(sessionId: string, userId: string, employeeId: string, adjustedScore: number, reason?: string) {
-    const session = await this.prisma.calibrationSession.findUnique({ where: { id: sessionId } });
+  async adjustScore(
+    sessionId: string,
+    userId: string,
+    employeeId: string,
+    adjustedScore: number,
+    reason?: string,
+  ) {
+    const session = await this.prisma.calibrationSession.findUnique({
+      where: { id: sessionId },
+    });
     if (!session) throw new NotFoundException('会话不存在');
-    if (session.status === 'completed') throw new BadRequestException('会话已完成，无法调整');
+    if (session.status === 'completed')
+      throw new BadRequestException('会话已完成，无法调整');
 
     const performance = await this.prisma.employeePerformance.findFirst({
       where: { periodId: session.periodId, employeeId },
@@ -106,21 +138,36 @@ export class CalibrationService {
     });
   }
 
-  async batchAdjust(sessionId: string, userId: string, adjustments: Array<{ employeeId: string; adjustedScore: number; reason?: string }>) {
-    const session = await this.prisma.calibrationSession.findUnique({ where: { id: sessionId } });
+  async batchAdjust(
+    sessionId: string,
+    userId: string,
+    adjustments: Array<{
+      employeeId: string;
+      adjustedScore: number;
+      reason?: string;
+    }>,
+  ) {
+    const session = await this.prisma.calibrationSession.findUnique({
+      where: { id: sessionId },
+    });
     if (!session) throw new NotFoundException('会话不存在');
-    if (session.status === 'completed') throw new BadRequestException('会话已完成，无法调整');
+    if (session.status === 'completed')
+      throw new BadRequestException('会话已完成，无法调整');
 
-    const employeeIds = adjustments.map(a => a.employeeId); // 批量获取绩效数据
+    const employeeIds = adjustments.map((a) => a.employeeId); // 批量获取绩效数据
     const performances = await this.prisma.employeePerformance.findMany({
       where: { periodId: session.periodId, employeeId: { in: employeeIds } },
     });
-    const perfMap = new Map(performances.map(p => [p.employeeId, p.totalScore]));
+    const perfMap = new Map(
+      performances.map((p) => [p.employeeId, p.totalScore]),
+    );
 
-    const operations = adjustments.map(adj => {
+    const operations = adjustments.map((adj) => {
       const originalScore = perfMap.get(adj.employeeId) || 0;
       return this.prisma.calibrationAdjustment.upsert({
-        where: { sessionId_employeeId: { sessionId, employeeId: adj.employeeId } },
+        where: {
+          sessionId_employeeId: { sessionId, employeeId: adj.employeeId },
+        },
         create: {
           sessionId,
           employeeId: adj.employeeId,
@@ -169,9 +216,14 @@ export class CalibrationService {
     }
 
     const performances = await this.prisma.employeePerformance.findMany({
-      where: { periodId: session.periodId, departmentId: { in: session.departmentIds as string[] } },
+      where: {
+        periodId: session.periodId,
+        departmentId: { in: session.departmentIds as string[] },
+      },
     });
-    const calibratedStats = this.calculateStats(performances.map((p) => p.totalScore));
+    const calibratedStats = this.calculateStats(
+      performances.map((p) => p.totalScore),
+    );
 
     return this.prisma.calibrationSession.update({
       where: { id: sessionId },
@@ -180,9 +232,11 @@ export class CalibrationService {
   }
 
   private calculateStats(scores: number[]) {
-    if (scores.length === 0) return { avg: 0, min: 0, max: 0, stdDev: 0, count: 0 };
+    if (scores.length === 0)
+      return { avg: 0, min: 0, max: 0, stdDev: 0, count: 0 };
     const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const variance = scores.reduce((sum, s) => sum + Math.pow(s - avg, 2), 0) / scores.length;
+    const variance =
+      scores.reduce((sum, s) => sum + Math.pow(s - avg, 2), 0) / scores.length;
     return {
       avg: Math.round(avg * 100) / 100,
       min: Math.min(...scores),

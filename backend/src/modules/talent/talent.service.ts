@@ -17,17 +17,41 @@ const GRID_POSITIONS = {
 export class TalentService {
   constructor(private prisma: PrismaService) {}
 
-  async assessPotential(companyId: string, userId: string, dto: { employeeId: string; periodId: string; learningAgility: number; leadershipPotential: number; technicalDepth: number; collaborationSkill: number }) {
-    const potentialScore = (dto.learningAgility + dto.leadershipPotential + dto.technicalDepth + dto.collaborationSkill) / 4;
+  async assessPotential(
+    companyId: string,
+    userId: string,
+    dto: {
+      employeeId: string;
+      periodId: string;
+      learningAgility: number;
+      leadershipPotential: number;
+      technicalDepth: number;
+      collaborationSkill: number;
+    },
+  ) {
+    const potentialScore =
+      (dto.learningAgility +
+        dto.leadershipPotential +
+        dto.technicalDepth +
+        dto.collaborationSkill) /
+      4;
 
     const performance = await this.prisma.employeePerformance.findFirst({
       where: { employeeId: dto.employeeId, periodId: dto.periodId },
     });
 
-    const gridPosition = this.calculateGridPosition(performance?.totalScore || 0, potentialScore);
+    const gridPosition = this.calculateGridPosition(
+      performance?.totalScore || 0,
+      potentialScore,
+    );
 
     return this.prisma.potentialAssessment.upsert({
-      where: { employeeId_periodId: { employeeId: dto.employeeId, periodId: dto.periodId } },
+      where: {
+        employeeId_periodId: {
+          employeeId: dto.employeeId,
+          periodId: dto.periodId,
+        },
+      },
       create: {
         ...dto,
         companyId,
@@ -74,7 +98,9 @@ export class TalentService {
         performanceScore: perf?.totalScore || 0,
         potentialScore: a.potentialScore,
         gridPosition: a.gridPosition,
-        gridLabel: a.gridPosition ? GRID_POSITIONS[a.gridPosition]?.label || '未分类' : '未分类',
+        gridLabel: a.gridPosition
+          ? GRID_POSITIONS[a.gridPosition]?.label || '未分类'
+          : '未分类',
         assessment: a,
       };
     });
@@ -106,7 +132,9 @@ export class TalentService {
       assessment,
       performance,
       gridPosition: assessment?.gridPosition,
-      gridLabel: assessment?.gridPosition ? GRID_POSITIONS[assessment.gridPosition]?.label : null,
+      gridLabel: assessment?.gridPosition
+        ? GRID_POSITIONS[assessment.gridPosition]?.label
+        : null,
     };
   }
 
@@ -117,9 +145,18 @@ export class TalentService {
     });
   }
 
-  private calculateGridPosition(performanceScore: number, potentialScore: number): string {
-    const perfLevel = performanceScore >= 85 ? 'high' : performanceScore >= 70 ? 'medium' : 'low';
-    const potLevel = potentialScore >= 4 ? 'high' : potentialScore >= 3 ? 'medium' : 'low';
+  private calculateGridPosition(
+    performanceScore: number,
+    potentialScore: number,
+  ): string {
+    const perfLevel =
+      performanceScore >= 85
+        ? 'high'
+        : performanceScore >= 70
+          ? 'medium'
+          : 'low';
+    const potLevel =
+      potentialScore >= 4 ? 'high' : potentialScore >= 3 ? 'medium' : 'low';
 
     for (const [pos, config] of Object.entries(GRID_POSITIONS)) {
       if (config.performance === perfLevel && config.potential === potLevel) {

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Request, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  UseGuards,
+  Request,
+  Res,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -15,13 +24,24 @@ export class SalaryController {
   }
 
   @Post('coefficients')
-  saveCoefficients(@Request() req, @Body() dto: { coefficients: Record<string, number>; bonusBaseType?: string }) {
+  saveCoefficients(
+    @Request() req,
+    @Body()
+    dto: { coefficients: Record<string, number>; bonusBaseType?: string },
+  ) {
     return this.service.saveCoefficients(req.user.companyId, dto);
   }
 
   @Post('calculate')
-  calculateSalaries(@Request() req, @Body() dto: { periodId: string; baseBonusAmount?: number }) {
-    return this.service.calculateSalaries(req.user.companyId, dto.periodId, dto.baseBonusAmount);
+  calculateSalaries(
+    @Request() req,
+    @Body() dto: { periodId: string; baseBonusAmount?: number },
+  ) {
+    return this.service.calculateSalaries(
+      req.user.companyId,
+      dto.periodId,
+      dto.baseBonusAmount,
+    );
   }
 
   @Get('calculations')
@@ -30,13 +50,25 @@ export class SalaryController {
   }
 
   @Get('export')
-  async exportSalaryData(@Request() req, @Query('periodId') periodId: string, @Query('format') format: string, @Res() res: Response) {
-    const data = await this.service.exportSalaryData(req.user.companyId, periodId, format);
+  async exportSalaryData(
+    @Request() req,
+    @Query('periodId') periodId: string,
+    @Query('format') format: string,
+    @Res() res: Response,
+  ) {
+    const data = await this.service.exportSalaryData(
+      req.user.companyId,
+      periodId,
+      format,
+    );
 
     if (format === 'csv') {
       const csv = this.convertToCSV(data);
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=salary_${periodId}.csv`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=salary_${periodId}.csv`,
+      );
       return res.send(csv);
     }
 

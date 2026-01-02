@@ -37,7 +37,8 @@ export class UsersService {
     const company = await this.prisma.company.findFirst({
       where: { id: companyId, groupId, isActive: true },
     });
-    if (!company) throw new ForbiddenException('Invalid company or access denied');
+    if (!company)
+      throw new ForbiddenException('Invalid company or access denied');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const { password, companyId: _, ...userData } = dto;
@@ -305,10 +306,13 @@ export class UsersService {
       achievements: true,
       deadlineAlert: true,
     };
-    return { ...(defaults), ...(user.notificationSettings as object || {}) };
+    return { ...defaults, ...((user.notificationSettings as object) || {}) };
   }
 
-  async updateNotificationSettings(userId: string, dto: UpdateNotificationSettingsDto) {
+  async updateNotificationSettings(
+    userId: string,
+    dto: UpdateNotificationSettingsDto,
+  ) {
     const current = await this.getNotificationSettings(userId);
     const updated = { ...current, ...dto };
 
@@ -324,7 +328,16 @@ export class UsersService {
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: limit,
-      select: { id: true, device: true, browser: true, os: true, ipAddress: true, location: true, isCurrent: true, createdAt: true },
+      select: {
+        id: true,
+        device: true,
+        browser: true,
+        os: true,
+        ipAddress: true,
+        location: true,
+        isCurrent: true,
+        createdAt: true,
+      },
     });
   }
 
@@ -344,7 +357,7 @@ export class UsersService {
       warningThreshold: 80,
       selectedQuarter: 'Q1',
     };
-    return { ...defaults, ...(user.kpiPreferences as object || {}) };
+    return { ...defaults, ...((user.kpiPreferences as object) || {}) };
   }
 
   async updateKpiPreferences(userId: string, dto: UpdateKpiPreferencesDto) {
@@ -372,10 +385,13 @@ export class UsersService {
       compactMode: false,
       animations: true,
     };
-    return { ...defaults, ...(user.appearanceSettings as object || {}) };
+    return { ...defaults, ...((user.appearanceSettings as object) || {}) };
   }
 
-  async updateAppearanceSettings(userId: string, dto: UpdateAppearanceSettingsDto) {
+  async updateAppearanceSettings(
+    userId: string,
+    dto: UpdateAppearanceSettingsDto,
+  ) {
     const current = await this.getAppearanceSettings(userId);
     const updated = { ...current, ...dto };
 
@@ -398,7 +414,7 @@ export class UsersService {
       dateFormat: 'YYYY-MM-DD',
       timeFormat: '24h',
     };
-    return { ...defaults, ...(user.regionalSettings as object || {}) };
+    return { ...defaults, ...((user.regionalSettings as object) || {}) };
   }
 
   async updateRegionalSettings(userId: string, dto: UpdateRegionalSettingsDto) {

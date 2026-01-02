@@ -1,4 +1,5 @@
 import { UserRole } from '@prisma/client';
+import type { Request } from 'express';
 
 export interface RequestUser {
   userId: string;

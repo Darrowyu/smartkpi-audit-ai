@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '@prisma/client';
@@ -10,18 +14,31 @@ export class InterviewService {
     private notifications: NotificationsService,
   ) {}
 
-  async scheduleInterview(companyId: string, userId: string, dto: { periodId: string; employeeId: string; scheduledAt: Date }) {
+  async scheduleInterview(
+    companyId: string,
+    userId: string,
+    dto: { periodId: string; employeeId: string; scheduledAt: Date },
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('用户不存在');
 
     const existing = await this.prisma.performanceInterview.findUnique({
-      where: { periodId_employeeId: { periodId: dto.periodId, employeeId: dto.employeeId } },
+      where: {
+        periodId_employeeId: {
+          periodId: dto.periodId,
+          employeeId: dto.employeeId,
+        },
+      },
     });
 
     if (existing) {
       return this.prisma.performanceInterview.update({
         where: { id: existing.id },
-        data: { scheduledAt: dto.scheduledAt, interviewerId: userId, interviewerName: user.username },
+        data: {
+          scheduledAt: dto.scheduledAt,
+          interviewerId: userId,
+          interviewerName: user.username,
+        },
       });
     }
 
@@ -34,18 +51,25 @@ export class InterviewService {
       },
     });
 
-    const employee = await this.prisma.employee.findUnique({ where: { id: dto.employeeId } });
+    const employee = await this.prisma.employee.findUnique({
+      where: { id: dto.employeeId },
+    });
     if (employee?.id) {
-      const linkedUser = await this.prisma.user.findFirst({ where: { linkedEmployeeId: dto.employeeId } });
+      const linkedUser = await this.prisma.user.findFirst({
+        where: { linkedEmployeeId: dto.employeeId },
+      });
       if (linkedUser) {
-        await this.notifications.send({
-          userId: linkedUser.id,
-          type: 'INTERVIEW_SCHEDULED' as any,
-          title: '面谈已安排',
-          content: `您的绩效面谈已安排在 ${new Date(dto.scheduledAt).toLocaleString()}`,
-          relatedType: 'interview',
-          relatedId: interview.id,
-        }, companyId);
+        await this.notifications.send(
+          {
+            userId: linkedUser.id,
+            type: 'INTERVIEW_SCHEDULED' as any,
+            title: '面谈已安排',
+            content: `您的绩效面谈已安排在 ${new Date(dto.scheduledAt).toLocaleString()}`,
+            relatedType: 'interview',
+            relatedId: interview.id,
+          },
+          companyId,
+        );
       }
     }
 
@@ -84,7 +108,9 @@ export class InterviewService {
   }
 
   async getInterviewDetail(id: string) {
-    const interview = await this.prisma.performanceInterview.findUnique({ where: { id } });
+    const interview = await this.prisma.performanceInterview.findUnique({
+      where: { id },
+    });
     if (!interview) throw new NotFoundException('面谈记录不存在');
 
     const employee = await this.prisma.employee.findUnique({
@@ -92,7 +118,9 @@ export class InterviewService {
       include: { department: true },
     });
 
-    const period = await this.prisma.assessmentPeriod.findUnique({ where: { id: interview.periodId } });
+    const period = await this.prisma.assessmentPeriod.findUnique({
+      where: { id: interview.periodId },
+    });
     const performance = await this.prisma.employeePerformance.findFirst({
       where: { periodId: interview.periodId, employeeId: interview.employeeId },
     });
@@ -100,8 +128,19 @@ export class InterviewService {
     return { ...interview, employee, period, performance };
   }
 
-  async conductInterview(id: string, userId: string, dto: { summary: string; strengths?: string; improvements?: string; goals?: string }) {
-    const interview = await this.prisma.performanceInterview.findUnique({ where: { id } });
+  async conductInterview(
+    id: string,
+    userId: string,
+    dto: {
+      summary: string;
+      strengths?: string;
+      improvements?: string;
+      goals?: string;
+    },
+  ) {
+    const interview = await this.prisma.performanceInterview.findUnique({
+      where: { id },
+    });
     if (!interview) throw new NotFoundException('面谈记录不存在');
 
     return this.prisma.performanceInterview.update({
@@ -115,7 +154,9 @@ export class InterviewService {
 
   async employeeConfirm(id: string, userId: string, feedback?: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    const interview = await this.prisma.performanceInterview.findUnique({ where: { id } });
+    const interview = await this.prisma.performanceInterview.findUnique({
+      where: { id },
+    });
 
     if (!interview) throw new NotFoundException('面谈记录不存在');
     if (!interview.conductedAt) throw new BadRequestException('面谈尚未进行');

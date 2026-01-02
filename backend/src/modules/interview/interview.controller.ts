@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { InterviewService } from './interview.service';
@@ -9,12 +19,19 @@ export class InterviewController {
   constructor(private readonly service: InterviewService) {}
 
   @Post()
-  scheduleInterview(@Request() req, @Body() dto: { periodId: string; employeeId: string; scheduledAt: Date }) {
+  scheduleInterview(
+    @Request() req,
+    @Body() dto: { periodId: string; employeeId: string; scheduledAt: Date },
+  ) {
     return this.service.scheduleInterview(req.user.companyId, req.user.id, dto);
   }
 
   @Get()
-  getInterviews(@Request() req, @Query('periodId') periodId?: string, @Query('status') status?: string) {
+  getInterviews(
+    @Request() req,
+    @Query('periodId') periodId?: string,
+    @Query('status') status?: string,
+  ) {
     return this.service.getInterviews(req.user.companyId, periodId, status);
   }
 
@@ -34,12 +51,26 @@ export class InterviewController {
   }
 
   @Put(':id/conduct')
-  conductInterview(@Request() req, @Param('id') id: string, @Body() dto: { summary: string; strengths?: string; improvements?: string; goals?: string }) {
+  conductInterview(
+    @Request() req,
+    @Param('id') id: string,
+    @Body()
+    dto: {
+      summary: string;
+      strengths?: string;
+      improvements?: string;
+      goals?: string;
+    },
+  ) {
     return this.service.conductInterview(id, req.user.id, dto);
   }
 
   @Put(':id/confirm')
-  employeeConfirm(@Request() req, @Param('id') id: string, @Body() dto: { feedback?: string }) {
+  employeeConfirm(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: { feedback?: string },
+  ) {
     return this.service.employeeConfirm(id, req.user.id, dto.feedback);
   }
 }

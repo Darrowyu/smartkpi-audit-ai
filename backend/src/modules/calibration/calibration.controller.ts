@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { CalibrationService } from './calibration.service';
@@ -9,7 +19,10 @@ export class CalibrationController {
   constructor(private readonly service: CalibrationService) {}
 
   @Post('sessions')
-  createSession(@Request() req, @Body() dto: { name: string; periodId: string; departmentIds: string[] }) {
+  createSession(
+    @Request() req,
+    @Body() dto: { name: string; periodId: string; departmentIds: string[] },
+  ) {
     return this.service.createSession(req.user.companyId, req.user.id, dto);
   }
 
@@ -24,12 +37,33 @@ export class CalibrationController {
   }
 
   @Post('sessions/:id/adjust')
-  adjustScore(@Request() req, @Param('id') id: string, @Body() dto: { employeeId: string; adjustedScore: number; reason?: string }) {
-    return this.service.adjustScore(id, req.user.id, dto.employeeId, dto.adjustedScore, dto.reason);
+  adjustScore(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: { employeeId: string; adjustedScore: number; reason?: string },
+  ) {
+    return this.service.adjustScore(
+      id,
+      req.user.id,
+      dto.employeeId,
+      dto.adjustedScore,
+      dto.reason,
+    );
   }
 
   @Post('sessions/:id/batch-adjust')
-  batchAdjust(@Request() req, @Param('id') id: string, @Body() dto: { adjustments: Array<{ employeeId: string; adjustedScore: number; reason?: string }> }) {
+  batchAdjust(
+    @Request() req,
+    @Param('id') id: string,
+    @Body()
+    dto: {
+      adjustments: Array<{
+        employeeId: string;
+        adjustedScore: number;
+        reason?: string;
+      }>;
+    },
+  ) {
     return this.service.batchAdjust(id, req.user.id, dto.adjustments);
   }
 

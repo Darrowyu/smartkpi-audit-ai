@@ -93,6 +93,31 @@ const ALL_PERMISSIONS: Permission[] = [
     description: '导出绩效数据',
     module: 'reports',
   },
+  // 数据源
+  {
+    id: 'datasource:view',
+    name: '查看数据源',
+    description: '查看数据源配置',
+    module: 'datasource',
+  },
+  {
+    id: 'datasource:create',
+    name: '创建数据源',
+    description: '创建新的数据源',
+    module: 'datasource',
+  },
+  {
+    id: 'datasource:edit',
+    name: '编辑数据源',
+    description: '编辑数据源配置',
+    module: 'datasource',
+  },
+  {
+    id: 'datasource:delete',
+    name: '删除数据源',
+    description: '删除数据源',
+    module: 'datasource',
+  },
   // 用户管理
   {
     id: 'user:view',
@@ -149,6 +174,10 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     'data:approve',
     'report:view',
     'report:export',
+    'datasource:view',
+    'datasource:create',
+    'datasource:edit',
+    'datasource:delete',
     'user:view',
     'user:create',
     'user:edit',
@@ -162,6 +191,10 @@ const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     'data:approve',
     'report:view',
     'report:export',
+    'datasource:view',
+    'datasource:create',
+    'datasource:edit',
+    'datasource:delete',
     'user:view',
   ],
   [UserRole.USER]: [
@@ -184,7 +217,7 @@ export class PermissionsService {
 
   /** 获取公司的角色权限配置 */
   async getRolePermissions(companyId: string): Promise<RolePermissions> {
-    const config = await (this.prisma as any).permissionConfig.findUnique({
+    const config = await this.prisma.permissionConfig.findUnique({
       where: { companyId },
     });
 
@@ -211,7 +244,7 @@ export class PermissionsService {
     };
     delete data[UserRole.SUPER_ADMIN];
 
-    await (this.prisma as any).permissionConfig.upsert({
+    await this.prisma.permissionConfig.upsert({
       where: { companyId },
       create: { companyId, rolePermissions: data, createdById: userId },
       update: { rolePermissions: data, updatedById: userId },
@@ -245,7 +278,7 @@ export class PermissionsService {
 
   /** 重置为默认权限 */
   async resetToDefault(companyId: string): Promise<void> {
-    await (this.prisma as any).permissionConfig.deleteMany({
+    await this.prisma.permissionConfig.deleteMany({
       where: { companyId },
     });
   }

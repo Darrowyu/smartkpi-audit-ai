@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { GlobalAuthGuard } from './common/guards/global-auth.guard';
 import { MailModule } from './modules/mail/mail.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { FilesModule } from './modules/files/files.module';
@@ -63,6 +64,10 @@ import { DataSourceModule } from './modules/datasource/datasource.module';
     DataSourceModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: GlobalAuthGuard },
+  ],
 })
 export class AppModule {}

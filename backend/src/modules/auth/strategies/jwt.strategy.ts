@@ -43,7 +43,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    const payloadTokenVersion = typeof payload.tokenVersion === 'number' ? payload.tokenVersion : 0;
+    const payloadTokenVersion =
+      typeof payload.tokenVersion === 'number' ? payload.tokenVersion : 0;
     if (user.tokenVersion !== payloadTokenVersion) {
       throw new UnauthorizedException('Token revoked');
     }

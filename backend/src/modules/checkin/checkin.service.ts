@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 
@@ -15,14 +20,27 @@ export class CheckInService {
     return checkIn;
   }
 
-  async createCheckIn(companyId: string, employeeId: string, dto: { assignmentId: string; currentValue: number; notes?: string; attachments?: string[]; riskLevel?: string }) {
+  async createCheckIn(
+    companyId: string,
+    employeeId: string,
+    dto: {
+      assignmentId: string;
+      currentValue: number;
+      notes?: string;
+      attachments?: string[];
+      riskLevel?: string;
+    },
+  ) {
     const assignment = await this.prisma.kPIAssignment.findUnique({
       where: { id: dto.assignmentId },
     });
 
     if (!assignment) throw new NotFoundException('KPI分配不存在');
 
-    const progressPercent = assignment.targetValue > 0 ? (dto.currentValue / assignment.targetValue) * 100 : 0;
+    const progressPercent =
+      assignment.targetValue > 0
+        ? (dto.currentValue / assignment.targetValue) * 100
+        : 0;
 
     return this.prisma.progressCheckIn.create({
       data: {
@@ -39,7 +57,15 @@ export class CheckInService {
     });
   }
 
-  async getCheckIns(companyId: string, filters: { assignmentId?: string; employeeId?: string; startDate?: Date; endDate?: Date }) {
+  async getCheckIns(
+    companyId: string,
+    filters: {
+      assignmentId?: string;
+      employeeId?: string;
+      startDate?: Date;
+      endDate?: Date;
+    },
+  ) {
     const where: any = { companyId };
 
     if (filters.assignmentId) where.assignmentId = filters.assignmentId;
@@ -98,7 +124,13 @@ export class CheckInService {
     });
   }
 
-  async addManagerFeedback(checkInId: string, userId: string, companyId: string, userRole: UserRole, feedback: string) {
+  async addManagerFeedback(
+    checkInId: string,
+    userId: string,
+    companyId: string,
+    userRole: UserRole,
+    feedback: string,
+  ) {
     const checkIn = await this.validateCheckInAccess(checkInId, companyId); // 校验租户权限
 
     // 仅MANAGER及以上角色可添加反馈
@@ -126,17 +158,28 @@ export class CheckInService {
 
     // 边界处理：空数组时直接返回空结果
     if (assignmentIds.length === 0) {
-      return { summary: { total: 0, onTrack: 0, atRisk: 0, critical: 0, noUpdate: 0 }, details: [] };
+      return {
+        summary: { total: 0, onTrack: 0, atRisk: 0, critical: 0, noUpdate: 0 },
+        details: [],
+      };
     }
 
-    const latestCheckIns = await this.prisma.$queryRaw`
+    type LatestCheckInRow = {
+      assignment_id: string;
+      risk_level: string;
+      [key: string]: unknown;
+    };
+
+    const latestCheckIns = await this.prisma.$queryRaw<LatestCheckInRow[]>`
       SELECT DISTINCT ON (assignment_id) *
       FROM progress_check_ins
       WHERE assignment_id = ANY(${assignmentIds}::uuid[])
       ORDER BY assignment_id, check_in_date DESC
-    ` as any[];
+    `;
 
-    const checkInMap = new Map(latestCheckIns.map((c) => [c.assignment_id, c]));
+    const checkInMap = new Map<string, LatestCheckInRow>(
+      latestCheckIns.map((c) => [c.assignment_id, c]),
+    );
 
     const summary = {
       total: assignments.length,

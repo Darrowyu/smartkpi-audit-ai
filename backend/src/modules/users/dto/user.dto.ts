@@ -238,7 +238,9 @@ export class UpdateAppearanceSettingsDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'customColor must be a valid HEX color (e.g., #FF5733)' })
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'customColor must be a valid HEX color (e.g., #FF5733)',
+  })
   customColor?: string;
 
   @IsOptional()

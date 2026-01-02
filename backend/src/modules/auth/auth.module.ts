@@ -18,7 +18,12 @@ import { PermissionsModule } from '../permissions/permissions.module';
         if (!secret || secret.length < 32) {
           throw new Error('JWT_SECRET must be set and at least 32 characters');
         }
-        return { secret, signOptions: { expiresIn: configService.get('JWT_EXPIRATION') || '15m' } };
+        return {
+          secret,
+          signOptions: {
+            expiresIn: configService.get('JWT_EXPIRATION') || '15m',
+          },
+        };
       },
     }),
   ],

@@ -199,10 +199,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                   >
                     <Building2 className="w-5 h-5" />
                   </button>
-                  <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
-                    <div className="absolute left-0 top-0 w-2 h-full" />
-                  <div className="bg-nav-bg rounded-lg shadow-xl border border-nav-border py-2 min-w-[180px]">
-                    <div className="px-3 py-1.5 text-xs font-semibold text-nav-text opacity-70 uppercase">{t('sidebar.orgAdmin', '组织管理')}</div>
+                  <div className="absolute left-full top-0 pl-1 hidden group-hover:block z-50">
+                    <div className="bg-nav-bg rounded-lg shadow-xl border border-nav-border py-2 min-w-[180px]">
+                      <div className="px-3 py-1.5 text-xs font-semibold text-nav-text opacity-70 uppercase">{t('sidebar.orgAdmin', '组织管理')}</div>
                       {adminNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -210,9 +209,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                           <button
                             key={item.path}
                             onClick={() => handleNavClick(item.path)}
-                          className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-nav-text bg-nav-active' : 'text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
+                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-nav-text bg-nav-active' : 'text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
                           >
-                          <Icon className={`w-5 h-5 ${isActive ? 'text-nav-accent' : ''}`} />
+                            <Icon className={`w-5 h-5 ${isActive ? 'text-nav-accent' : ''}`} />
                             <span className="ml-2">{t(item.labelKey)}</span>
                           </button>
                         );
@@ -253,9 +252,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                     <Scale className="w-5 h-5" />
                   </button>
                   <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
-                    <div className="absolute left-0 top-0 w-2 h-full" />
-                  <div className="bg-nav-bg rounded-lg shadow-xl border border-nav-border py-2 min-w-[180px]">
-                    <div className="px-3 py-1.5 text-xs font-semibold text-nav-text opacity-70 uppercase">{t('sidebar.perfAdmin', '绩效管理')}</div>
+                    <div className="bg-nav-bg rounded-lg shadow-xl border border-nav-border py-2 min-w-[180px] overflow-hidden">
+                      <div className="px-3 py-1.5 text-xs font-semibold text-nav-text opacity-70 uppercase">{t('sidebar.perfAdmin', '绩效管理')}</div>
                       {performanceAdminNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -263,9 +261,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, onClose, collapsed =
                           <button
                             key={item.path}
                             onClick={() => handleNavClick(item.path)}
-                          className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-nav-text bg-nav-active' : 'text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
+                            className={`w-full flex items-center px-3 py-2 text-sm transition-colors transition-opacity ${isActive ? 'text-nav-text bg-nav-active' : 'text-nav-text opacity-75 hover:opacity-100 hover:bg-black/10'}`}
                           >
-                          <Icon className={`w-5 h-5 ${isActive ? 'text-nav-accent' : ''}`} />
+                            <Icon className={`w-5 h-5 ${isActive ? 'text-nav-accent' : ''}`} />
                             <span className="ml-2">{t(item.labelKey)}</span>
                           </button>
                         );

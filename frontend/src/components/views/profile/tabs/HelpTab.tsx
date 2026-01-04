@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HelpCircle, Search, ChevronDown, FileText, Video, MessageCircle, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { HelpCircle, Search, ChevronDown, FileText, Mail, ArrowRight, X } from 'lucide-react';
 import { SectionCard } from '../components/SectionCard';
+import { docs } from '@/docs';
 
 interface FAQItem {
   question: string;
   answer: string;
+}
+
+interface SearchResult {
+  docId: string;
+  title: string;
+  matches: string[];
 }
 
 const FAQ_ITEMS: FAQItem[] = [
@@ -17,21 +25,61 @@ const FAQ_ITEMS: FAQItem[] = [
 ];
 
 const RESOURCES = [
-  { icon: FileText, title: '使用手册', desc: '详细的功能使用说明', color: 'bg-primary/10 text-primary' },
-  { icon: Video, title: '视频教程', desc: '观看操作演示视频', color: 'bg-purple-50 text-purple-600' },
-  { icon: MessageCircle, title: '在线客服', desc: '实时在线咨询', color: 'bg-green-50 text-green-600' },
-  { icon: Mail, title: '邮件支持', desc: '发送邮件获取帮助', color: 'bg-amber-50 text-amber-600' },
+  { icon: FileText, title: '使用手册', desc: '详细的功能使用说明', color: 'bg-primary/10 text-primary', action: 'manual' },
+  { icon: Mail, title: '邮件支持', desc: '发送邮件获取帮助', color: 'bg-amber-50 text-amber-600', action: 'email' },
 ];
+
+const extractMatchContext = (content: string, query: string, contextLength = 50): string[] => {
+  const matches: string[] = [];
+  const lowerContent = content.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+  let startIndex = 0;
+  while (matches.length < 3) {
+    const index = lowerContent.indexOf(lowerQuery, startIndex);
+    if (index === -1) break;
+    const start = Math.max(0, index - contextLength);
+    const end = Math.min(content.length, index + query.length + contextLength);
+    let match = content.slice(start, end).replace(/\n/g, ' ').replace(/#{1,6}\s*/g, '').replace(/\*{1,2}/g, '').replace(/\|/g, ' ');
+    if (start > 0) match = '...' + match;
+    if (end < content.length) match = match + '...';
+    matches.push(match);
+    startIndex = index + query.length;
+  }
+  return matches;
+};
 
 export const HelpTab: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [showResults, setShowResults] = useState(false);
+
+  const handleResourceClick = (action: string) => {
+    switch (action) {
+      case 'manual': navigate('/app/help'); break;
+      case 'email': window.location.href = 'mailto:support@makrite.com?subject=KPI系统帮助请求'; break;
+      default: break;
+    }
+  };
+
+  const docSearchResults = useMemo<SearchResult[]>(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
+    return docs
+      .filter(doc => doc.title.toLowerCase().includes(q) || doc.content.toLowerCase().includes(q))
+      .map(doc => ({ docId: doc.id, title: doc.title, matches: extractMatchContext(doc.content, searchQuery) }))
+      .slice(0, 5);
+  }, [searchQuery]);
 
   const filteredFAQ = FAQ_ITEMS.filter(item =>
     item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSearch = () => setShowResults(true);
+  const handleResultClick = (docId: string) => { navigate(`/app/help/${docId}`); setShowResults(false); };
+  const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter') handleSearch(); };
 
   return (
     <div className="space-y-6">
@@ -42,18 +90,75 @@ export const HelpTab: React.FC = () => {
 
       {/* 快速搜索 */}
       <SectionCard icon={<HelpCircle className="w-5 h-5" />} title={t('settings.help.quickSearch', '快速搜索')} description={t('settings.help.quickSearchDesc', '搜索常见问题和帮助文档')}>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('settings.help.searchPlaceholder', '输入关键词搜索帮助...')}
-            className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
-          />
-          <button className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
-            <Search className="w-4 h-4" />
-            {t('settings.help.search', '搜索')}
-          </button>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setShowResults(true); }}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setShowResults(true)}
+                placeholder={t('settings.help.searchPlaceholder', '输入关键词搜索帮助...')}
+                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary"
+              />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(''); setShowResults(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <button onClick={handleSearch} className="px-4 py-2 bg-brand-primary text-brand-text rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              {t('settings.help.search', '搜索')}
+            </button>
+          </div>
+
+          {/* 搜索结果 */}
+          {showResults && searchQuery.length >= 2 && (
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              {docSearchResults.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {docSearchResults.map((result) => (
+                    <button
+                      key={result.docId}
+                      onClick={() => handleResultClick(result.docId)}
+                      className="w-full p-3 text-left hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-primary" />
+                          <span className="font-medium text-slate-800">{result.title}</span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-400" />
+                      </div>
+                      {result.matches.length > 0 && (
+                        <p className="mt-1 text-sm text-slate-500 line-clamp-2">
+                          {result.matches[0]}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => { navigate('/app/help'); setShowResults(false); }}
+                    className="w-full p-3 text-center text-sm text-primary hover:bg-slate-50 transition-colors"
+                  >
+                    {t('settings.help.viewAllDocs', '查看全部帮助文档')} →
+                  </button>
+                </div>
+              ) : (
+                <div className="p-4 text-center text-slate-500">
+                  <p>{t('settings.help.noResults', '未找到相关文档')}</p>
+                  <button
+                    onClick={() => navigate('/app/help')}
+                    className="mt-2 text-sm text-primary hover:underline"
+                  >
+                    {t('settings.help.browseAll', '浏览全部帮助文档')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </SectionCard>
 
@@ -83,7 +188,7 @@ export const HelpTab: React.FC = () => {
           {RESOURCES.map((item, index) => {
             const Icon = item.icon;
             return (
-              <button key={index} className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all text-left">
+              <button key={index} onClick={() => handleResourceClick(item.action)} className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all text-left">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${item.color}`}>
                   <Icon className="w-5 h-5" />
                 </div>

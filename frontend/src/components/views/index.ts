@@ -25,3 +25,4 @@ export * from './talent/TalentNineBoxView';
 export * from './salary/SalaryView';
 export * from './checkin/CheckInView';
 export * from './datasource/DataSourceView';
+export * from './help/HelpCenterView';

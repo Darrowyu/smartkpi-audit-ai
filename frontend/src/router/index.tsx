@@ -65,6 +65,9 @@ const SalaryPage = lazy(() => import('@/pages/salary/SalaryPage'));
 const CheckInPage = lazy(() => import('@/pages/checkin/CheckInPage'));
 const DataSourcePage = lazy(() => import('@/pages/datasource/DataSourcePage'));
 
+// Help
+const HelpPage = lazy(() => import('@/pages/help/HelpPage'));
+
 // Error
 const NotFoundPage = lazy(() => import('@/pages/error/NotFoundPage'));
 
@@ -123,6 +126,9 @@ export const router = createBrowserRouter([
             { path: 'salary', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><SalaryPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'checkin', element: <ProtectedRoute permission="data:view"><SuspenseWrapper><CheckInPage /></SuspenseWrapper></ProtectedRoute> },
             { path: 'datasource', element: <ProtectedRoute permission="settings:view" adminOnly><SuspenseWrapper><DataSourcePage /></SuspenseWrapper></ProtectedRoute> },
+            // Help Center
+            { path: 'help', element: <SuspenseWrapper><HelpPage /></SuspenseWrapper> },
+            { path: 'help/:docId', element: <SuspenseWrapper><HelpPage /></SuspenseWrapper> },
             { path: '404', element: <SuspenseWrapper><NotFoundPage /></SuspenseWrapper> },
             { path: '*', element: <Navigate to="/404" replace /> },
         ],

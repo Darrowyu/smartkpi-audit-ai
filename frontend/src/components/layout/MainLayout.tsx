@@ -154,7 +154,7 @@ export const MainLayout: React.FC = () => {
             {/* 侧边栏 - 桌面端固定，移动端抽屉式 */}
             <aside className={`
                 fixed inset-y-0 left-0 z-50
-                lg:relative lg:z-auto
+                lg:relative lg:z-40
                 transition-all duration-300 ease-in-out flex-shrink-0
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>

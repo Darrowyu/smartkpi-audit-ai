@@ -29,6 +29,14 @@ export class UpdatePeriodDto {
 
   @IsOptional()
   @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsDateString()
   lockDate?: string;
 
   @IsOptional()

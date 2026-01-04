@@ -18,6 +18,11 @@ export const assessmentApi = {
         return response.data;
     },
 
+    updatePeriod: async (id: string, data: Partial<AssessmentPeriod>) => {
+        const response = await apiClient.put(`/assessment/periods/${id}`, data);
+        return response.data;
+    },
+
     lockPeriod: async (id: string) => {
         const response = await apiClient.post(`/assessment/periods/${id}/lock`, {});
         return response.data;

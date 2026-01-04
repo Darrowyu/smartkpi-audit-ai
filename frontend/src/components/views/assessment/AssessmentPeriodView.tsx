@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
     Plus, Lock, Unlock, Calendar, Clock, CheckCircle2, AlertCircle,
     Play, Pause, BarChart3, Users, Target, ArrowRight, MoreHorizontal,
-    CalendarDays, TrendingUp, FileText, Archive
+    CalendarDays, TrendingUp, FileText, Archive, Pencil, ListChecks
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -130,9 +131,11 @@ interface PeriodCardProps {
     onLock: (id: string) => void;
     onActivate: (id: string) => void;
     onArchive: (id: string) => void;
+    onEdit: (period: AssessmentPeriod) => void;
+    onAssign: (id: string) => void;
 }
 
-const PeriodCard: React.FC<PeriodCardProps> = ({ period, onLock, onActivate, onArchive }) => {
+const PeriodCard: React.FC<PeriodCardProps> = ({ period, onLock, onActivate, onArchive, onEdit, onAssign }) => {
     const statusConfig = STATUS_CONFIG[period.status] || STATUS_CONFIG[PeriodStatus.DRAFT];
     const StatusIcon = statusConfig.icon;
     const progress = calculateProgress(period.startDate, period.endDate);
@@ -160,18 +163,26 @@ const PeriodCard: React.FC<PeriodCardProps> = ({ period, onLock, onActivate, onA
                     <DropdownMenuContent align="end">
                         {isDraft && (
                             <>
+                                <DropdownMenuItem onClick={() => onEdit(period)}>
+                                    <Pencil className="h-4 w-4 mr-2" /> 编辑周期
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onAssign(period.id)}>
+                                    <ListChecks className="h-4 w-4 mr-2" /> 分配KPI
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => onActivate(period.id)}>
                                     <Play className="h-4 w-4 mr-2" /> 激活周期
+                                </DropdownMenuItem>
+                            </>
+                        )}
+                        {isActive && (
+                            <>
+                                <DropdownMenuItem onClick={() => onAssign(period.id)}>
+                                    <ListChecks className="h-4 w-4 mr-2" /> 查看KPI分配
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => onLock(period.id)}>
                                     <Lock className="h-4 w-4 mr-2" /> 锁定周期
                                 </DropdownMenuItem>
                             </>
-                        )}
-                        {isActive && (
-                            <DropdownMenuItem onClick={() => onLock(period.id)}>
-                                <Lock className="h-4 w-4 mr-2" /> 锁定周期
-                            </DropdownMenuItem>
                         )}
                         {period.status === PeriodStatus.LOCKED && (
                             <DropdownMenuItem onClick={() => onArchive(period.id)}>
@@ -230,9 +241,11 @@ export const AssessmentPeriodView: React.FC = () => {
     const { t } = useTranslation();
     const { toast } = useToast();
     const confirm = useConfirm();
+    const navigate = useNavigate();
     const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
     const [loading, setLoading] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingPeriod, setEditingPeriod] = useState<AssessmentPeriod | null>(null);
 
     const periodSchema = z.object({
         name: z.string().min(1, t('assessmentView.enterPeriodName')),
@@ -271,14 +284,34 @@ export const AssessmentPeriodView: React.FC = () => {
 
     const onSubmit = async (data: PeriodFormValues) => {
         try {
-            await assessmentApi.createPeriod(data);
-            toast({ title: t('assessmentView.createSuccess') });
+            if (editingPeriod) {
+                await assessmentApi.updatePeriod(editingPeriod.id, data);
+                toast({ title: '周期已更新' });
+            } else {
+                await assessmentApi.createPeriod(data);
+                toast({ title: t('assessmentView.createSuccess') });
+            }
             setIsDialogOpen(false);
+            setEditingPeriod(null);
             form.reset();
             fetchPeriods();
         } catch (_error) {
-            toast({ variant: 'destructive', title: t('assessmentView.createFailed') });
+            toast({ variant: 'destructive', title: editingPeriod ? '更新失败' : t('assessmentView.createFailed') });
         }
+    };
+
+    const handleEdit = (period: AssessmentPeriod) => {
+        setEditingPeriod(period);
+        form.reset({
+            name: period.name,
+            startDate: period.startDate.split('T')[0],
+            endDate: period.endDate.split('T')[0],
+        });
+        setIsDialogOpen(true);
+    };
+
+    const handleAssign = (periodId: string) => {
+        navigate(`/app/assignment?periodId=${periodId}`);
     };
 
     const handleLock = async (id: string) => {
@@ -301,8 +334,9 @@ export const AssessmentPeriodView: React.FC = () => {
             await assessmentApi.activatePeriod(id);
             toast({ title: '周期已激活' });
             fetchPeriods();
-        } catch (_error) {
-            toast({ variant: 'destructive', title: '激活失败' });
+        } catch (error: any) {
+            const message = error?.response?.data?.message || '激活失败';
+            toast({ variant: 'destructive', title: '激活失败', description: message });
         }
     };
 
@@ -345,7 +379,7 @@ export const AssessmentPeriodView: React.FC = () => {
                     <h1 className="text-xl sm:text-2xl font-bold text-slate-900">考核周期管理</h1>
                     <p className="text-sm sm:text-base text-slate-500">创建和管理绩效考核周期</p>
                 </div>
-                <Button onClick={() => { form.reset(); setIsDialogOpen(true); }}>
+                <Button onClick={() => { setEditingPeriod(null); form.reset(); setIsDialogOpen(true); }}>
                     <Plus className="mr-2 h-4 w-4" /> 新建周期
                 </Button>
             </div>
@@ -390,7 +424,7 @@ export const AssessmentPeriodView: React.FC = () => {
                         title="暂无考核周期"
                         description="开始创建您的第一个考核周期"
                         action={
-                            <Button onClick={() => { form.reset(); setIsDialogOpen(true); }}>
+                            <Button onClick={() => { setEditingPeriod(null); form.reset(); setIsDialogOpen(true); }}>
                                 <Plus className="mr-2 h-4 w-4" /> 创建第一个周期
                             </Button>
                         }
@@ -405,17 +439,19 @@ export const AssessmentPeriodView: React.FC = () => {
                             onLock={handleLock}
                             onActivate={handleActivate}
                             onArchive={handleArchive}
+                            onEdit={handleEdit}
+                            onAssign={handleAssign}
                         />
                     ))}
                 </div>
             )}
 
             {/* 新建周期对话框 */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingPeriod(null); }}>
                 <DialogContent className="max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>新建考核周期</DialogTitle>
-                        <DialogDescription>创建一个新的绩效考核周期</DialogDescription>
+                        <DialogTitle>{editingPeriod ? '编辑考核周期' : '新建考核周期'}</DialogTitle>
+                        <DialogDescription>{editingPeriod ? '修改考核周期的基本信息' : '创建一个新的绩效考核周期'}</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <div className="space-y-2">
@@ -437,7 +473,7 @@ export const AssessmentPeriodView: React.FC = () => {
                         </div>
                         <DialogFooter className="flex-col sm:flex-row gap-2">
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">取消</Button>
-                            <Button type="submit" className="w-full sm:w-auto">创建周期</Button>
+                            <Button type="submit" className="w-full sm:w-auto">{editingPeriod ? '保存修改' : '创建周期'}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

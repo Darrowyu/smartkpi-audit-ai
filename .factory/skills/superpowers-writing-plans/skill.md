@@ -20,7 +20,6 @@ description: 编写实施计划。当有规范或多步骤任务需求时使用�
 - "运行确保它失败" - 一步
 - "实现最小代码让测试通过" - 一步
 - "运行测试确保通过" - 一步
-- "提交" - 一步
 
 ## 计划文档头部
 
@@ -77,12 +76,9 @@ function function(input) {
 运行: `npm test tests/path/test.ts`
 预期: PASS
 
-**步骤5: 提交**
+**步骤5: 验证完成**
 
-```bash
-git add tests/path/test.ts src/path/file.ts
-git commit -m "feat: add specific feature"
-```
+确认测试通过，准备下一个任务。
 ```
 
 ## 记住
@@ -90,7 +86,7 @@ git commit -m "feat: add specific feature"
 - 总是精确文件路径
 - 计划中写完整代码（不是"添加验证"）
 - 精确命令和预期输出
-- DRY、YAGNI、TDD、频繁提交
+- DRY、YAGNI、TDD
 
 ## 执行交接
 
@@ -135,13 +131,6 @@ export class LoginDto {
   @MinLength(6)
   password: string;
 }
-```
-
-**步骤2: 提交**
-
-```bash
-git add backend/src/modules/auth/dto/login.dto.ts
-git commit -m "feat(auth): add login DTO"
 ```
 
 ### 任务 2: 实现登录服务方法

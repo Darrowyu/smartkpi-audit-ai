@@ -1,20 +1,23 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
 import {
     Plus, Search, Pencil, Trash2, Upload, Download, Filter,
-    BarChart3, Target, TrendingUp, CheckCircle2, ArrowUpRight, ArrowDownRight
+    BarChart3, Target, TrendingUp, CheckCircle2, ArrowUpRight, ArrowDownRight,
+    ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
 import { CardSkeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Dialog,
     DialogContent,
@@ -35,7 +38,7 @@ import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-import { kpiLibraryApi } from '@/api/kpi-library.api';
+import { kpiLibraryApi, KPILibraryStats } from '@/api/kpi-library.api';
 import { KPIDefinition, FormulaType, AssessmentFrequency } from '@/types';
 
 // 分类映射
@@ -216,11 +219,18 @@ export const KPILibraryView: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [selectedStatus, setSelectedStatus] = useState<string>('all');
     const [selectedFrequency, setSelectedFrequency] = useState<string>('all');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [stats, setStats] = useState<KPILibraryStats | null>(null);
+    const [importing, setImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const PAGE_SIZE = 20;
 
     const { toast } = useToast();
     const confirm = useConfirm();
 
-    const kpiSchema = z.object({
+    const kpiSchema = useMemo(() => z.object({
         code: z.string().min(1, t('kpiLibrary.enterKpiCode')),
         name: z.string().min(1, t('kpiLibrary.enterKpiName')),
         description: z.string().optional(),
@@ -241,7 +251,10 @@ export const KPILibraryView: React.FC = () => {
         scoreCap: z.number().min(0),
         scoreFloor: z.number().min(0),
         unit: z.string().optional(),
-    });
+    }).refine(data => data.formulaType !== FormulaType.CUSTOM || (data.customFormula && data.customFormula.trim().length > 0), {
+        message: '自定义公式类型必须填写公式',
+        path: ['customFormula'],
+    }), [t]);
 
     const form = useForm<KPIFormValues>({
         resolver: zodResolver(kpiSchema),
@@ -254,21 +267,38 @@ export const KPILibraryView: React.FC = () => {
         },
     });
 
+    const watchFormulaType = form.watch('formulaType');
+
     const fetchKPIs = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await kpiLibraryApi.findAll({ search: debouncedSearch });
+            const res = await kpiLibraryApi.findAll({ search: debouncedSearch, page, limit: PAGE_SIZE });
             setKpis(res.data);
+            setTotal(res.meta.total);
+            setTotalPages(res.meta.totalPages);
         } catch (_error) {
             toast({ variant: 'destructive', title: t('common.loadFailed') });
         } finally {
             setLoading(false);
         }
-    }, [debouncedSearch, toast, t]);
+    }, [debouncedSearch, page, toast, t]);
+
+    const fetchStats = useCallback(async () => {
+        try {
+            const data = await kpiLibraryApi.getStatistics();
+            setStats(data);
+        } catch (_error) { /* ignore */ }
+    }, []);
 
     useEffect(() => {
         fetchKPIs();
     }, [fetchKPIs]);
+
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
+
+    useEffect(() => { setPage(1); }, [debouncedSearch]); // 搜索时重置页码
 
     // 过滤后的KPI列表
     const filteredKpis = useMemo(() => {
@@ -280,15 +310,6 @@ export const KPILibraryView: React.FC = () => {
             return true;
         });
     }, [kpis, selectedCategory, selectedStatus, selectedFrequency]);
-
-    // 统计数据
-    const stats = useMemo(() => {
-        const total = kpis.length;
-        const active = kpis.filter(k => k.isActive).length;
-        const achieved = Math.floor(total * 0.67); // 模拟达成数
-        const trending = Math.floor(total * 0.56); // 模拟上升趋势数
-        return { total, active, achieved, trending };
-    }, [kpis]);
 
     // 分类统计
     const categoryStats = useMemo(() => {
@@ -355,12 +376,68 @@ export const KPILibraryView: React.FC = () => {
         }
     };
 
-    const handleImport = () => {
-        toast({ title: '导入功能开发中' });
-    };
+    const handleExport = useCallback(() => {
+        if (kpis.length === 0) {
+            toast({ variant: 'destructive', title: '暂无数据可导出' });
+            return;
+        }
+        const exportData = kpis.map(kpi => ({
+            '指标编码': kpi.code,
+            '指标名称': kpi.name,
+            '描述': kpi.description || '',
+            '公式类型': kpi.formulaType,
+            '自定义公式': kpi.customFormula || '',
+            '考核频率': kpi.frequency,
+            '默认权重': kpi.defaultWeight,
+            '得分上限': kpi.scoreCap,
+            '得分下限': kpi.scoreFloor,
+            '单位': kpi.unit || '',
+            '状态': kpi.isActive ? '启用' : '停用',
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'KPI指标库');
+        ws['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 30 }, { wch: 10 }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 8 }, { wch: 8 }];
+        XLSX.writeFile(wb, `KPI指标库_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        toast({ title: '导出成功' });
+    }, [kpis, toast]);
 
-    const handleExport = () => {
-        toast({ title: '导出功能开发中' });
+    const handleImportClick = () => fileInputRef.current?.click();
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImporting(true);
+        try {
+            const data = await file.arrayBuffer();
+            const wb = XLSX.read(data);
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
+            if (rows.length === 0) throw new Error('文件为空');
+            if (rows.length > 500) throw new Error('单次最多导入500条');
+            const definitions = rows.map(row => ({
+                code: String(row['指标编码'] || ''),
+                name: String(row['指标名称'] || ''),
+                description: row['描述'] ? String(row['描述']) : undefined,
+                formulaType: (row['公式类型'] as FormulaType) || FormulaType.POSITIVE,
+                customFormula: row['自定义公式'] ? String(row['自定义公式']) : undefined,
+                frequency: (row['考核频率'] as AssessmentFrequency) || AssessmentFrequency.MONTHLY,
+                defaultWeight: Number(row['默认权重']) || 10,
+                scoreCap: Number(row['得分上限']) || 120,
+                scoreFloor: Number(row['得分下限']) || 0,
+                unit: row['单位'] ? String(row['单位']) : undefined,
+            }));
+            const result = await kpiLibraryApi.bulkCreate(definitions);
+            toast({ title: `导入完成：成功 ${result.success} 条` });
+            fetchKPIs();
+            fetchStats();
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : '导入失败';
+            toast({ variant: 'destructive', title: msg });
+        } finally {
+            setImporting(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     return (
@@ -372,8 +449,9 @@ export const KPILibraryView: React.FC = () => {
                     <p className="text-sm sm:text-base text-slate-500">管理和维护企业关键绩效指标</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={handleImport}>
-                        <Upload className="mr-2 h-4 w-4" /> 导入
+                    <input type="file" ref={fileInputRef} accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
+                    <Button variant="outline" onClick={handleImportClick} disabled={importing}>
+                        {importing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />} 导入
                     </Button>
                     <Button variant="outline" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> 导出
@@ -388,27 +466,25 @@ export const KPILibraryView: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="指标总数"
-                    value={stats.total}
+                    value={stats?.total ?? 0}
                     icon={<BarChart3 className="w-6 h-6 text-brand-primary" />}
                     iconBg="bg-primary/10"
                 />
                 <StatCard
-                    title="已开指标"
-                    value={stats.active}
+                    title="启用指标"
+                    value={stats?.active ?? 0}
                     icon={<Target className="w-6 h-6 text-brand-secondary" />}
                     iconBg="bg-sky-50"
-                    trend={12}
                 />
                 <StatCard
-                    title="达成目标"
-                    value={stats.achieved}
-                    icon={<CheckCircle2 className="w-6 h-6 text-emerald-600" />}
-                    iconBg="bg-emerald-50"
-                    trend={5}
+                    title="停用指标"
+                    value={stats?.inactive ?? 0}
+                    icon={<CheckCircle2 className="w-6 h-6 text-slate-400" />}
+                    iconBg="bg-slate-50"
                 />
                 <StatCard
-                    title="上升趋势"
-                    value={stats.trending}
+                    title="公式类型"
+                    value={Object.keys(stats?.byType ?? {}).length}
                     icon={<TrendingUp className="w-6 h-6 text-amber-500" />}
                     iconBg="bg-amber-50"
                 />
@@ -491,11 +567,28 @@ export const KPILibraryView: React.FC = () => {
                     }
                 />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredKpis.map((kpi) => (
-                        <KPICard key={kpi.id} kpi={kpi} onEdit={handleEdit} onDelete={handleDelete} />
-                    ))}
-                </div>
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredKpis.map((kpi) => (
+                            <KPICard key={kpi.id} kpi={kpi} onEdit={handleEdit} onDelete={handleDelete} />
+                        ))}
+                    </div>
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between pt-4 border-t">
+                            <span className="text-sm text-muted-foreground">
+                                第 {page} 页，共 {totalPages} 页（{total} 条）
+                            </span>
+                            <div className="flex gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page <= 1}>
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages}>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* 新建/编辑对话框 */}
@@ -529,13 +622,14 @@ export const KPILibraryView: React.FC = () => {
                                 <Label>计算公式</Label>
                                 <Select
                                     onValueChange={(val) => form.setValue('formulaType', val as FormulaType)}
-                                    defaultValue={form.watch('formulaType')}
+                                    value={form.watch('formulaType')}
                                 >
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value={FormulaType.POSITIVE}>越高越好</SelectItem>
                                         <SelectItem value={FormulaType.NEGATIVE}>越低越好</SelectItem>
                                         <SelectItem value={FormulaType.BINARY}>是否达成</SelectItem>
+                                        <SelectItem value={FormulaType.STEPPED}>阶梯计分</SelectItem>
                                         <SelectItem value={FormulaType.CUSTOM}>自定义公式</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -544,7 +638,7 @@ export const KPILibraryView: React.FC = () => {
                                 <Label>考核频率</Label>
                                 <Select
                                     onValueChange={(val) => form.setValue('frequency', val as AssessmentFrequency)}
-                                    defaultValue={form.watch('frequency')}
+                                    value={form.watch('frequency')}
                                 >
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
@@ -555,6 +649,20 @@ export const KPILibraryView: React.FC = () => {
                                 </Select>
                             </div>
                         </div>
+
+                        {watchFormulaType === FormulaType.CUSTOM && (
+                            <div className="space-y-2">
+                                <Label>自定义公式 <span className="text-red-500">*</span></Label>
+                                <Textarea
+                                    {...form.register('customFormula')}
+                                    placeholder="如：(actual / target) * 100，支持 Math.js 语法"
+                                    rows={2}
+                                />
+                                {form.formState.errors.customFormula && (
+                                    <p className="text-red-500 text-xs">{form.formState.errors.customFormula.message}</p>
+                                )}
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                             <div className="space-y-2">

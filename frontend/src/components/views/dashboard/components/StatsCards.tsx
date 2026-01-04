@@ -1,15 +1,15 @@
 import React from 'react';
-import { Target, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { Users, CheckCircle2, TrendingUp, AlertTriangle } from 'lucide-react';
 
 interface StatsData {
-  totalKPIs: number;
-  completed: number;
-  inProgress: number;
+  totalEmployees: number;
+  passedEmployees: number;
+  needImprovement: number;
   atRisk: number;
   trends: {
-    totalKPIs: number;
-    completed: number;
-    inProgress: number;
+    totalEmployees: number;
+    passedEmployees: number;
+    needImprovement: number;
     atRisk: number;
   };
   warningThreshold?: number;
@@ -29,8 +29,8 @@ interface StatItemProps {
 
 const StatItem: React.FC<StatItemProps> = ({ title, value, trend, icon, iconBg }) => {
   const isPositive = trend >= 0;
-  const isRiskCard = title.startsWith('有风险');
-  const trendColor = isRiskCard 
+  const isNegativeGood = title === '待提升' || title.startsWith('绩效预警');
+  const trendColor = isNegativeGood 
     ? (trend > 0 ? 'text-red-500' : 'text-emerald-600')
     : (isPositive ? 'text-emerald-600' : 'text-red-500');
 
@@ -53,28 +53,28 @@ const StatItem: React.FC<StatItemProps> = ({ title, value, trend, icon, iconBg }
 };
 
 export const StatsCards: React.FC<StatsCardsProps> = ({ data }) => {
-  const warningLabel = data.warningThreshold ? `有风险 (<${data.warningThreshold}%)` : '有风险';
+  const warningLabel = data.warningThreshold ? `绩效预警 (<${data.warningThreshold}分)` : '绩效预警';
   const stats = [
     {
-      title: '总KPI数',
-      value: data.totalKPIs,
-      trend: data.trends.totalKPIs,
-      icon: <Target className="w-6 h-6 text-brand-primary" />,
+      title: '参评员工',
+      value: data.totalEmployees,
+      trend: data.trends.totalEmployees,
+      icon: <Users className="w-6 h-6 text-brand-primary" />,
       iconBg: 'bg-primary/10',
     },
     {
-      title: '已完成',
-      value: data.completed,
-      trend: data.trends.completed,
+      title: '达标员工',
+      value: data.passedEmployees,
+      trend: data.trends.passedEmployees,
       icon: <CheckCircle2 className="w-6 h-6 text-emerald-600" />,
       iconBg: 'bg-emerald-50',
     },
     {
-      title: '进行中',
-      value: data.inProgress,
-      trend: data.trends.inProgress,
-      icon: <Clock className="w-6 h-6 text-slate-600" />,
-      iconBg: 'bg-slate-100',
+      title: '待提升',
+      value: data.needImprovement,
+      trend: data.trends.needImprovement,
+      icon: <TrendingUp className="w-6 h-6 text-amber-600" />,
+      iconBg: 'bg-amber-50',
     },
     {
       title: warningLabel,

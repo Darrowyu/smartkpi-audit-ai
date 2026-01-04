@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, Users, Calendar, RefreshCw, Calculator, Loader2 } from 'lucide-react';
 import { assessmentApi } from '@/api/assessment.api';
-import { reportsApi, DepartmentRanking, TrendData, EmployeeRanking } from '@/api/reports.api';
+import { reportsApi, DepartmentRanking as DeptRankingType, TrendData, EmployeeRanking } from '@/api/reports.api';
 import { calculationApi } from '@/api/calculation.api';
 import { usersApi, KpiPreferences } from '@/api/users.api';
+import { myApi, MyKPIItem } from '@/api/my.api';
 import { AssessmentPeriod } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsManager, usePermission } from '@/hooks/usePermission';
@@ -15,6 +17,7 @@ import {
   TeamPerformance,
   KeyMetrics,
   RecentActivity,
+  DepartmentRanking,
   type StatsData,
   type TrendDataPoint,
   type TeamMember,
@@ -43,12 +46,15 @@ const defaultPreferences: KpiPreferences = {
 };
 
 export const DashboardView: React.FC = () => {
+  const navigate = useNavigate();
   const [periods, setPeriods] = useState<AssessmentPeriod[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [overview, setOverview] = useState<OverviewData | null>(null);
-  const [deptRanking, setDeptRanking] = useState<DepartmentRanking[]>([]);
+  const [prevOverview, setPrevOverview] = useState<OverviewData | null>(null);
+  const [deptRanking, setDeptRanking] = useState<DeptRankingType[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [employeeRanking, setEmployeeRanking] = useState<EmployeeRanking[]>([]);
+  const [myKpis, setMyKpis] = useState<MyKPIItem[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [kpiPrefs, setKpiPrefs] = useState<KpiPreferences>(defaultPreferences);
   const { toast } = useToast();
@@ -74,6 +80,10 @@ export const DashboardView: React.FC = () => {
       setPeriods(periodsData);
       if (periodsData.length > 0) {
         setSelectedPeriod(periodsData[0].id);
+        if (periodsData.length > 1) {
+          const prevOv = await reportsApi.getOverview(periodsData[1].id).catch(() => null);
+          setPrevOverview(prevOv);
+        }
       }
     } catch (_e) { /* silent */ }
   };
@@ -87,14 +97,19 @@ export const DashboardView: React.FC = () => {
 
   const loadPeriodData = async (id: string) => {
     try {
-      const [ov, dept, emp] = await Promise.all([
-        reportsApi.getOverview(id),
-        reportsApi.getDepartmentRanking(id),
-        reportsApi.getEmployeeRanking(id, 1, 10),
-      ]);
-      setOverview(ov);
-      setDeptRanking(dept);
-      setEmployeeRanking(emp.data || []);
+      if (isManager) {
+        const [ov, dept, emp] = await Promise.all([
+          reportsApi.getOverview(id),
+          reportsApi.getDepartmentRanking(id),
+          reportsApi.getEmployeeRanking(id, 1, 10),
+        ]);
+        setOverview(ov);
+        setDeptRanking(dept);
+        setEmployeeRanking(emp.data || []);
+      } else {
+        const kpis = await myApi.getMyKPIs(id).catch(() => []);
+        setMyKpis(kpis);
+      }
     } catch (_e) { /* silent */ }
   };
 
@@ -148,31 +163,57 @@ export const DashboardView: React.FC = () => {
   }, [selectedPeriod, toast]);
 
   const statsData: StatsData = useMemo(() => {
+    const calcTrend = (curr: number, prev: number): number => {
+      if (prev === 0) return curr > 0 ? 100 : 0;
+      return Math.round(((curr - prev) / prev) * 100);
+    };
+
     if (!overview) {
       return {
-        totalKPIs: 24, completed: 18, inProgress: 4, atRisk: 2,
-        trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 },
+        totalEmployees: 0, passedEmployees: 0, needImprovement: 0, atRisk: 0,
+        trends: { totalEmployees: 0, passedEmployees: 0, needImprovement: 0, atRisk: 0 },
         warningThreshold: kpiPrefs.warningThreshold,
       };
     }
+
+    const curr = {
+      totalEmployees: overview.totalEmployees,
+      passedEmployees: overview.excellent + overview.good,
+      needImprovement: overview.average,
+      atRisk: overview.poor,
+    };
+
+    const prev = prevOverview ? {
+      totalEmployees: prevOverview.totalEmployees,
+      passedEmployees: prevOverview.excellent + prevOverview.good,
+      needImprovement: prevOverview.average,
+      atRisk: prevOverview.poor,
+    } : { totalEmployees: 0, passedEmployees: 0, needImprovement: 0, atRisk: 0 };
+
     return {
-      totalKPIs: overview.totalEmployees || 24,
-      completed: overview.excellent + overview.good || 18,
-      inProgress: overview.average || 4,
-      atRisk: overview.poor || 2,
-      trends: { totalKPIs: 12, completed: 8, inProgress: -2, atRisk: 1 },
+      ...curr,
+      trends: {
+        totalEmployees: calcTrend(curr.totalEmployees, prev.totalEmployees),
+        passedEmployees: calcTrend(curr.passedEmployees, prev.passedEmployees),
+        needImprovement: calcTrend(curr.needImprovement, prev.needImprovement),
+        atRisk: calcTrend(curr.atRisk, prev.atRisk),
+      },
       warningThreshold: kpiPrefs.warningThreshold,
     };
-  }, [overview, kpiPrefs.warningThreshold]);
+  }, [overview, prevOverview, kpiPrefs.warningThreshold]);
+
+  const targetScore = useMemo(() => {
+    return kpiPrefs.warningThreshold || 70;
+  }, [kpiPrefs.warningThreshold]);
 
   const chartData: TrendDataPoint[] = useMemo(() => {
     if (trendData.length === 0) return [];
     return trendData.map((item, idx) => ({
       month: item.period || `${idx + 1}月`,
       actual: item.avgScore,
-      target: 75
+      target: targetScore
     }));
-  }, [trendData]);
+  }, [trendData, targetScore]);
 
   const teamMembers: TeamMember[] = useMemo(() => {
     if (employeeRanking.length === 0) return [];
@@ -186,19 +227,102 @@ export const DashboardView: React.FC = () => {
     }));
   }, [employeeRanking]);
 
-  // TODO: 后续从API获取真实的关键指标数据
-  const keyMetrics: KeyMetric[] = useMemo(() => [], []);
+  const selectedPeriodData = useMemo(() => {
+    return periods.find(p => p.id === selectedPeriod);
+  }, [periods, selectedPeriod]);
 
-  // TODO: 后续从API获取真实的活动记录
-  const recentActivities: Activity[] = useMemo(() => [], []);
+  const keyMetrics: KeyMetric[] = useMemo(() => {
+    const getStatus = (progress: number): 'normal' | 'warning' | 'danger' => {
+      if (progress >= 80) return 'normal';
+      if (progress >= 60) return 'warning';
+      return 'danger';
+    };
+
+    if (isManager) {
+      if (deptRanking.length === 0) return [];
+      return deptRanking.slice(0, 4).map((dept) => ({
+        id: dept.departmentId,
+        name: dept.departmentName,
+        currentValue: Math.round(dept.score),
+        targetValue: 100,
+        unit: '分',
+        status: getStatus(dept.score),
+        deadline: selectedPeriodData?.endDate ? new Date(selectedPeriodData.endDate).toLocaleDateString('zh-CN') : undefined,
+      }));
+    } else {
+      if (myKpis.length === 0) return [];
+      return myKpis.slice(0, 4).map((kpi) => {
+        const progress = kpi.targetValue > 0 ? ((kpi.actualValue || 0) / kpi.targetValue) * 100 : 0;
+        return {
+          id: kpi.assignmentId,
+          name: kpi.kpiName,
+          currentValue: kpi.actualValue || 0,
+          targetValue: kpi.targetValue,
+          unit: kpi.unit || '',
+          status: getStatus(progress),
+          deadline: selectedPeriodData?.endDate ? new Date(selectedPeriodData.endDate).toLocaleDateString('zh-CN') : undefined,
+        };
+      });
+    }
+  }, [isManager, deptRanking, myKpis, selectedPeriodData]);
+
+  const recentActivities: Activity[] = useMemo(() => {
+    const activities: Activity[] = [];
+
+    if (overview && overview.poor > 0) {
+      activities.push({
+        id: 'alert-poor',
+        type: 'alert',
+        title: '绩效预警',
+        description: `本周期有 ${overview.poor} 名员工需要关注`,
+        time: '本周期',
+      });
+    }
+
+    deptRanking.slice(0, 3).forEach((dept) => {
+      activities.push({
+        id: `dept-${dept.departmentId}`,
+        type: 'milestone',
+        title: `${dept.departmentName} 排名第${dept.rank}`,
+        description: `得分 ${dept.score.toFixed(1)}，共 ${dept.employeeCount} 人`,
+        time: '本周期',
+      });
+    });
+
+    employeeRanking.slice(0, 2).forEach((emp) => {
+      activities.push({
+        id: `emp-${emp.employeeId}`,
+        type: 'complete',
+        title: `${emp.employeeName} 表现优秀`,
+        description: `${emp.departmentName}，得分 ${emp.score.toFixed(1)}`,
+        time: '本周期',
+      });
+    });
+
+    if (overview) {
+      activities.push({
+        id: 'calc-done',
+        type: 'update',
+        title: '绩效计算已完成',
+        description: `周期: ${overview.periodName}`,
+        time: '本周期',
+      });
+    }
+
+    return activities.slice(0, 6);
+  }, [overview, deptRanking, employeeRanking]);
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-8">
       {/* 头部区域 - 响应式 */}
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">绩效仪表盘</h1>
-          <p className="text-sm sm:text-base text-slate-500 mt-1">追踪和管理您的关键绩效指标</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+            {isManager ? '绩效仪表盘' : '我的绩效'}
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-1">
+            {isManager ? '追踪和管理团队关键绩效指标' : '查看和跟踪您的个人KPI完成情况'}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
@@ -226,16 +350,16 @@ export const DashboardView: React.FC = () => {
                 )}
                 <span className="hidden xs:inline">{isCalculating ? '计算中...' : '计算绩效'}</span>
               </Button>
-              <Button className="flex-1 sm:flex-none bg-brand-primary hover:opacity-90 text-brand-text">
+              <Button onClick={() => navigate('/app/kpi-library')} className="flex-1 sm:flex-none bg-brand-primary hover:opacity-90 text-brand-text">
                 <Plus className="w-4 h-4 mr-1" /> <span className="hidden xs:inline">新建</span>KPI
               </Button>
               <Button variant="outline" onClick={handleExport} className="flex-1 sm:flex-none" disabled={!canExport}>
                 <FileText className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">生成报告</span>
               </Button>
-              <Button variant="outline" className="flex-1 sm:flex-none">
+              <Button variant="outline" onClick={() => navigate('/app/team')} className="flex-1 sm:flex-none">
                 <Users className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">团队管理</span>
               </Button>
-              <Button variant="outline" className="flex-1 sm:flex-none">
+              <Button variant="outline" onClick={() => navigate('/app/assessment')} className="flex-1 sm:flex-none">
                 <Calendar className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">设定周期</span>
               </Button>
             </div>
@@ -253,23 +377,29 @@ export const DashboardView: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         {kpiPrefs.showTrendChart && (
           <div className="xl:col-span-2">
-            <TrendChart data={chartData} />
+            <TrendChart data={chartData} targetScore={targetScore} />
           </div>
         )}
         <div className={kpiPrefs.showTrendChart ? 'xl:col-span-1' : 'xl:col-span-3'}>
-          <TeamPerformance members={teamMembers} teamName="管理团队" showProgressBar={kpiPrefs.showProgressBar} />
+          <TeamPerformance members={teamMembers} teamName="绩效排行" showProgressBar={kpiPrefs.showProgressBar} />
         </div>
       </div>
 
       {/* 关键指标进度 + 最近动态 - 响应式网格 */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         <div className="xl:col-span-2">
-          <KeyMetrics metrics={keyMetrics} onViewAll={() => { }} />
+          <KeyMetrics 
+            metrics={keyMetrics} 
+            title={isManager ? '部门绩效概览' : '我的KPI进度'} 
+          />
         </div>
         <div className="xl:col-span-1">
           <RecentActivity activities={recentActivities} />
         </div>
       </div>
+
+      {/* 部门排名 - 仅管理者可见 */}
+      {isManager && <DepartmentRanking departments={deptRanking} />}
     </div>
   );
 };

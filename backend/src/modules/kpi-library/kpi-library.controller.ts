@@ -53,7 +53,10 @@ export class KPILibraryController {
   @Get('statistics')
   @Roles(UserRole.MANAGER, UserRole.GROUP_ADMIN, UserRole.SUPER_ADMIN)
   async getStatistics(@Request() req: any) {
-    return this.kpiLibraryService.getStatistics(req.user.companyId);
+    return this.kpiLibraryService.getStatistics(
+      req.user.companyId,
+      req.user.groupId,
+    );
   }
 
   /** 获取单个指标详情 */

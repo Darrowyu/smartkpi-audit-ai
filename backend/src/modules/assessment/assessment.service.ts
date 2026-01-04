@@ -118,6 +118,8 @@ export class AssessmentService {
       where: { id },
       data: {
         ...dto,
+        startDate: dto.startDate ? new Date(dto.startDate) : period.startDate,
+        endDate: dto.endDate ? new Date(dto.endDate) : period.endDate,
         lockDate: dto.lockDate ? new Date(dto.lockDate) : period.lockDate,
       },
     });

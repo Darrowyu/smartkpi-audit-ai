@@ -9,9 +9,11 @@ interface TrendDataPoint {
 
 interface TrendChartProps {
   data: TrendDataPoint[];
+  targetScore?: number;
 }
 
-export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
+export const TrendChart: React.FC<TrendChartProps> = ({ data, targetScore = 70 }) => {
+  const chartData = data.map(item => ({ ...item, target: targetScore }));
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
@@ -29,7 +31,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
       </div>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <defs>
               <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#1E4B8E" stopOpacity={0.15}/>

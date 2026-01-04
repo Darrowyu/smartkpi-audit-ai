@@ -12,6 +12,7 @@ interface KeyMetric {
 
 interface KeyMetricsProps {
   metrics: KeyMetric[];
+  title?: string;
   onViewAll?: () => void;
 }
 
@@ -50,11 +51,11 @@ const formatTarget = (value: number, unit: string): string => {
   return `${value}${unit}`;
 };
 
-export const KeyMetrics: React.FC<KeyMetricsProps> = ({ metrics, onViewAll }) => {
+export const KeyMetrics: React.FC<KeyMetricsProps> = ({ metrics, title = '关键指标进度', onViewAll }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">关键指标进度</h3>
+        <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
         {onViewAll && (
           <button onClick={onViewAll} className="text-sm text-primary hover:opacity-90 font-medium transition-opacity">
             查看全部

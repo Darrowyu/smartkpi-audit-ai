@@ -130,6 +130,7 @@ model User {
   kpiAnalyses   KPIAnalysis[]
   notifications Notification[]
   loginHistory  LoginHistory[]
+  todos         Todo[]
 
   @@index([companyId])
   @@index([departmentId])
@@ -1160,4 +1161,42 @@ model DataSyncLog {
   @@index([dataSourceId])
   @@index([companyId])
   @@map("data_sync_logs")
+}
+
+// ============================================
+// Todo System (待办事项系统)
+// ============================================
+
+enum TodoPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model Todo {
+  id          String       @id @default(uuid())
+  title       String
+  description String?      @db.Text
+  dueDate     DateTime?    @map("due_date")
+  priority    TodoPriority @default(MEDIUM)
+  completed   Boolean      @default(false)
+  completedAt DateTime?    @map("completed_at")
+
+  relatedType  String? @map("related_type")
+  relatedId    String? @map("related_id")
+  reminderDays Int?    @map("reminder_days")
+  recurrence   String?
+
+  userId    String @map("user_id")
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String @map("company_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([dueDate])
+  @@index([completed])
+  @@map("todos")
 }

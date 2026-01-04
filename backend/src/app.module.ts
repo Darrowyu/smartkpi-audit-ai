@@ -31,6 +31,7 @@ import { TalentModule } from './modules/talent/talent.module';
 import { SalaryModule } from './modules/salary/salary.module';
 import { CheckInModule } from './modules/checkin/checkin.module';
 import { DataSourceModule } from './modules/datasource/datasource.module';
+import { TodosModule } from './modules/todos/todos.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { DataSourceModule } from './modules/datasource/datasource.module';
     SalaryModule,
     CheckInModule,
     DataSourceModule,
+    TodosModule,
   ],
   controllers: [AppController],
   providers: [

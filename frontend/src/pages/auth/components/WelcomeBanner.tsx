@@ -4,9 +4,9 @@ import { LayoutDashboard } from 'lucide-react';
 
 interface WelcomeStats {
   completionRate: number;
-  activeKPIs: number;
+  pendingCount: number;
   teamMembers: number;
-  pendingTasks: number;
+  riskCount: number;
 }
 
 interface WelcomeBannerProps {
@@ -60,16 +60,16 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ userName, stats, o
           <p className="text-brand-text-muted text-sm mt-1">整体完成率</p>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-          <p className="text-3xl font-bold">{stats.activeKPIs}</p>
-          <p className="text-brand-text-muted text-sm mt-1">进行中指标</p>
+          <p className="text-3xl font-bold">{stats.pendingCount}</p>
+          <p className="text-brand-text-muted text-sm mt-1">待处理事项</p>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
           <p className="text-3xl font-bold">{stats.teamMembers}</p>
           <p className="text-brand-text-muted text-sm mt-1">团队成员</p>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-          <p className="text-3xl font-bold">{stats.pendingTasks}</p>
-          <p className="text-brand-text-muted text-sm mt-1">待处理任务</p>
+          <p className="text-3xl font-bold">{stats.riskCount}</p>
+          <p className="text-brand-text-muted text-sm mt-1">风险预警</p>
         </div>
       </div>
     </div>
